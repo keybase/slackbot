@@ -3,11 +3,7 @@
 
 package slackbot
 
-import (
-	"fmt"
-
-	"github.com/nlopes/slack"
-)
+import "github.com/nlopes/slack"
 
 func LoadChannelIDs(api slack.Client) (map[string]string, error) {
 	channels, err := api.GetChannels(true)
@@ -16,7 +12,6 @@ func LoadChannelIDs(api slack.Client) (map[string]string, error) {
 	}
 	channelIDs := make(map[string]string)
 	for _, c := range channels {
-		fmt.Printf("%s %s\n", c.ID, c.Name)
 		channelIDs[c.Name] = c.ID
 	}
 	return channelIDs, nil
