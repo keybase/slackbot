@@ -1,7 +1,7 @@
 // Copyright 2015 Keybase, Inc. All rights reserved. Use of
 // this source code is governed by the included BSD license.
 
-package lib
+package slackbot
 
 import (
 	"fmt"
@@ -23,14 +23,9 @@ func NewBot(token string) (*Bot, error) {
 	api := slack.New(token)
 	//api.SetDebug(true)
 
-	channels, err := api.GetChannels(true)
+	channelIDs, err := LoadChannelIDs(*api)
 	if err != nil {
 		return nil, err
-	}
-	channelIDs := make(map[string]string)
-	for _, c := range channels {
-		fmt.Printf("%s %s\n", c.ID, c.Name)
-		channelIDs[c.Name] = c.ID
 	}
 
 	rtm := api.NewRTM()

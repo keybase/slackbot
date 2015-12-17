@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	slackbot "github.com/keybase/slackbot"
+	"github.com/keybase/slackbot"
 )
 
 func main() {
