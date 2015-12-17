@@ -16,7 +16,6 @@ var ignoreError = flag.Bool("i", false, "Ignore error (always exit 0)")
 
 func error(s string) {
 	if *ignoreError {
-		log.Printf("Error: %s", s)
 		os.Exit(0)
 	}
 	log.Fatal(s)
