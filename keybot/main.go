@@ -26,5 +26,8 @@ func main() {
 
 	bot.AddCommand(slackbot.NewCommand("build", "/bin/launchctl", []string{"start", "keybase.prerelease"}, false))
 
+	bot.AddCommand(slackbot.NewCommand("restart", "/bin/launchctl", []string{"stop", "keybase.keybot"}, false))
+
+	log.Println("Started keybot")
 	bot.Listen()
 }
