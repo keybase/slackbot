@@ -80,7 +80,7 @@ func (b *Bot) SendMessage(text string, channel string) {
 func (b *Bot) Help(channel string) {
 	msgs := []string{}
 	for trigger, command := range b.commands {
-		msgs = append(msgs, "%s: %s", trigger, command.Description())
+		msgs = append(msgs, fmt.Sprintf("%s: %s", trigger, command.Description()))
 	}
 	b.SendMessage(strings.Join(msgs, "\n"), channel)
 }
