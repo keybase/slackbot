@@ -39,6 +39,11 @@ func (b *Bot) AddCommand(trigger string, command Command) {
 }
 
 func (b *Bot) RunCommand(trigger string, channel string) {
+	if trigger == "help" {
+		b.Help(channel)
+		return
+	}
+
 	command, ok := b.commands[trigger]
 	if !ok {
 		log.Printf("Unrecognized command: %s", trigger)
