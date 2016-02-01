@@ -6,6 +6,7 @@ package slackbot
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 
 	"github.com/nlopes/slack"
@@ -77,12 +78,27 @@ func (b *Bot) SendMessage(text string, channel string) {
 	b.rtm.SendMessage(b.rtm.NewOutgoingMessage(text, cid))
 }
 
-func (b *Bot) Help(channel string) {
-	msgs := []string{}
-	for trigger, command := range b.commands {
-		msgs = append(msgs, fmt.Sprintf("%s: %s", trigger, command.Description()))
+func (b *Bot) Triggers() []string {
+	triggers := make([]string, 0, len(b.commands))
+	for trigger := range b.commands {
+		triggers = append(triggers, trigger)
 	}
-	b.SendMessage(strings.Join(msgs, "\n"), channel)
+	sort.Strings(triggers)
+	return triggers
+}
+
+func (b *Bot) helpMessage() string {
+	msgs := []string{}
+	triggers := b.Triggers()
+	for _, trigger := range triggers {
+		command := b.commands[trigger]
+		msgs = append(msgs, fmt.Sprintf("*!%s*: %s", trigger, command.Description()))
+	}
+	return strings.Join(msgs, "\n")
+}
+
+func (b *Bot) Help(channel string) {
+	b.SendMessage(b.helpMessage(), channel)
 }
 
 func (b *Bot) Listen() {
