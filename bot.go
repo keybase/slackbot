@@ -6,7 +6,6 @@ package slackbot
 import (
 	"fmt"
 	"log"
-	"os/exec"
 	"strings"
 
 	"github.com/nlopes/slack"
@@ -35,8 +34,8 @@ func NewBot(token string) (*Bot, error) {
 	return &bot, nil
 }
 
-func (b *Bot) AddCommand(command Command) {
-	b.commands[command.trigger] = command
+func (b *Bot) AddCommand(trigger string, command Command) {
+	b.commands[trigger] = command
 }
 
 func (b *Bot) RunCommand(trigger string, channel string) {
@@ -47,21 +46,21 @@ func (b *Bot) RunCommand(trigger string, channel string) {
 	}
 
 	log.Printf("Command: %#v\n", command)
-	b.SendMessage(fmt.Sprintf("Sure, I will !%s", command.trigger), channel)
+	b.SendMessage(fmt.Sprintf("Sure, I will !%s", trigger), channel)
 
-	go b.execute(command, channel)
+	go b.run(trigger, command, channel)
 }
 
-func (b *Bot) execute(command Command, channel string) {
-	out, err := exec.Command(command.execute, command.args...).Output()
+func (b *Bot) run(trigger string, command Command, channel string) {
+	out, err := command.Run()
 	if err != nil {
 		log.Printf("Error %s running: %#v; %s\n", err, command, out)
-		b.SendMessage(fmt.Sprintf("Oops, there was an error in !%s", command.trigger), channel)
+		b.SendMessage(fmt.Sprintf("Oops, there was an error in !%s", trigger), channel)
 		return
 	}
 	log.Printf("Output: %s\n", out)
-	if command.showResult {
-		b.SendMessage(fmt.Sprintf("%s", out), channel)
+	if command.ShowResult() {
+		b.SendMessage(out, channel)
 	}
 }
 
@@ -71,6 +70,14 @@ func (b *Bot) SendMessage(text string, channel string) {
 		cid = channel
 	}
 	b.rtm.SendMessage(b.rtm.NewOutgoingMessage(text, cid))
+}
+
+func (b *Bot) Help(channel string) {
+	msgs := []string{}
+	for trigger, command := range b.commands {
+		msgs = append(msgs, "%s: %s", trigger, command.Description())
+	}
+	b.SendMessage(strings.Join(msgs, "\n"), channel)
 }
 
 func (b *Bot) Listen() {

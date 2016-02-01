@@ -21,12 +21,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// For debugging
-	bot.AddCommand(slackbot.NewCommand("date", "/bin/date", nil, true))
+	bot.AddCommand("build", slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build"))
+	bot.AddCommand("build cancel", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.prerelease"}, false, "Cancel a running build"))
+	bot.AddCommand("build test", slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.test"}, false, "Test the build"))
 
-	bot.AddCommand(slackbot.NewCommand("build", "/bin/launchctl", []string{"start", "keybase.prerelease"}, false))
+	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.keybot"}, false, "Restart the bot"))
 
-	bot.AddCommand(slackbot.NewCommand("restart", "/bin/launchctl", []string{"stop", "keybase.keybot"}, false))
+	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
 
 	log.Println("Started keybot")
 	bot.Listen()
