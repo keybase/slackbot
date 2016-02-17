@@ -26,7 +26,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/test/go/src/github.com/keybase/slackbot/build.sh</string>
+        <string>/Users/test/go/src/github.com/keybase/slackbot/launchd/build.sh</string>
     </array>
     <key>StandardErrorPath</key>
     <string>/Users/test/Library/Logs/keybase.prerelease.log</string>
