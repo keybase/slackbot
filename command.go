@@ -11,6 +11,7 @@ import (
 	"os/user"
 )
 
+// Command is the interface the bot uses to run things
 type Command interface {
 	Run() (string, error)
 	ShowResult() bool // Whether to output result back to channel
@@ -31,8 +32,12 @@ type ConfigCommand struct {
 	Updater func(c Config) (Config, error)
 }
 
+// ToggleDryRunCommand is a special command that toggles dry run state
 type ToggleDryRunCommand struct{}
 
+// Config is the state of the build bot.
+// DryRun will print out what it plans to do without doing it
+// Paused will prevent any builds in the future from running
 type Config struct {
 	DryRun bool
 	Paused bool
@@ -106,6 +111,7 @@ func updateConfig(updater func(c Config) (Config, error)) (Config, error) {
 	return newConfig, nil
 }
 
+// NewExecCommand creates an ExecCommand
 func NewExecCommand(exec string, args []string, showResult bool, description string) ExecCommand {
 	return ExecCommand{
 		exec:        exec,
@@ -115,6 +121,7 @@ func NewExecCommand(exec string, args []string, showResult bool, description str
 	}
 }
 
+// Run runs the exec command
 func (c ExecCommand) Run() (string, error) {
 	config := readConfigOrDefault()
 
@@ -127,15 +134,18 @@ func (c ExecCommand) Run() (string, error) {
 	return outAsString, err
 }
 
+// ShowResult decides whether to show the results from the exec
 func (c ExecCommand) ShowResult() bool {
 	config := readConfigOrDefault()
 	return config.DryRun || c.showResult
 }
 
+// Description describes the command
 func (c ExecCommand) Description() string {
 	return c.description
 }
 
+// Run the config change
 func (c ConfigCommand) Run() (string, error) {
 	config := readConfigOrDefault()
 
@@ -152,14 +162,17 @@ func (c ConfigCommand) Run() (string, error) {
 	return fmt.Sprintf("Config is now: %+v", newConfig), nil
 }
 
+// ShowResult will always show the results of a config change
 func (c ConfigCommand) ShowResult() bool {
 	return true
 }
 
+// Description describes how it will change the config
 func (c ConfigCommand) Description() string {
 	return c.Desc
 }
 
+// Run toggles the dry run state. (Itself is never run under dry run mode)
 func (c ToggleDryRunCommand) Run() (string, error) {
 	config, err := updateConfig(func(c Config) (Config, error) {
 		c.DryRun = !c.DryRun
@@ -173,10 +186,12 @@ func (c ToggleDryRunCommand) Run() (string, error) {
 	return fmt.Sprintf("Dry Run Value is now: %t", config.DryRun), nil
 }
 
+// ShowResult always shows results for toggling dry run
 func (c ToggleDryRunCommand) ShowResult() bool {
 	return true
 }
 
+// Description describes what it does
 func (c ToggleDryRunCommand) Description() string {
 	return "Toggles the Dry Run value"
 }
