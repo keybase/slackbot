@@ -129,6 +129,10 @@ func (c ExecCommand) Run() (string, error) {
 		return fmt.Sprintf("Dry Run: would have ran `%s` with args: %s", c.exec, c.args), nil
 	}
 
+	if config.Paused {
+		return fmt.Sprintf("Paused. But would have ran `%s` with args: %s", c.exec, c.args), nil
+	}
+
 	out, err := exec.Command(c.exec, c.args...).Output()
 	outAsString := fmt.Sprintf("%s", out)
 	return outAsString, err
@@ -137,7 +141,7 @@ func (c ExecCommand) Run() (string, error) {
 // ShowResult decides whether to show the results from the exec
 func (c ExecCommand) ShowResult() bool {
 	config := readConfigOrDefault()
-	return config.DryRun || c.showResult
+	return config.DryRun || config.Paused || c.showResult
 }
 
 // Description describes the command
