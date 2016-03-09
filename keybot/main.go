@@ -40,7 +40,7 @@ func kingpinHandler(args []string) (string, error) {
 
 	cmd, err := app.Parse(args)
 
-	if err != nil {
+	if err != nil && stringBuffer.Len() == 0 {
 		log.Printf("Error in parsing command: %s. got %s", args, err)
 		io.WriteString(stringBuffer, fmt.Sprintf("I don't know what you mean by `%s`.\nError: `%s`\nHere's my usage:\n\n", strings.Join(args, " "), err.Error()))
 		// Print out help page if there was an error parsing command
@@ -48,7 +48,7 @@ func kingpinHandler(args []string) (string, error) {
 	}
 
 	if stringBuffer.Len() > 0 {
-		return stringBuffer.String(), nil
+		return fmt.Sprintf("```\n%s\n```", stringBuffer.String()), nil
 	}
 
 	buildStart := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build")
@@ -112,7 +112,7 @@ func main() {
 		},
 	})
 
-	bot.AddCommand("start", slackbot.ConfigCommand{
+	bot.AddCommand("resume", slackbot.ConfigCommand{
 		"Continue any future builds",
 		func(c slackbot.Config) (slackbot.Config, error) {
 			c.Paused = false
@@ -120,7 +120,7 @@ func main() {
 		},
 	})
 
-	bot.AddCommand("ls-config", slackbot.ConfigCommand{
+	bot.AddCommand("config", slackbot.ConfigCommand{
 		"List current config",
 		func(c slackbot.Config) (slackbot.Config, error) {
 			return c, nil
