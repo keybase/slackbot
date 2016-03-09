@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>keybase.keybot</string>
+    <string>keybase.keybot.build</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>GOPATH</key>

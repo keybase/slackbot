@@ -4,16 +4,13 @@
 package slackbot
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os/exec"
-	"os/user"
 )
 
 // Command is the interface the bot uses to run things
 type Command interface {
-	Run() (string, error)
+	Run([]string) (string, error)
 	ShowResult() bool // Whether to output result back to channel
 	Description() string
 }
@@ -26,89 +23,13 @@ type ExecCommand struct {
 	description string
 }
 
-// ConfigCommand is a Command that sets some saved state
-type ConfigCommand struct {
-	Desc    string
-	Updater func(c Config) (Config, error)
-}
-
 // ToggleDryRunCommand is a special command that toggles dry run state
 type ToggleDryRunCommand struct{}
 
-// Config is the state of the build bot.
-// DryRun will print out what it plans to do without doing it
-// Paused will prevent any builds in the future from running
-type Config struct {
-	DryRun bool
-	Paused bool
-}
-
-func getConfigPath() (string, error) {
-	u, err := user.Current()
-
-	if err != nil {
-		return "", err
-	}
-
-	return u.HomeDir + "/.keybot", nil
-}
-
-func readConfigOrDefault() Config {
-	defaultConfig := Config{
-		DryRun: true,
-		Paused: false,
-	}
-
-	path, err := getConfigPath()
-
-	if err != nil {
-		return defaultConfig
-	}
-
-	b, err := ioutil.ReadFile(path)
-
-	if err != nil {
-		fmt.Printf("Couldn't read config file:%s\n", err)
-		return defaultConfig
-	}
-
-	var config Config
-	err = json.Unmarshal(b, &config)
-	if err != nil {
-		fmt.Printf("Couldn't read config file:%s\n", err)
-		return defaultConfig
-	}
-
-	return config
-}
-
-func updateConfig(updater func(c Config) (Config, error)) (Config, error) {
-	config := readConfigOrDefault()
-	newConfig, err := updater(config)
-
-	if err != nil {
-		return config, err
-	}
-
-	b, err := json.Marshal(newConfig)
-
-	if err != nil {
-		return config, err
-	}
-
-	path, err := getConfigPath()
-
-	if err != nil {
-		return config, err
-	}
-
-	err = ioutil.WriteFile(path, b, 0644)
-
-	if err != nil {
-		return config, err
-	}
-
-	return newConfig, nil
+// FuncCommand runs an arbitrary function on trigger
+type FuncCommand struct {
+	Desc string
+	Fn   func(args []string) (string, error)
 }
 
 // NewExecCommand creates an ExecCommand
@@ -122,15 +43,15 @@ func NewExecCommand(exec string, args []string, showResult bool, description str
 }
 
 // Run runs the exec command
-func (c ExecCommand) Run() (string, error) {
+func (c ExecCommand) Run(_ []string) (string, error) {
 	config := readConfigOrDefault()
 
 	if config.DryRun {
-		return fmt.Sprintf("Dry Run: would have ran `%s` with args: %s", c.exec, c.args), nil
+		return fmt.Sprintf("Dry Run: Doing that would run `%s` with args: %s", c.exec, c.args), nil
 	}
 
 	if config.Paused {
-		return fmt.Sprintf("Paused. But would have ran `%s` with args: %s", c.exec, c.args), nil
+		return fmt.Sprintf("I'm paused so I can't do that, but I would have ran `%s` with args: %s", c.exec, c.args), nil
 	}
 
 	out, err := exec.Command(c.exec, c.args...).Output()
@@ -149,35 +70,8 @@ func (c ExecCommand) Description() string {
 	return c.description
 }
 
-// Run the config change
-func (c ConfigCommand) Run() (string, error) {
-	config := readConfigOrDefault()
-
-	if config.DryRun {
-		return fmt.Sprintf("Dry Run: %s", c.Description()), nil
-	}
-
-	newConfig, err := updateConfig(c.Updater)
-
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("Config is now: %+v", newConfig), nil
-}
-
-// ShowResult will always show the results of a config change
-func (c ConfigCommand) ShowResult() bool {
-	return true
-}
-
-// Description describes how it will change the config
-func (c ConfigCommand) Description() string {
-	return c.Desc
-}
-
 // Run toggles the dry run state. (Itself is never run under dry run mode)
-func (c ToggleDryRunCommand) Run() (string, error) {
+func (c ToggleDryRunCommand) Run(_ []string) (string, error) {
 	config, err := updateConfig(func(c Config) (Config, error) {
 		c.DryRun = !c.DryRun
 		return c, nil
@@ -198,4 +92,19 @@ func (c ToggleDryRunCommand) ShowResult() bool {
 // Description describes what it does
 func (c ToggleDryRunCommand) Description() string {
 	return "Toggles the Dry Run value"
+}
+
+// Run runs the Fn func
+func (c FuncCommand) Run(args []string) (string, error) {
+	return c.Fn(args)
+}
+
+// ShowResult always shows results
+func (c FuncCommand) ShowResult() bool {
+	return true
+}
+
+// Description describes what it does
+func (c FuncCommand) Description() string {
+	return c.Desc
 }
