@@ -5,8 +5,11 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/keybase/slackbot"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -39,6 +42,7 @@ func kingpinHandler(args []string) (string, error) {
 
 	if err != nil {
 		log.Printf("Error in parsing command: %s. got %s", args, err)
+		io.WriteString(stringBuffer, fmt.Sprintf("I don't know what you mean by `%s`.\nError: `%s`\nHere's my usage:\n\n", strings.Join(args, " "), err.Error()))
 		// Print out help page if there was an error parsing command
 		app.Usage([]string{})
 	}

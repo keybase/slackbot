@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os/user"
+	"path/filepath"
 )
 
 // ConfigCommand is a Command that sets some saved state
@@ -31,7 +33,7 @@ func getConfigPath() (string, error) {
 		return "", err
 	}
 
-	return currentUser.HomeDir + "/.keybot", nil
+	return filepath.Join(currentUser.HomeDir, ".keybot"), nil
 }
 
 func readConfigOrDefault() Config {
@@ -49,14 +51,14 @@ func readConfigOrDefault() Config {
 	fileBytes, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		fmt.Printf("Couldn't read config file:%s\n", err)
+		log.Printf("Couldn't read config file:%s\n", err)
 		return defaultConfig
 	}
 
 	var config Config
 	err = json.Unmarshal(fileBytes, &config)
 	if err != nil {
-		fmt.Printf("Couldn't read config file:%s\n", err)
+		log.Printf("Couldn't read config file:%s\n", err)
 		return defaultConfig
 	}
 
