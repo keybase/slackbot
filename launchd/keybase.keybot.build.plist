@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>keybase.keybot.build</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>GOPATH</key>
+        <string></string>
+        <key>SLACK_TOKEN</key>
+        <string></string>
+        <key>SLACK_CHANNEL</key>
+        <string></string>
+        <key>PATH</key>
+        <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
+    </dict>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>slackbot/send/send.sh</string>
+        <string>!build</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Hour</key>
+            <integer>9</integer>
+            <key>Weekday</key>
+            <integer>1</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>9</integer>
+            <key>Weekday</key>
+            <integer>2</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>9</integer>
+            <key>Weekday</key>
+            <integer>3</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>9</integer>
+            <key>Weekday</key>
+            <integer>4</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>9</integer>
+            <key>Weekday</key>
+            <integer>5</integer>
+        </dict>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>/Users/test/Library/Logs/keybase.keybot.build.log</string>
+    <key>StandardOutPath</key>
+    <string>/Users/test/Library/Logs/keybase.keybot.build.log</string>
+</dict>
+</plist>
