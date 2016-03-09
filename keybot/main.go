@@ -112,7 +112,7 @@ func main() {
 		},
 	})
 
-	bot.AddCommand("start", slackbot.ConfigCommand{
+	bot.AddCommand("resume", slackbot.ConfigCommand{
 		"Continue any future builds",
 		func(c slackbot.Config) (slackbot.Config, error) {
 			c.Paused = false
