@@ -48,7 +48,7 @@ func kingpinHandler(args []string) (string, error) {
 	}
 
 	if stringBuffer.Len() > 0 {
-		return stringBuffer.String(), nil
+		return fmt.Sprintf("```\n%s\n```", stringBuffer.String()), nil
 	}
 
 	buildStart := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build")
@@ -120,7 +120,7 @@ func main() {
 		},
 	})
 
-	bot.AddCommand("ls-config", slackbot.ConfigCommand{
+	bot.AddCommand("config", slackbot.ConfigCommand{
 		"List current config",
 		func(c slackbot.Config) (slackbot.Config, error) {
 			return c, nil
