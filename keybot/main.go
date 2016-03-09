@@ -24,22 +24,27 @@ func kingpinHandler(args []string) (string, error) {
 	app.Writer(stringBuffer)
 
 	build := app.Command("build", "Build things")
-
-	clientCommit := build.Flag("client-commit", "Build a specific client commit hash").String()
-	kbfsCommit := build.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
-
 	buildPlease := build.Command("please", "Start a build")
 	buildTest := build.Command("test", "Start a test build")
-	cancel := build.Command("cancel", "Cancel any existing builds. commit flags don't affect this.")
+
+	clientCommit := buildPlease.Flag("client-commit", "Build a specific client commit hash").String()
+	kbfsCommit := buildPlease.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+
+	testClientCommit := buildTest.Flag("client-commit", "Build a specific client commit hash").String()
+	testKbfsCommit := buildTest.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+
+	cancel := build.Command("cancel", "Cancel any existing builds")
 
 	cmd, err := app.Parse(args)
 
-	if stringBuffer.Len() > 0 {
-		return stringBuffer.String(), nil
+	if err != nil {
+		log.Printf("Error in parsing command: %s. got %s", args, err)
+		// Print out help page if there was an error parsing command
+		app.Usage([]string{})
 	}
 
-	if err != nil {
-		return err.Error(), nil
+	if stringBuffer.Len() > 0 {
+		return stringBuffer.String(), nil
 	}
 
 	buildStart := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build")
@@ -66,6 +71,18 @@ func kingpinHandler(args []string) (string, error) {
 	case cancel.FullCommand():
 		return buildStop.Run(emptyArgs)
 	case buildTest.FullCommand():
+		err = setEnv("CLIENT_COMMIT", *testClientCommit)
+
+		if err != nil {
+			return "", err
+		}
+
+		err = setEnv("KBFS_COMMIT", *testKbfsCommit)
+
+		if err != nil {
+			return "", err
+		}
+
 		return buildStartTest.Run(emptyArgs)
 	}
 
