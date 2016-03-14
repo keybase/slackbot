@@ -6,4 +6,14 @@ Launchd plists and scripts for running from the bot.
 
 - Copy plist to ~/Library/LaunchAgents
 - Set the necessary environment variables (for tokens, etc)
-- Run `launchctl load -w file.plist`
+- Load the plist
+```
+launchctl load -w file.plist
+```
+
+After editing, you need to reload the plist:
+
+```
+launchctl unload file.plist
+launchctl load -w file.plist
+```
