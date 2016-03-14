@@ -13,7 +13,7 @@
         <key>SLACK_CHANNEL</key>
         <string></string>
         <key>PATH</key>
-        <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/Users/test/.rbenv/shims</string>
+        <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
     </dict>
     <key>ProgramArguments</key>
     <array>

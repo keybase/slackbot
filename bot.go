@@ -45,7 +45,8 @@ func (b *Bot) RunCommand(trigger string, channel string) {
 		return
 	}
 
-	command, ok := b.commands[trigger]
+	splitWords := strings.Split(trigger, " ")
+	command, ok := b.commands[splitWords[0]]
 	if !ok {
 		log.Printf("Unrecognized command: %s", trigger)
 		return
@@ -54,14 +55,14 @@ func (b *Bot) RunCommand(trigger string, channel string) {
 	log.Printf("Command: %#v\n", command)
 	b.SendMessage(fmt.Sprintf("Sure, I will !%s", trigger), channel)
 
-	go b.run(trigger, command, channel)
+	go b.run(splitWords, command, channel)
 }
 
-func (b *Bot) run(trigger string, command Command, channel string) {
-	out, err := command.Run()
+func (b *Bot) run(splitWords []string, command Command, channel string) {
+	out, err := command.Run(splitWords)
 	if err != nil {
 		log.Printf("Error %s running: %#v; %s\n", err, command, out)
-		b.SendMessage(fmt.Sprintf("Oops, there was an error in !%s", trigger), channel)
+		b.SendMessage(fmt.Sprintf("Oops, there was an error in !%s", strings.Join(splitWords, " ")), channel)
 		return
 	}
 	log.Printf("Output: %s\n", out)
