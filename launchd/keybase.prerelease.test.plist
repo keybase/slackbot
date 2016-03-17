@@ -24,6 +24,8 @@
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
         <key>LOG_PATH</key>
         <string>/Users/test/Library/Logs/keybase.prerelease.test.log</string>
+        <key>PLATFORM</key>
+        <string>darwin</string>
     </dict>
     <key>ProgramArguments</key>
     <array>
