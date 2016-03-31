@@ -56,7 +56,7 @@ func kingpinHandler(args []string) (string, error) {
 	buildStart := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build")
 	buildStop := slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.prerelease"}, false, "Cancel a running build")
 	buildStartTest := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.test"}, false, "Test the build")
-	buildAndroidCmd := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "android.release"}, false, "Perform an alpha build")
+	buildAndroidCmd := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.android.release"}, false, "Perform an alpha build")
 
 	emptyArgs := []string{}
 
