@@ -61,7 +61,7 @@ func (b *Bot) run(args []string, command Command, channel string) {
 	out, err := command.Run(args)
 	if err != nil {
 		log.Printf("Error %s running: %#v; %s\n", err, command, out)
-		b.SendMessage(fmt.Sprintf("Oops, there was an error in !%s", strings.Join(args, " ")), channel)
+		b.SendMessage(fmt.Sprintf("Oops, there was an error in %q:\n%s", strings.Join(args, " "), SlackBlockQuote(out)), channel)
 		return
 	}
 	log.Printf("Output: %s\n", out)
@@ -146,4 +146,11 @@ Loop:
 			}
 		}
 	}
+}
+
+func SlackBlockQuote(s string) string {
+	if !strings.HasSuffix(s, "\n") {
+		s += "\n"
+	}
+	return "```\n" + s + "```"
 }

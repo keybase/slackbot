@@ -50,7 +50,7 @@ func kingpinHandler(args []string) (string, error) {
 	}
 
 	if stringBuffer.Len() > 0 {
-		return fmt.Sprintf("```\n%s\n```", stringBuffer.String()), nil
+		return slackbot.SlackBlockQuote(stringBuffer.String()), nil
 	}
 
 	buildStart := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build")
