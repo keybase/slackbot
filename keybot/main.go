@@ -16,7 +16,7 @@ import (
 )
 
 func setEnv(name string, val string) error {
-	_, err := slackbot.NewExecCommand("/bin/launchctl", []string{"setenv", name, val}, false, "Set the env").Run([]string{})
+	_, err := setEnvCommand(name, val).Run([]string{})
 	return err
 }
 
@@ -53,11 +53,6 @@ func kingpinHandler(args []string) (string, error) {
 		return slackbot.SlackBlockQuote(stringBuffer.String()), nil
 	}
 
-	buildStart := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build")
-	buildStop := slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.prerelease"}, false, "Cancel a running build")
-	buildStartTest := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.test"}, false, "Test the build")
-	buildAndroidCmd := slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.android.release"}, false, "Perform an alpha build")
-
 	emptyArgs := []string{}
 
 	switch cmd {
@@ -74,13 +69,13 @@ func kingpinHandler(args []string) (string, error) {
 			return "", err
 		}
 
-		return buildStart.Run(emptyArgs)
+		return buildStartCommand().Run(emptyArgs)
 
 	case buildAndroid.FullCommand():
-		return buildAndroidCmd.Run(emptyArgs)
+		return buildAndroidCommand().Run(emptyArgs)
 
 	case cancel.FullCommand():
-		return buildStop.Run(emptyArgs)
+		return buildStopCommand().Run(emptyArgs)
 	case buildTest.FullCommand():
 		err = setEnv("CLIENT_COMMIT", *testClientCommit)
 
@@ -94,7 +89,7 @@ func kingpinHandler(args []string) (string, error) {
 			return "", err
 		}
 
-		return buildStartTest.Run(emptyArgs)
+		return buildStartTestCommand().Run(emptyArgs)
 	}
 
 	return cmd, nil
@@ -138,7 +133,7 @@ func main() {
 
 	bot.AddCommand("build", slackbot.FuncCommand{"Build all the things!", kingpinHandler})
 
-	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.keybot"}, false, "Restart the bot"))
+	bot.AddCommand("restart", restartCommand())
 
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
 
