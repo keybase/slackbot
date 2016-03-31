@@ -39,30 +39,29 @@ func (b *Bot) AddCommand(trigger string, command Command) {
 	b.commands[trigger] = command
 }
 
-func (b *Bot) RunCommand(trigger string, channel string) {
-	if trigger == "help" {
+func (b *Bot) RunCommand(args []string, channel string) {
+	if len(args) == 0 || args[0] == "help" {
 		b.Help(channel)
 		return
 	}
 
-	splitWords := strings.Split(trigger, " ")
-	command, ok := b.commands[splitWords[0]]
+	command, ok := b.commands[args[0]]
 	if !ok {
-		log.Printf("Unrecognized command: %s", trigger)
+		log.Printf("Unrecognized command: %q", args)
 		return
 	}
 
 	log.Printf("Command: %#v\n", command)
-	b.SendMessage(fmt.Sprintf("Sure, I will !%s", trigger), channel)
+	b.SendMessage(fmt.Sprintf("Sure, I will %s.", args[0]), channel)
 
-	go b.run(splitWords, command, channel)
+	go b.run(args, command, channel)
 }
 
-func (b *Bot) run(splitWords []string, command Command, channel string) {
-	out, err := command.Run(splitWords)
+func (b *Bot) run(args []string, command Command, channel string) {
+	out, err := command.Run(args)
 	if err != nil {
 		log.Printf("Error %s running: %#v; %s\n", err, command, out)
-		b.SendMessage(fmt.Sprintf("Oops, there was an error in !%s", strings.Join(splitWords, " ")), channel)
+		b.SendMessage(fmt.Sprintf("Oops, there was an error in !%s", strings.Join(args, " ")), channel)
 		return
 	}
 	log.Printf("Output: %s\n", out)
@@ -105,6 +104,14 @@ func (b *Bot) Help(channel string) {
 func (b *Bot) Listen() {
 	go b.rtm.ManageConnection()
 
+	auth, err := b.api.AuthTest()
+	if err != nil {
+		panic(err)
+	}
+	// The Slack bot "tuxbot" should expect commands to start with "!tuxbot".
+	log.Printf("Connected to Slack as %q", auth.User)
+	commandPrefix := "!" + auth.User
+
 Loop:
 	for {
 		select {
@@ -115,9 +122,9 @@ Loop:
 			case *slack.ConnectedEvent:
 
 			case *slack.MessageEvent:
-				text := strings.TrimSpace(ev.Text)
-				if strings.HasPrefix(text, "!") {
-					cmd := text[1:]
+				args := strings.Fields(ev.Text)
+				if len(args) > 0 && args[0] == commandPrefix {
+					cmd := args[1:]
 					b.RunCommand(cmd, ev.Channel)
 				}
 
