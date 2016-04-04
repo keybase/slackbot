@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the Keybase prerelease Linux build
+
+[Service]
+Type=oneshot
+ExecStart=/home/keybasebuild/client/packaging/linux/docker_build.sh prerelease HEAD
+
+[Install]
+WantedBy=multi-user.target
