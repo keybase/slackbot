@@ -1,0 +1,11 @@
+[Unit]
+Description=The Keybase Slack robot responsible for the Linux build
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/home/keybasebuild/keybot.env
+ExecStart=/home/keybasebuild/slackbot/systemd/run_keybot.sh
+
+[Install]
+WantedBy=multi-user.target
