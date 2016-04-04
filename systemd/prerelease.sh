@@ -8,4 +8,4 @@ git checkout -f master
 
 git pull --ff-only
 
-exec ./packaging/linux/docker_build.sh prerelease HEAD
+./packaging/linux/docker_build.sh prerelease HEAD
