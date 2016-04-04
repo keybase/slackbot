@@ -15,4 +15,9 @@ fi
 go get -v github.com/keybase/slackbot/keybot
 go install github.com/keybase/slackbot/keybot
 
+# Wait for the network.
+while ! ping -c 3 slack.com ; do
+  sleep 1
+done
+
 exec "$GOPATH/bin/keybot"
