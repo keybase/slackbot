@@ -8,4 +8,4 @@ EnvironmentFile=/home/keybasebuild/keybot.env
 ExecStart=/home/keybasebuild/slackbot/systemd/run_keybot.sh
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
