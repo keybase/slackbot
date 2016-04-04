@@ -1,5 +1,8 @@
 ### Instructions for getting the Keybase buildbot running on Linux
 
+TODO: I should script this. Unfortunately there are "systemctl --user"
+issues that make this difficult.
+
 - Create an account called "keybasebuild": `sudo useradd -m
   keybasebuild`
 - Add user "keybasebuild" to the "docker" group: `sudo gpasswd -a
@@ -12,6 +15,9 @@
   - kbfs-beta
   - server-ops
   - slackbot
+  - `git clone aur@aur.archlinux.org:keybase-git $(mktemp -d)` (This
+    repo is a throwaway, but it makes sure you have the right SSH keys,
+    and it adds the host key to ~/.ssh/known_hosts.)
 - Import the code signing PGP secret key. After import, remove the
   password from this key. (TODO: Something more interesting with
   yubikeys.)
