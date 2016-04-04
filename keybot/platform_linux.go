@@ -10,25 +10,25 @@ import (
 
 func setEnvCommand(name string, val string) slackbot.ExecCommand {
 	log.Printf("WARNING: setEnvCommand(%q, %q) is a NO-OP on Linux", name, val)
-	return slackbot.NewExecCommand("true", []string{}, false, "Set the env")
+	return slackbot.NewExecCommand("true", []string{}, true, "Set the env")
 }
 
 func buildStartCommand() slackbot.ExecCommand {
-	return slackbot.NewExecCommand("bash", []string{"-c", "systemctl --user start keybase.prerelease.service"}, false, "Perform a build")
+	return slackbot.NewExecCommand("bash", []string{"-c", "systemctl --user start keybase.prerelease.service"}, true, "Perform a build")
 }
 
 func buildStopCommand() slackbot.ExecCommand {
-	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, false, "Cancel a running build")
+	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Cancel a running build")
 }
 
 func buildStartTestCommand() slackbot.ExecCommand {
-	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, false, "Test the build")
+	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Test the build")
 }
 
 func buildAndroidCommand() slackbot.ExecCommand {
-	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, false, "Perform an alpha build")
+	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Perform an alpha build")
 }
 
 func restartCommand() slackbot.ExecCommand {
-	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, false, "Restart the bot")
+	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Restart the bot")
 }
