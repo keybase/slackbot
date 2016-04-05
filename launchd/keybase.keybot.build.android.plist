@@ -19,7 +19,7 @@
     <array>
         <string>/bin/bash</string>
         <string>/Users/test/go/src/github.com/keybase/slackbot/send/send.sh</string>
-        <string>!build android</string>
+        <string>!keybot build android</string>
     </array>
     <key>StartCalendarInterval</key>
     <array>
