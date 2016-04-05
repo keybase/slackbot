@@ -5,6 +5,7 @@ package slackbot
 
 import "github.com/nlopes/slack"
 
+// LoadChannelIDs loads channel ids for the Slack client
 func LoadChannelIDs(api slack.Client) (map[string]string, error) {
 	channels, err := api.GetChannels(true)
 	if err != nil {

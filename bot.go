@@ -12,6 +12,7 @@ import (
 	"github.com/nlopes/slack"
 )
 
+// Bot defines a Slack bot
 type Bot struct {
 	api        *slack.Client
 	rtm        *slack.RTM
@@ -19,6 +20,7 @@ type Bot struct {
 	channelIDs map[string]string
 }
 
+// NewBot constructs a bot from a Slack token
 func NewBot(token string) (*Bot, error) {
 	api := slack.New(token)
 	//api.SetDebug(true)
@@ -35,10 +37,12 @@ func NewBot(token string) (*Bot, error) {
 	return &bot, nil
 }
 
+// AddCommand adds a command to the Bot
 func (b *Bot) AddCommand(trigger string, command Command) {
 	b.commands[trigger] = command
 }
 
+// RunCommand runs a command
 func (b *Bot) RunCommand(args []string, channel string) {
 	if len(args) == 0 || args[0] == "help" {
 		b.Help(channel)
@@ -70,6 +74,7 @@ func (b *Bot) run(args []string, command Command, channel string) {
 	}
 }
 
+// SendMessage sends a message to a channel
 func (b *Bot) SendMessage(text string, channel string) {
 	cid := b.channelIDs[channel]
 	if cid == "" {
@@ -78,6 +83,7 @@ func (b *Bot) SendMessage(text string, channel string) {
 	b.rtm.SendMessage(b.rtm.NewOutgoingMessage(text, cid))
 }
 
+// Triggers returns list of supported triggers
 func (b *Bot) Triggers() []string {
 	triggers := make([]string, 0, len(b.commands))
 	for trigger := range b.commands {
@@ -97,10 +103,12 @@ func (b *Bot) helpMessage() string {
 	return strings.Join(msgs, "\n")
 }
 
+// Help displays help message to the channel
 func (b *Bot) Help(channel string) {
 	b.SendMessage(b.helpMessage(), channel)
 }
 
+// Listen starts listening on the connection
 func (b *Bot) Listen() {
 	go b.rtm.ManageConnection()
 
@@ -148,6 +156,7 @@ Loop:
 	}
 }
 
+// SlackBlockQuote returns the string block-quoted
 func SlackBlockQuote(s string) string {
 	if !strings.HasSuffix(s, "\n") {
 		s += "\n"
