@@ -1,7 +1,8 @@
 ### Instructions for getting the Keybase buildbot running on Linux
 
 TODO: I should script this. Unfortunately there are "systemctl --user"
-issues that make this difficult.
+issues that make this difficult. Can I get around this by manually
+setting `DBUS_SESSION_BUS_ADDRESS` after the `enable-linger` call?
 
 - Create an account called "keybasebuild": `sudo useradd -m
   keybasebuild`
