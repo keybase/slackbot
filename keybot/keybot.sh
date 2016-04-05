@@ -7,5 +7,6 @@ cd $dir
 
 git pull --ff-only
 go get -u github.com/keybase/slackbot/keybot
+go install github.com/keybase/slackbot/keybot
 ../send/send.sh "Keybot starting"
-go run $GOPATH/src/github.com/keybase/slackbot/keybot/main.go
+./$GOPATH/bin/keybot
