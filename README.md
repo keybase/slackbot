@@ -1,3 +1,13 @@
 ## Slackbot
 
-        SLACK_TOKEN=... go run $GOPATH/src/github.com/keybase/slackbot/keybot/main.go
+```
+export SLACK_TOKEN=...
+go install github.com/keybase/slackbot/keybot
+$GOPATH/bin/keybot
+```
+
+### Development
+
+```
+pre-commit install
+```
