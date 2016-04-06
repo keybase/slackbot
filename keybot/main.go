@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/keybase/slackbot"
+	"github.com/keybase/slackbot/jenkins"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -43,7 +44,9 @@ func kingpinHandler(args []string) (string, error) {
 	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
 
 	cancel := build.Command("cancel", "Cancel any existing builds")
-
+	buildWindows := build.Command("windows", "start a windows build")
+	testWindows := buildTest.Arg("windows", "Start a windows test build").String()
+	cancelWindows := cancel.Arg("windows", "Cancel last windows build").String()
 	// Make sure context parses otherwise showing Usage on error will fail later
 	if _, perr := app.ParseContext(args); perr != nil {
 		return "", perr
@@ -107,8 +110,6 @@ func kingpinHandler(args []string) (string, error) {
 		}
 
 		return buildStartTestCommand().Run(emptyArgs)
-	}
-
 	return cmd, nil
 }
 
