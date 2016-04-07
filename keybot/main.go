@@ -29,6 +29,7 @@ func kingpinHandler(args []string) (string, error) {
 	build := app.Command("build", "Build things")
 	buildPlease := build.Command("please", "Start a build")
 	buildTest := build.Command("test", "Start a test build")
+
 	buildAndroid := build.Command("android", "Start an android build")
 
 	clientCommit := buildPlease.Flag("client-commit", "Build a specific client commit hash").String()
