@@ -29,7 +29,6 @@ func kingpinHandler(args []string) (string, error) {
 	build := app.Command("build", "Build things")
 	buildPlease := build.Command("please", "Start a build")
 	buildTest := build.Command("test", "Start a test build")
-
 	buildAndroid := build.Command("android", "Start an android build")
 
 	clientCommit := buildPlease.Flag("client-commit", "Build a specific client commit hash").String()
@@ -37,6 +36,10 @@ func kingpinHandler(args []string) (string, error) {
 
 	testClientCommit := buildTest.Flag("client-commit", "Build a specific client commit hash").String()
 	testKbfsCommit := buildTest.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+
+	release := app.Command("release", "Release things")
+	releasePromote := release.Command("promote", "Promote a release to public")
+	releaseToPromote := release.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
 
 	cancel := build.Command("cancel", "Cancel any existing builds")
 
@@ -76,6 +79,14 @@ func kingpinHandler(args []string) (string, error) {
 
 	case cancel.FullCommand():
 		return buildStopCommand().Run(emptyArgs)
+
+	case releasePromote.FullCommand():
+		err = setEnv("RELEASE_TO_PROMOTE", *releaseToPromote)
+		if err != nil {
+			return "", err
+		}
+		return releasePromoteCommand().Run(emptyArgs)
+
 	case buildTest.FullCommand():
 		err = setEnv("CLIENT_COMMIT", *testClientCommit)
 
