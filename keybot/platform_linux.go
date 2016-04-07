@@ -14,7 +14,7 @@ func setEnvCommand(name string, val string) slackbot.ExecCommand {
 }
 
 func buildStartCommand() slackbot.ExecCommand {
-	return slackbot.NewExecCommand("bash", []string{"-c", "systemctl --user start keybase.prerelease.service"}, true, "Perform a build")
+	return slackbot.NewExecCommand("bash", []string{"-c", "systemctl --user start keybase.prerelease.service && echo 'SUCCESS'"}, true, "Perform a build")
 }
 
 func buildStopCommand() slackbot.ExecCommand {
