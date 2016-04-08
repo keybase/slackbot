@@ -51,7 +51,7 @@ func (c ExecCommand) Run(_ []string) (string, error) {
 	}
 
 	if config.Paused {
-		return fmt.Sprintf("I'm paused so I can't do that, but I would have ran `%s` with args: %s", c.exec, c.args), nil
+		return fmt.Sprintf("I'm paused so I can't do that, but I would have run `%s` with args: %s", c.exec, c.args), nil
 	}
 
 	out, err := exec.Command(c.exec, c.args...).CombinedOutput()
