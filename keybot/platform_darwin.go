@@ -30,3 +30,7 @@ func buildAndroidCommand() slackbot.ExecCommand {
 func restartCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.keybot"}, false, "Restart the bot")
 }
+
+func releasePromoteCommand() slackbot.ExecCommand {
+	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a specific release to public")
+}
