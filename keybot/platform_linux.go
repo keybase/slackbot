@@ -4,8 +4,9 @@
 package main
 
 import (
-	"github.com/keybase/slackbot"
 	"log"
+
+	"github.com/keybase/slackbot"
 )
 
 func setEnvCommand(name string, val string) slackbot.ExecCommand {
@@ -33,6 +34,6 @@ func restartCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Restart the bot")
 }
 
-func releasePromoteCommand(release string) slackbot.ExecCommand {
+func releasePromoteCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Promote a specific release to public")
 }
