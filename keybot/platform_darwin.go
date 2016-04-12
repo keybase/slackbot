@@ -11,15 +11,15 @@ func setEnvCommand(name string, val string) slackbot.ExecCommand {
 	return slackbot.NewExecCommand("/bin/launchctl", []string{"setenv", name, val}, false, "Set the env")
 }
 
-func buildStartCommand() slackbot.ExecCommand {
+func buildDarwinCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build")
 }
 
-func buildStopCommand() slackbot.ExecCommand {
+func buildDarwinCancelCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.prerelease"}, false, "Cancel a running build")
 }
 
-func buildStartTestCommand() slackbot.ExecCommand {
+func buildDarwinTestCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.test"}, false, "Test the build")
 }
 

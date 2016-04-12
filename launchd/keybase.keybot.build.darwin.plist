@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>keybase.keybot.build</string>
+    <string>keybase.keybot.build.darwin</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>GOPATH</key>
@@ -19,7 +19,7 @@
     <array>
         <string>/bin/bash</string>
         <string>/Users/test/go/src/github.com/keybase/slackbot/send/send.sh</string>
-        <string>!keybot build please</string>
+        <string>!keybot build darwin</string>
     </array>
     <key>StartCalendarInterval</key>
     <array>
@@ -85,8 +85,8 @@
         </dict>
     </array>
     <key>StandardErrorPath</key>
-    <string>/Users/test/Library/Logs/keybase.keybot.build.log</string>
+    <string>/Users/test/Library/Logs/keybase.keybot.build.darwin.log</string>
     <key>StandardOutPath</key>
-    <string>/Users/test/Library/Logs/keybase.keybot.build.log</string>
+    <string>/Users/test/Library/Logs/keybase.keybot.build.darwin.log</string>
 </dict>
 </plist>
