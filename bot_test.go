@@ -8,9 +8,10 @@ import (
 )
 
 func TestHelp(t *testing.T) {
-	bot := Bot{}
-	bot.commands = make(map[string]Command)
-
+	bot, err := NewTestBot()
+	if err != nil {
+		t.Fatal(err)
+	}
 	bot.AddCommand("date", NewExecCommand("/bin/date", nil, true, "Show the current date"))
 	bot.AddCommand("utc", NewExecCommand("/bin/date", []string{"-u"}, true, "Show the current date (utc)"))
 	msg := bot.helpMessage()

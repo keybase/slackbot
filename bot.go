@@ -30,11 +30,23 @@ func NewBot(token string) (*Bot, error) {
 		return nil, err
 	}
 
-	rtm := api.NewRTM()
-	commands := make(map[string]Command)
+	bot := newBot()
+	bot.api = api
+	bot.rtm = api.NewRTM()
+	bot.channelIDs = channelIDs
 
-	bot := Bot{api: api, rtm: rtm, commands: commands, channelIDs: channelIDs}
-	return &bot, nil
+	return bot, nil
+}
+
+func newBot() *Bot {
+	bot := Bot{}
+	bot.commands = make(map[string]Command)
+	return &bot
+}
+
+// NewTestBot returns a bot for testing
+func NewTestBot() (*Bot, error) {
+	return newBot(), nil
 }
 
 // AddCommand adds a command to the Bot

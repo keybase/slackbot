@@ -40,9 +40,14 @@ func kingpinHandler(args []string) (string, error) {
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
-	releaseToPromote := release.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
+	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
 
 	cancel := build.Command("cancel", "Cancel any existing builds")
+
+	// Make sure context parses otherwise showing Usage on error will fail later
+	if _, perr := app.ParseContext(args); perr != nil {
+		return "", perr
+	}
 
 	cmd, err := app.Parse(args)
 
@@ -107,6 +112,42 @@ func kingpinHandler(args []string) (string, error) {
 	return cmd, nil
 }
 
+func addCommands(bot *slackbot.Bot) {
+	bot.AddCommand("pause", slackbot.ConfigCommand{
+		Desc: "Pause any future builds",
+		Updater: func(c slackbot.Config) (slackbot.Config, error) {
+			c.Paused = true
+			return c, nil
+		},
+	})
+
+	bot.AddCommand("resume", slackbot.ConfigCommand{
+		Desc: "Continue any future builds",
+		Updater: func(c slackbot.Config) (slackbot.Config, error) {
+			c.Paused = false
+			return c, nil
+		},
+	})
+
+	bot.AddCommand("config", slackbot.ConfigCommand{
+		Desc: "List current config",
+		Updater: func(c slackbot.Config) (slackbot.Config, error) {
+			return c, nil
+		},
+	})
+
+	bot.AddCommand("toggle-dryrun", slackbot.ToggleDryRunCommand{})
+
+	bot.AddCommand("build", slackbot.FuncCommand{
+		Desc: "Build all the things!",
+		Fn:   kingpinHandler,
+	})
+
+	bot.AddCommand("restart", restartCommand())
+
+	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
+}
+
 func main() {
 	token := os.Getenv("SLACK_TOKEN")
 	if token == "" {
@@ -118,36 +159,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bot.AddCommand("pause", slackbot.ConfigCommand{
-		"Pause any future builds",
-		func(c slackbot.Config) (slackbot.Config, error) {
-			c.Paused = true
-			return c, nil
-		},
-	})
-
-	bot.AddCommand("resume", slackbot.ConfigCommand{
-		"Continue any future builds",
-		func(c slackbot.Config) (slackbot.Config, error) {
-			c.Paused = false
-			return c, nil
-		},
-	})
-
-	bot.AddCommand("config", slackbot.ConfigCommand{
-		"List current config",
-		func(c slackbot.Config) (slackbot.Config, error) {
-			return c, nil
-		},
-	})
-
-	bot.AddCommand("toggle-dryrun", slackbot.ToggleDryRunCommand{})
-
-	bot.AddCommand("build", slackbot.FuncCommand{"Build all the things!", kingpinHandler})
-
-	bot.AddCommand("restart", restartCommand())
-
-	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
+	addCommands(bot)
 
 	log.Println("Started keybot")
 	bot.Listen()
