@@ -12,8 +12,11 @@ import (
 	"strings"
 
 	"github.com/keybase/slackbot"
+	"github.com/keybase/slackbot/jenkins"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+var lastWinBuild string
 
 func setEnv(name string, val string) error {
 	_, err := setEnvCommand(name, val).Run([]string{})
@@ -43,6 +46,10 @@ func kingpinHandler(args []string) (string, error) {
 	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
 
 	cancel := build.Command("cancel", "Cancel any existing builds")
+	buildWindows := build.Command("windows", "start a windows build")
+	testWindows := buildTest.Command("windows", "Start a windows test build")
+	cancelWindows := cancel.Command("windows", "Cancel last windows build")
+	cancelWindowsQueueId := cancelWindows.Arg("quid", "queue id of build to stop").Required().String()
 
 	// Make sure context parses otherwise showing Usage on error will fail later
 	if _, perr := app.ParseContext(args); perr != nil {
@@ -85,6 +92,10 @@ func kingpinHandler(args []string) (string, error) {
 
 	case cancel.FullCommand():
 		return buildStopCommand().Run(emptyArgs)
+	case cancelWindows.FullCommand():
+		jenkins.StopBuild(*cancelWindowsQueueId)
+		out := "Issued stop for " + *cancelWindowsQueueId
+		return out, nil
 
 	case releasePromote.FullCommand():
 		err = setEnv("RELEASE_TO_PROMOTE", *releaseToPromote)
@@ -107,8 +118,11 @@ func kingpinHandler(args []string) (string, error) {
 		}
 
 		return buildStartTestCommand().Run(emptyArgs)
+	case buildWindows.FullCommand():
+		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "")
+	case testWindows.FullCommand():
+		return jenkins.StartBuild(*testClientCommit, *testKbfsCommit, "update-windows-prod-test.json")
 	}
-
 	return cmd, nil
 }
 
