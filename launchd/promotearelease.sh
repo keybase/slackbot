@@ -8,6 +8,8 @@ cd "$dir"
 logpath=${LOG_PATH:-}
 
 client_dir="$GOPATH/src/github.com/keybase/client"
+bucket_name="prerelease.keybase.io"
+platform="darwin"
 
 echo "Loading release tool"
 "$client_dir/packaging/goinstall.sh" "github.com/keybase/release"
@@ -19,4 +21,6 @@ err_report() {
 
 trap 'err_report $LINENO' ERR
 
-"$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="prerelease.keybase.io" --platform="darwin"
+"$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$bucket_name" --platform="$platform"
+
+"$client_dir/packaging/slack/send.sh" "Promoted $platform release $RELEASE_TO_PROMOTE ($bucket_name)"
