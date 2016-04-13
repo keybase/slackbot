@@ -29,15 +29,12 @@ func kingpinHandler(args []string) (string, error) {
 
 	build := app.Command("build", "Build things")
 
+	clientCommit := build.Flag("client-commit", "Build a specific client commit hash").String()
+	kbfsCommit := build.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+
 	buildDarwin := build.Command("darwin", "Start a darwin build")
-	buildDarwinTest := buildDarwin.Command("test", "Start a darwin test build")
-	buildDarwinCancel := buildDarwin.Command("cancel", "Cancel the darwin build")
-
-	clientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit hash").String()
-	kbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
-
-	testClientCommit := buildDarwinTest.Flag("client-commit", "Build a specific client commit hash").String()
-	testKbfsCommit := buildDarwinTest.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+	buildDarwinTest := build.Command("darwin-test", "Start a darwin test build")
+	buildDarwinCancel := build.Command("darwin-cancel", "Cancel the darwin build")
 
 	buildAndroid := build.Command("android", "Start an android build")
 
@@ -46,8 +43,8 @@ func kingpinHandler(args []string) (string, error) {
 	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
 
 	buildWindows := build.Command("windows", "start a windows build")
-	buildWindowsTest := buildWindows.Command("windows", "Start a windows test build")
-	buildWindowsCancel := buildWindows.Command("windows", "Cancel last windows build")
+	buildWindowsTest := build.Command("windows-test", "Start a windows test build")
+	buildWindowsCancel := build.Command("windows-cancel", "Cancel last windows build")
 	cancelWindowsQueueID := buildWindowsCancel.Arg("quid", "Queue id of build to stop").Required().String()
 
 	// Make sure context parses otherwise showing Usage on error will fail later
@@ -70,23 +67,18 @@ func kingpinHandler(args []string) (string, error) {
 
 	emptyArgs := []string{}
 
+	if err := setEnv("CLIENT_COMMIT", *clientCommit); err != nil {
+		return "", err
+	}
+	if err := setEnv("KBFS_COMMIT", *kbfsCommit); err != nil {
+		return "", err
+	}
+
 	switch cmd {
 	// Darwin
 	case buildDarwin.FullCommand():
-		if err := setEnv("CLIENT_COMMIT", *clientCommit); err != nil {
-			return "", err
-		}
-		if err := setEnv("KBFS_COMMIT", *kbfsCommit); err != nil {
-			return "", err
-		}
 		return buildDarwinCommand().Run(emptyArgs)
 	case buildDarwinTest.FullCommand():
-		if err := setEnv("CLIENT_COMMIT", *testClientCommit); err != nil {
-			return "", err
-		}
-		if err := setEnv("KBFS_COMMIT", *testKbfsCommit); err != nil {
-			return "", err
-		}
 		return buildDarwinTestCommand().Run(emptyArgs)
 	case buildDarwinCancel.FullCommand():
 		return buildDarwinCancelCommand().Run(emptyArgs)
@@ -95,7 +87,7 @@ func kingpinHandler(args []string) (string, error) {
 	case buildWindows.FullCommand():
 		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "")
 	case buildWindowsTest.FullCommand():
-		return jenkins.StartBuild(*testClientCommit, *testKbfsCommit, "update-windows-prod-test.json")
+		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "update-windows-prod-test.json")
 	case buildWindowsCancel.FullCommand():
 		jenkins.StopBuild(*cancelWindowsQueueID)
 		out := "Issued stop for " + *cancelWindowsQueueID
