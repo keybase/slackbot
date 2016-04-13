@@ -157,6 +157,11 @@ func addCommands(bot *slackbot.Bot) {
 		Fn:   kingpinHandler,
 	})
 
+	bot.AddCommand("release", slackbot.FuncCommand{
+		Desc: "Release all the things!",
+		Fn:   kingpinHandler,
+	})
+
 	bot.AddCommand("restart", restartCommand())
 
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
