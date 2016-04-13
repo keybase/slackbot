@@ -28,13 +28,15 @@ func kingpinHandler(args []string) (string, error) {
 	app.Writer(stringBuffer)
 
 	build := app.Command("build", "Build things")
+	test := app.Command("test", "Test")
+	cancel := app.Command("cancel", "Cancel")
 
 	clientCommit := build.Flag("client-commit", "Build a specific client commit hash").String()
 	kbfsCommit := build.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
 	buildDarwin := build.Command("darwin", "Start a darwin build")
-	buildDarwinTest := build.Command("darwin-test", "Start a darwin test build")
-	buildDarwinCancel := build.Command("darwin-cancel", "Cancel the darwin build")
+	testDarwin := test.Command("darwin", "Start a darwin test build")
+	cancelDarwin := cancel.Command("darwin", "Cancel the darwin build")
 
 	buildAndroid := build.Command("android", "Start an android build")
 
@@ -43,9 +45,9 @@ func kingpinHandler(args []string) (string, error) {
 	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
 
 	buildWindows := build.Command("windows", "start a windows build")
-	buildWindowsTest := build.Command("windows-test", "Start a windows test build")
-	buildWindowsCancel := build.Command("windows-cancel", "Cancel last windows build")
-	cancelWindowsQueueID := buildWindowsCancel.Arg("quid", "Queue id of build to stop").Required().String()
+	testWindows := test.Command("windows", "Start a windows test build")
+	cancelWindows := cancel.Command("windows", "Cancel last windows build")
+	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
 
 	// Make sure context parses otherwise showing Usage on error will fail later
 	if _, perr := app.ParseContext(args); perr != nil {
@@ -78,17 +80,17 @@ func kingpinHandler(args []string) (string, error) {
 	// Darwin
 	case buildDarwin.FullCommand():
 		return buildDarwinCommand().Run(emptyArgs)
-	case buildDarwinTest.FullCommand():
+	case testDarwin.FullCommand():
 		return buildDarwinTestCommand().Run(emptyArgs)
-	case buildDarwinCancel.FullCommand():
+	case cancelDarwin.FullCommand():
 		return buildDarwinCancelCommand().Run(emptyArgs)
 
 	// Windows
 	case buildWindows.FullCommand():
 		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "")
-	case buildWindowsTest.FullCommand():
+	case testWindows.FullCommand():
 		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "update-windows-prod-test.json")
-	case buildWindowsCancel.FullCommand():
+	case cancelWindows.FullCommand():
 		jenkins.StopBuild(*cancelWindowsQueueID)
 		out := "Issued stop for " + *cancelWindowsQueueID
 		return out, nil
