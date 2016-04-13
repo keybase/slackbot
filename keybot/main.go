@@ -21,6 +21,13 @@ func setEnv(name string, val string) error {
 	return err
 }
 
+func isParseContextValid(app *kingpin.Application, args []string) error {
+	if pcontext, perr := app.ParseContext(args); pcontext == nil {
+		return perr
+	}
+	return nil
+}
+
 func kingpinHandler(args []string) (string, error) {
 	app := kingpin.New("slackbot", "Command parser for slackbot")
 	app.Terminate(nil)
@@ -49,9 +56,10 @@ func kingpinHandler(args []string) (string, error) {
 	cancelWindows := cancel.Command("windows", "Cancel last windows build")
 	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
 
-	// Make sure context parses otherwise showing Usage on error will fail later
-	if _, perr := app.ParseContext(args); perr != nil {
-		return "", perr
+	// Make sure context is valid otherwise showing Usage on error will fail later.
+	// This is a workaround for a kingpin bug.
+	if err := isParseContextValid(app, args); err != nil {
+		return "", err
 	}
 
 	cmd, err := app.Parse(args)
