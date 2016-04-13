@@ -144,6 +144,16 @@ func addCommands(bot *slackbot.Bot) {
 		Fn:   kingpinHandler,
 	})
 
+	bot.AddCommand("test", slackbot.FuncCommand{
+		Desc: "Test all the things!",
+		Fn:   kingpinHandler,
+	})
+
+	bot.AddCommand("cancel", slackbot.FuncCommand{
+		Desc: "Cancel all the things!",
+		Fn:   kingpinHandler,
+	})
+
 	bot.AddCommand("restart", restartCommand())
 
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
