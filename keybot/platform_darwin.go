@@ -27,6 +27,10 @@ func buildAndroidCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.android.release"}, false, "Perform an alpha build")
 }
 
+func buildIOSCommand() slackbot.ExecCommand {
+	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios.release"}, false, "Perform an testflight build")
+}
+
 func restartCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.keybot"}, false, "Restart the bot")
 }

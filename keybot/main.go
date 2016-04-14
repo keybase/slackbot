@@ -46,6 +46,7 @@ func kingpinHandler(args []string) (string, error) {
 	cancelDarwin := cancel.Command("darwin", "Cancel the darwin build")
 
 	buildAndroid := build.Command("android", "Start an android build")
+	buildIOS := build.Command("ios", "Start an ios build")
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
@@ -106,6 +107,8 @@ func kingpinHandler(args []string) (string, error) {
 	// Android
 	case buildAndroid.FullCommand():
 		return buildAndroidCommand().Run(emptyArgs)
+	case buildIOS.FullCommand():
+		return buildIOSCommand().Run(emptyArgs)
 	case releasePromote.FullCommand():
 		err = setEnv("RELEASE_TO_PROMOTE", *releaseToPromote)
 		if err != nil {
