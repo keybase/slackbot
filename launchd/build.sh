@@ -7,6 +7,8 @@ cd "$dir"
 
 gopath=${GOPATH:-}
 logpath=${LOG_PATH:-}
+: ${SCRIPT_PATH:?"Need to set SCRIPT_PATH to build script"}
+
 
 if [ "$gopath" = "" ]; then
   echo "No GOPATH"
@@ -21,4 +23,4 @@ err_report() {
 
 trap 'err_report $LINENO' ERR
 
-$client_dir/packaging/prerelease/build_app.sh
+$SCRIPT_PATH

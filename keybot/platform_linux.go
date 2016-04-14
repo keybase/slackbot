@@ -30,6 +30,10 @@ func buildAndroidCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Perform an alpha build")
 }
 
+func buildIOSCommand() slackbot.ExecCommand {
+	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Perform an alpha build")
+}
+
 func restartCommand() slackbot.ExecCommand {
 	return slackbot.NewExecCommand("bash", []string{"-c", "echo not implemented; false"}, true, "Restart the bot")
 }
