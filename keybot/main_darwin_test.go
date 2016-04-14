@@ -8,7 +8,7 @@ package main
 import "testing"
 
 func TestBuildPlease(t *testing.T) {
-	out, err := kingpinHandler([]string{"build", "please"})
+	out, err := kingpinHandler([]string{"build", "darwin"})
 	if err != nil {
 		t.Fatal(err)
 	}

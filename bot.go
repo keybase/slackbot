@@ -110,9 +110,10 @@ func (b *Bot) helpMessage() string {
 	triggers := b.Triggers()
 	for _, trigger := range triggers {
 		command := b.commands[trigger]
-		msgs = append(msgs, fmt.Sprintf("`!%s`: %s", trigger, command.Description()))
+		msgs = append(msgs, fmt.Sprintf("!%s: %s", trigger, command.Description()))
 	}
-	return strings.Join(msgs, "\n")
+
+	return SlackBlockQuote(strings.Join(msgs, "\n"))
 }
 
 // Help displays help message to the channel

@@ -1,35 +1,33 @@
+// Copyright 2015 Keybase, Inc. All rights reserved. Use of
+// this source code is governed by the included BSD license.
+
 package main
 
 import (
-	"fmt"
-	"os"
-	"strings"
+	"flag"
+	"log"
 
 	"github.com/keybase/slackbot/jenkins"
 )
 
 func main() {
-	command := "build"
-
-	if len(os.Args) > 1 {
-		command = strings.ToLower(os.Args[1])
+	var f struct {
+		action             string
+		clientRev          string
+		kbfsRev            string
+		jsonUpdateFilename string
 	}
+	flag.StringVar(&f.action, "action", "build", "Action")
+	flag.StringVar(&f.clientRev, "client-rev", "", "Client commit")
+	flag.StringVar(&f.kbfsRev, "kbfs-rev", "", "KBFS commit")
+	flag.StringVar(&f.jsonUpdateFilename, "json", "", "JSON update filename")
+	flag.Parse()
 
-	switch command {
+	switch f.action {
 	case "stop":
-		jenkins.StopBuild(os.Args[2])
+		jenkins.StopBuild(flag.Arg(0))
 	case "build":
-		var clientRev, kbfsRev, JSONUpdateFilename string
-		if len(os.Args) > 2 {
-			clientRev = os.Args[2]
-			if len(os.Args) > 3 {
-				kbfsRev = os.Args[3]
-				if len(os.Args) > 4 {
-					JSONUpdateFilename = os.Args[4]
-				}
-			}
-		}
-		res, _ := jenkins.StartBuild(clientRev, kbfsRev, JSONUpdateFilename)
-		fmt.Printf("Started: %s\n", res)
+		res, _ := jenkins.StartBuild(f.clientRev, f.kbfsRev, f.jsonUpdateFilename)
+		log.Printf("Started: %s\n", res)
 	}
 }

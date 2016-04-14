@@ -16,8 +16,6 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-var lastWinBuild string
-
 func setEnv(name string, val string) error {
 	_, err := setEnvCommand(name, val).Run([]string{})
 	return err
@@ -37,26 +35,26 @@ func kingpinHandler(args []string) (string, error) {
 	app.Writer(stringBuffer)
 
 	build := app.Command("build", "Build things")
-	buildPlease := build.Command("please", "Start a build")
-	buildTest := build.Command("test", "Start a test build")
+	test := app.Command("test", "Test")
+	cancel := app.Command("cancel", "Cancel")
+
+	clientCommit := build.Flag("client-commit", "Build a specific client commit hash").String()
+	kbfsCommit := build.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+
+	buildDarwin := build.Command("darwin", "Start a darwin build")
+	testDarwin := test.Command("darwin", "Start a darwin test build")
+	cancelDarwin := cancel.Command("darwin", "Cancel the darwin build")
 
 	buildAndroid := build.Command("android", "Start an android build")
-
-	clientCommit := buildPlease.Flag("client-commit", "Build a specific client commit hash").String()
-	kbfsCommit := buildPlease.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
-
-	testClientCommit := buildTest.Flag("client-commit", "Build a specific client commit hash").String()
-	testKbfsCommit := buildTest.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
 	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
 
-	cancel := build.Command("cancel", "Cancel any existing builds")
 	buildWindows := build.Command("windows", "start a windows build")
-	testWindows := buildTest.Command("windows", "Start a windows test build")
+	testWindows := test.Command("windows", "Start a windows test build")
 	cancelWindows := cancel.Command("windows", "Cancel last windows build")
-	cancelWindowsQueueId := cancelWindows.Arg("quid", "queue id of build to stop").Required().String()
+	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
 
 	// Make sure context is valid otherwise showing Usage on error will fail later.
 	// This is a workaround for a kingpin bug.
@@ -79,57 +77,41 @@ func kingpinHandler(args []string) (string, error) {
 
 	emptyArgs := []string{}
 
+	if err := setEnv("CLIENT_COMMIT", *clientCommit); err != nil {
+		return "", err
+	}
+	if err := setEnv("KBFS_COMMIT", *kbfsCommit); err != nil {
+		return "", err
+	}
+
 	switch cmd {
-	case buildPlease.FullCommand():
-		err = setEnv("CLIENT_COMMIT", *clientCommit)
+	// Darwin
+	case buildDarwin.FullCommand():
+		return buildDarwinCommand().Run(emptyArgs)
+	case testDarwin.FullCommand():
+		return buildDarwinTestCommand().Run(emptyArgs)
+	case cancelDarwin.FullCommand():
+		return buildDarwinCancelCommand().Run(emptyArgs)
 
-		if err != nil {
-			return "", err
-		}
-
-		err = setEnv("KBFS_COMMIT", *kbfsCommit)
-
-		if err != nil {
-			return "", err
-		}
-
-		return buildStartCommand().Run(emptyArgs)
-
-	case buildAndroid.FullCommand():
-		return buildAndroidCommand().Run(emptyArgs)
-
-	case cancel.FullCommand():
-		return buildStopCommand().Run(emptyArgs)
+	// Windows
+	case buildWindows.FullCommand():
+		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "")
+	case testWindows.FullCommand():
+		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "update-windows-prod-test.json")
 	case cancelWindows.FullCommand():
-		jenkins.StopBuild(*cancelWindowsQueueId)
-		out := "Issued stop for " + *cancelWindowsQueueId
+		jenkins.StopBuild(*cancelWindowsQueueID)
+		out := "Issued stop for " + *cancelWindowsQueueID
 		return out, nil
 
+	// Android
+	case buildAndroid.FullCommand():
+		return buildAndroidCommand().Run(emptyArgs)
 	case releasePromote.FullCommand():
 		err = setEnv("RELEASE_TO_PROMOTE", *releaseToPromote)
 		if err != nil {
 			return "", err
 		}
 		return releasePromoteCommand().Run(emptyArgs)
-
-	case buildTest.FullCommand():
-		err = setEnv("CLIENT_COMMIT", *testClientCommit)
-
-		if err != nil {
-			return "", err
-		}
-
-		err = setEnv("KBFS_COMMIT", *testKbfsCommit)
-
-		if err != nil {
-			return "", err
-		}
-
-		return buildStartTestCommand().Run(emptyArgs)
-	case buildWindows.FullCommand():
-		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "")
-	case testWindows.FullCommand():
-		return jenkins.StartBuild(*testClientCommit, *testKbfsCommit, "update-windows-prod-test.json")
 	}
 	return cmd, nil
 }
@@ -167,6 +149,16 @@ func addCommands(bot *slackbot.Bot) {
 
 	bot.AddCommand("release", slackbot.FuncCommand{
 		Desc: "Release all the things!",
+		Fn:   kingpinHandler,
+	})
+
+	bot.AddCommand("test", slackbot.FuncCommand{
+		Desc: "Test all the things!",
+		Fn:   kingpinHandler,
+	})
+
+	bot.AddCommand("cancel", slackbot.FuncCommand{
+		Desc: "Cancel all the things!",
 		Fn:   kingpinHandler,
 	})
 
