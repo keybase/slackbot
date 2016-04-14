@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>keybase.ios.release</string>
+    <string>keybase.ios</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>GOPATH</key>
@@ -15,16 +15,18 @@
         <key>PATH</key>
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
         <key>LOG_PATH</key>
-        <string>/Users/test/Library/Logs/ios.release.log</string>
+        <string>/Users/test/Library/Logs/ios.log</string>
+        <key>SCRIPT_PATH</key>
+        <string>/Users/test/go/src/github.com/keybase/client/packaging/ios/build_and_publish.sh</string>
     </dict>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/test/go/src/github.com/keybase/client/packaging/ios/build_and_publish.sh</string>
+        <string>/Users/test/go/src/github.com/keybase/slackbot/launchd/build.sh</string>
     </array>
     <key>StandardErrorPath</key>
-    <string>/Users/test/Library/Logs/keybase.ios.release.log</string>
+    <string>/Users/test/Library/Logs/keybase.ios.log</string>
     <key>StandardOutPath</key>
-    <string>/Users/test/Library/Logs/keybase.ios.release.log</string>
+    <string>/Users/test/Library/Logs/keybase.ios.log</string>
 </dict>
 </plist>

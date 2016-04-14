@@ -26,6 +26,9 @@
         <string>/Users/test/Library/Logs/keybase.prerelease.test.log</string>
         <key>PLATFORM</key>
         <string>darwin</string>
+
+        <key>SCRIPT_PATH</key>
+        <string>/Users/test/go/src/github.com/keybase/client/packaging/prerelease/build_app.sh</string>
     </dict>
     <key>ProgramArguments</key>
     <array>

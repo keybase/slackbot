@@ -24,11 +24,11 @@ func buildDarwinTestCommand() slackbot.ExecCommand {
 }
 
 func buildAndroidCommand() slackbot.ExecCommand {
-	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.android.release"}, false, "Perform an alpha build")
+	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.android"}, false, "Perform an android build")
 }
 
 func buildIOSCommand() slackbot.ExecCommand {
-	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios.release"}, false, "Perform an testflight build")
+	return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios"}, false, "Perform an ios build")
 }
 
 func restartCommand() slackbot.ExecCommand {
