@@ -3,6 +3,7 @@ Description=run keybase.buildplease.service every weekday at noon
 
 [Timer]
 OnCalendar=Mon-Fri 12:00
+Persistent=true
 
 [Install]
 WantedBy=timers.target
