@@ -3,6 +3,7 @@
 TODO: I should script this. Unfortunately there are "systemctl --user"
 issues that make this difficult. Can I get around this by manually
 setting `DBUS_SESSION_BUS_ADDRESS` after the `enable-linger` call?
+(Further note, `XDG_RUNTIME_DIR` also works for this.)
 
 - Create an account called "keybasebuild": `sudo useradd -m
   keybasebuild`
