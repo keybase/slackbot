@@ -16,6 +16,7 @@ import (
 type Bot struct {
 	api        *slack.Client
 	rtm        *slack.RTM
+	user       string // user is set after connecting
 	commands   map[string]Command
 	channelIDs map[string]string
 }
@@ -121,6 +122,11 @@ func (b *Bot) Help(channel string) {
 	b.SendMessage(b.helpMessage(), channel)
 }
 
+// User returns current bot user, which is set after Listen() is called
+func (b *Bot) User() string {
+	return b.user
+}
+
 // Listen starts listening on the connection
 func (b *Bot) Listen() {
 	go b.rtm.ManageConnection()
@@ -131,6 +137,7 @@ func (b *Bot) Listen() {
 	}
 	// The Slack bot "tuxbot" should expect commands to start with "!tuxbot".
 	log.Printf("Connected to Slack as %q", auth.User)
+	b.user = auth.User
 	commandPrefix := "!" + auth.User
 
 Loop:

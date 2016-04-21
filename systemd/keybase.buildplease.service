@@ -1,6 +1,6 @@
 [Unit]
-Description=send "!tuxbot build please" to the Slack #bot channel
+Description=send "!tuxbot build linux" to the Slack #bot channel
 
 [Service]
 EnvironmentFile=/home/keybasebuild/keybot.env
-ExecStart=/home/keybasebuild/slackbot/systemd/send.sh '!tuxbot build please'
+ExecStart=/home/keybasebuild/slackbot/systemd/send.sh '!tuxbot build linux'
