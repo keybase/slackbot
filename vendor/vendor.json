@@ -1,0 +1,36 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"path": "github.com/alecthomas/template",
+			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
+			"revisionTime": "2016-04-05T17:15:01+10:00"
+		},
+		{
+			"path": "github.com/alecthomas/template/parse",
+			"revision": "a0175ee3bccc567396460bf5acd36800cb10c49c",
+			"revisionTime": "2016-04-05T17:15:01+10:00"
+		},
+		{
+			"path": "github.com/alecthomas/units",
+			"revision": "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a",
+			"revisionTime": "2015-10-22T17:55:26+11:00"
+		},
+		{
+			"path": "github.com/nlopes/slack",
+			"revision": "14b5c06da227e7d8fe3e411b58ace3977df0d00d",
+			"revisionTime": "2016-03-30T08:13:57+01:00"
+		},
+		{
+			"path": "golang.org/x/net/websocket",
+			"revision": "318395d8b12f5dd0f1b7cd0fbb95195f49acb0f9",
+			"revisionTime": "2016-04-01T23:21:16-05:00"
+		},
+		{
+			"path": "gopkg.in/alecthomas/kingpin.v2",
+			"revision": "8cccfa8eb2e3183254457fb1749b2667fbc364c7",
+			"revisionTime": "2016-02-17T20:03:01+11:00"
+		}
+	]
+}
