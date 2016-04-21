@@ -108,3 +108,35 @@ func (c FuncCommand) ShowResult() bool {
 func (c FuncCommand) Description() string {
 	return c.Desc
 }
+
+// NewPauseCommand sets Paused config to true
+func NewPauseCommand() Command {
+	return ConfigCommand{
+		Desc: "Pause any future builds",
+		Updater: func(c Config) (Config, error) {
+			c.Paused = true
+			return c, nil
+		},
+	}
+}
+
+// NewResumeCommand sets Paused config to false
+func NewResumeCommand() Command {
+	return ConfigCommand{
+		Desc: "Continue any future builds",
+		Updater: func(c Config) (Config, error) {
+			c.Paused = false
+			return c, nil
+		},
+	}
+}
+
+// NewListConfigCommand is a command that shows current config
+func NewListConfigCommand() Command {
+	return ConfigCommand{
+		Desc: "List current config",
+		Updater: func(c Config) (Config, error) {
+			return c, nil
+		},
+	}
+}
