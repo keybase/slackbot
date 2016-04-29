@@ -21,6 +21,15 @@ err_report() {
 
 trap 'err_report $LINENO' ERR
 
-"$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$bucket_name" --platform="$platform"
 
-"$client_dir/packaging/slack/send.sh" "Promoted $platform release $RELEASE_TO_PROMOTE ($bucket_name)"
+if [ -n "$RELEASE_TO_PROMOTE" ];
+then
+  "$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$bucket_name" --platform="$platform"
+  "$client_dir/packaging/slack/send.sh" "Promoted $platform release $RELEASE_TO_PROMOTE ($bucket_name)"
+else
+  "$release_bin" promote-releases --bucket-name="$bucket_name" --platform="$platform"
+  "$client_dir/packaging/slack/send.sh" "Promoted $platform release on ($bucket_name)"
+fi
+
+# TODO (mm / gh) this should happen automatically when we promote a release, otherwise it's easy to forget.
+"$release_bin" latest --bucket-name="$bucket_name" --platform="$platform"
