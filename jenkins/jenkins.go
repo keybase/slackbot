@@ -15,7 +15,7 @@ import (
 )
 
 const jenkinsURL = "http://192.168.1.10:8080"
-const jenkinsJobName = "gui_kbfs_dokan_1"
+const jenkinsJobName = "gui_kbfs_dokan"
 
 func parseQueueNumber(locationString string) string {
 	countIndex := strings.Index(locationString, "queue/item/")
