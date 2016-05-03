@@ -30,6 +30,3 @@ else
   "$release_bin" promote-releases --bucket-name="$bucket_name" --platform="$platform"
   "$client_dir/packaging/slack/send.sh" "Promoted $platform release on ($bucket_name)"
 fi
-
-# TODO (mm / gh) this should happen automatically when we promote a release, otherwise it's easy to forget.
-"$release_bin" latest --bucket-name="$bucket_name" --platform="$platform"
