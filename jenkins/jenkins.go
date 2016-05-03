@@ -60,7 +60,7 @@ func StartBuild(clientRev string, kbfsRev string, jsonUpdateFilename string) (st
 	}
 	loc, _ := res.Location()
 	log.Print(robots)
-	return parseQueueNumber(loc.String()), nil
+	return fmt.Sprintf("Requested Jenkins build with queue ID %s", parseQueueNumber(loc.String())), nil
 }
 
 func stopBuildByID(buildID string) {
