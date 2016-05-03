@@ -22,8 +22,7 @@ err_report() {
 trap 'err_report $LINENO' ERR
 
 
-if [ -n "$RELEASE_TO_PROMOTE" ];
-then
+if [ -n "$RELEASE_TO_PROMOTE" ]; then
   "$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$bucket_name" --platform="$platform"
   "$client_dir/packaging/slack/send.sh" "Promoted $platform release $RELEASE_TO_PROMOTE ($bucket_name)"
 else
