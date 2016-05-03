@@ -41,7 +41,7 @@ func kingpinKeybotHandler(args []string) (string, error) {
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
-	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").Required().String()
+	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").String()
 
 	buildWindows := build.Command("windows", "start a windows build")
 	testWindows := test.Command("windows", "Start a windows test build")
@@ -91,7 +91,7 @@ func kingpinKeybotHandler(args []string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a specific release to public").Run(emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a release to public, takes an optional specific release").Run(emptyArgs)
 	}
 	return cmd, nil
 }
