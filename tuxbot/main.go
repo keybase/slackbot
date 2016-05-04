@@ -18,6 +18,14 @@ import (
 var token string
 
 func linuxBuildFunc(channel string, args []string) (string, error) {
+	config := slackbot.ReadConfigOrDefault()
+	if config.DryRun {
+		return "Dry Run: Doing that would run `systemctl --user start keybase.prerelease.service`", nil
+	}
+	if config.Paused {
+		return "I'm paused so I can't do that, but I would have run `systemctl --user start keybase.prerelease.service`", nil
+	}
+
 	out, err := exec.Command("systemctl", "--user", "start", "keybase.prerelease.service").CombinedOutput()
 	if err != nil {
 		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.prerelease.service").CombinedOutput()

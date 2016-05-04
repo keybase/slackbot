@@ -44,7 +44,7 @@ func NewExecCommand(exec string, args []string, showResult bool, description str
 
 // Run runs the exec command
 func (c ExecCommand) Run(_ string, _ []string) (string, error) {
-	config := readConfigOrDefault()
+	config := ReadConfigOrDefault()
 
 	if config.DryRun {
 		return fmt.Sprintf("Dry Run: Doing that would run `%s` with args: %s", c.exec, c.args), nil
@@ -61,7 +61,7 @@ func (c ExecCommand) Run(_ string, _ []string) (string, error) {
 
 // ShowResult decides whether to show the results from the exec
 func (c ExecCommand) ShowResult() bool {
-	config := readConfigOrDefault()
+	config := ReadConfigOrDefault()
 	return config.DryRun || config.Paused || c.showResult
 }
 

@@ -36,7 +36,7 @@ func getConfigPath() (string, error) {
 	return filepath.Join(currentUser.HomeDir, ".keybot"), nil
 }
 
-func readConfigOrDefault() Config {
+func ReadConfigOrDefault() Config {
 	defaultConfig := Config{
 		DryRun: true,
 		Paused: false,
@@ -66,7 +66,7 @@ func readConfigOrDefault() Config {
 }
 
 func updateConfig(updater func(c Config) (Config, error)) (Config, error) {
-	config := readConfigOrDefault()
+	config := ReadConfigOrDefault()
 	newConfig, err := updater(config)
 
 	if err != nil {
@@ -96,7 +96,7 @@ func updateConfig(updater func(c Config) (Config, error)) (Config, error) {
 
 // Run the config change
 func (c ConfigCommand) Run(_ string, _ []string) (string, error) {
-	config := readConfigOrDefault()
+	config := ReadConfigOrDefault()
 
 	if config.DryRun {
 		return fmt.Sprintf("Dry Run: %s", c.Description()), nil
