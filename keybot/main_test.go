@@ -19,7 +19,7 @@ func TestAddCommands(t *testing.T) {
 }
 
 func TestBuildPlease(t *testing.T) {
-	out, err := kingpinKeybotHandler([]string{"build", "darwin"})
+	out, err := kingpinKeybotHandler("", []string{"build", "darwin"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func TestBuildPlease(t *testing.T) {
 }
 
 func TestPromoteRelease(t *testing.T) {
-	out, err := kingpinKeybotHandler([]string{"release", "promote", "1.2.3"})
+	out, err := kingpinKeybotHandler("", []string{"release", "promote", "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +39,7 @@ func TestPromoteRelease(t *testing.T) {
 }
 
 func TestInvalidUsage(t *testing.T) {
-	out, err := kingpinKeybotHandler([]string{"release", "oops"})
+	out, err := kingpinKeybotHandler("", []string{"release", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}
