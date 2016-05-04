@@ -24,17 +24,12 @@ func error(s string) {
 func main() {
 	flag.Parse()
 
-	token := os.Getenv("SLACK_TOKEN")
-	if token == "" {
-		error("SLACK_TOKEN is not set")
-	}
-
 	channel := os.Getenv("SLACK_CHANNEL")
 	if channel == "" {
 		error("SLACK_CHANNEL is not set")
 	}
 
-	api := slack.New(token)
+	api := slack.New(slackbot.GetTokenFromEnv())
 	//api.SetDebug(true)
 
 	channelIDs, err := slackbot.LoadChannelIDs(*api)

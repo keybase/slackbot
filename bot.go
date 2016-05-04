@@ -6,6 +6,7 @@ package slackbot
 import (
 	"fmt"
 	"log"
+	"os"
 	"sort"
 	"strings"
 
@@ -175,4 +176,12 @@ func SlackBlockQuote(s string) string {
 		s += "\n"
 	}
 	return "```\n" + s + "```"
+}
+
+func GetTokenFromEnv() string {
+	token := os.Getenv("SLACK_TOKEN")
+	if token == "" {
+		log.Fatal("SLACK_TOKEN is not set")
+	}
+	return token
 }

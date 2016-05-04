@@ -6,7 +6,6 @@ package main
 import (
 	"bytes"
 	"log"
-	"os"
 	"os/exec"
 
 	"github.com/keybase/slackbot"
@@ -14,8 +13,6 @@ import (
 	"github.com/nlopes/slack"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
-
-var token string
 
 func linuxBuildFunc(channel string, args []string) (string, error) {
 	config := slackbot.ReadConfigOrDefault()
@@ -29,7 +26,7 @@ func linuxBuildFunc(channel string, args []string) (string, error) {
 	out, err := exec.Command("systemctl", "--user", "start", "keybase.prerelease.service").CombinedOutput()
 	if err != nil {
 		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.prerelease.service").CombinedOutput()
-		api := slack.New(token)
+		api := slack.New(slackbot.GetTokenFromEnv())
 		snippetFile := slack.FileUploadParameters{
 			Channels: []string{channel},
 			Title:    "failed build output",
@@ -81,12 +78,7 @@ func addCommands(bot *slackbot.Bot) {
 }
 
 func main() {
-	token = os.Getenv("SLACK_TOKEN")
-	if token == "" {
-		log.Fatal("SLACK_TOKEN is not set")
-	}
-
-	bot, err := slackbot.NewBot(token)
+	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv())
 	if err != nil {
 		log.Fatal(err)
 	}

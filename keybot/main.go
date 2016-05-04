@@ -6,7 +6,6 @@ package main
 import (
 	"bytes"
 	"log"
-	"os"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
@@ -127,12 +126,7 @@ func addCommands(bot *slackbot.Bot) {
 }
 
 func main() {
-	token := os.Getenv("SLACK_TOKEN")
-	if token == "" {
-		log.Fatal("SLACK_TOKEN is not set")
-	}
-
-	bot, err := slackbot.NewBot(token)
+	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv())
 	if err != nil {
 		log.Fatal(err)
 	}
