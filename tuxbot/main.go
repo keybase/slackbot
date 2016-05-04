@@ -7,11 +7,32 @@ import (
 	"bytes"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
+	"github.com/nlopes/slack"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+var token string
+
+func linuxBuildFunc(channel string, args []string) (string, error) {
+	out, err := exec.Command("systemctl", "--user", "start", "keybase.prerelease.service").CombinedOutput()
+	if err != nil {
+		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.prerelease.service").CombinedOutput()
+		api := slack.New(token)
+		snippetFile := slack.FileUploadParameters{
+			Channels: []string{channel},
+			Title:    "failed build output",
+			Content:  string(journal),
+		}
+		api.UploadFile(snippetFile) // ignore errors here for now
+		return string(out), err
+	} else {
+		return "SUCCESS", nil
+	}
+}
 
 func kingpinTuxbotHandler(channel string, args []string) (string, error) {
 	app := kingpin.New("tuxbot", "Command parser for tuxbot")
@@ -29,7 +50,10 @@ func kingpinTuxbotHandler(channel string, args []string) (string, error) {
 
 	switch cmd {
 	case buildLinux.FullCommand():
-		return slackbot.NewExecCommand("bash", []string{"-c", "systemctl --user start keybase.prerelease.service && echo 'SUCCESS'"}, true, "Perform a linux build").Run(channel, args)
+		return slackbot.FuncCommand{
+			Desc: "Perform a linux build",
+			Fn:   linuxBuildFunc,
+		}.Run(channel, args)
 	}
 
 	return cmd, nil
@@ -49,7 +73,7 @@ func addCommands(bot *slackbot.Bot) {
 }
 
 func main() {
-	token := os.Getenv("SLACK_TOKEN")
+	token = os.Getenv("SLACK_TOKEN")
 	if token == "" {
 		log.Fatal("SLACK_TOKEN is not set")
 	}
