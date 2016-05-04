@@ -15,11 +15,11 @@ import (
 )
 
 func setDarwinEnv(name string, val string) error {
-	_, err := slackbot.NewExecCommand("/bin/launchctl", []string{"setenv", name, val}, false, "Set the env").Run([]string{})
+	_, err := slackbot.NewExecCommand("/bin/launchctl", []string{"setenv", name, val}, false, "Set the env").Run("", []string{})
 	return err
 }
 
-func kingpinKeybotHandler(args []string) (string, error) {
+func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	app := kingpin.New("keybot", "Command parser for keybot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -64,11 +64,11 @@ func kingpinKeybotHandler(args []string) (string, error) {
 	switch cmd {
 	// Darwin
 	case buildDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build").Run(emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build").Run("", emptyArgs)
 	case testDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.test"}, false, "Test the build").Run(emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.test"}, false, "Test the build").Run("", emptyArgs)
 	case cancelDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.prerelease"}, false, "Cancel a running build").Run(emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.prerelease"}, false, "Cancel a running build").Run("", emptyArgs)
 
 	// Windows
 	case buildWindows.FullCommand():
@@ -82,16 +82,16 @@ func kingpinKeybotHandler(args []string) (string, error) {
 
 	// Android
 	case buildAndroid.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.android"}, false, "Perform an android build").Run(emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.android"}, false, "Perform an android build").Run("", emptyArgs)
 	case buildIOS.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios"}, false, "Perform an ios build").Run(emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios"}, false, "Perform an ios build").Run("", emptyArgs)
 
 	case releasePromote.FullCommand():
 		err = setDarwinEnv("RELEASE_TO_PROMOTE", *releaseToPromote)
 		if err != nil {
 			return "", err
 		}
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a release to public, takes an optional specific release").Run(emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a release to public, takes an optional specific release").Run("", emptyArgs)
 	}
 	return cmd, nil
 }

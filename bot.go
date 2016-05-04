@@ -74,7 +74,7 @@ func (b *Bot) RunCommand(args []string, channel string) {
 }
 
 func (b *Bot) run(args []string, command Command, channel string) {
-	out, err := command.Run(args)
+	out, err := command.Run(channel, args)
 	if err != nil {
 		log.Printf("Error %s running: %#v; %s\n", err, command, out)
 		b.SendMessage(fmt.Sprintf("Oops, there was an error in %q:\n%s", strings.Join(args, " "), SlackBlockQuote(out)), channel)

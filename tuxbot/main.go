@@ -13,7 +13,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-func kingpinTuxbotHandler(args []string) (string, error) {
+func kingpinTuxbotHandler(channel string, args []string) (string, error) {
 	app := kingpin.New("tuxbot", "Command parser for tuxbot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -29,7 +29,7 @@ func kingpinTuxbotHandler(args []string) (string, error) {
 
 	switch cmd {
 	case buildLinux.FullCommand():
-		return slackbot.NewExecCommand("bash", []string{"-c", "systemctl --user start keybase.prerelease.service && echo 'SUCCESS'"}, true, "Perform a linux build").Run([]string{})
+		return slackbot.NewExecCommand("bash", []string{"-c", "systemctl --user start keybase.prerelease.service && echo 'SUCCESS'"}, true, "Perform a linux build").Run(channel, args)
 	}
 
 	return cmd, nil

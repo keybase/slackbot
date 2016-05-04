@@ -95,7 +95,7 @@ func updateConfig(updater func(c Config) (Config, error)) (Config, error) {
 }
 
 // Run the config change
-func (c ConfigCommand) Run(_ []string) (string, error) {
+func (c ConfigCommand) Run(_ string, _ []string) (string, error) {
 	config := readConfigOrDefault()
 
 	if config.DryRun {
