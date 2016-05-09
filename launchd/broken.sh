@@ -12,8 +12,8 @@ echo "Loading release tool"
 "$client_dir/packaging/goinstall.sh" "github.com/keybase/release"
 release_bin="$GOPATH/bin/release"
 
-"$release_bin" broken-release --release="$BROKEN_RELEASE" --bucket-name="$bucket_name" --platform="$PLATFORM"
-"$client_dir/packaging/slack/send.sh" "Broken $PLATFORM $BROKEN_RELEASE ($bucket_name)"
+"$release_bin" broken-release --release="$BROKEN_RELEASE" --bucket-name="$bucket_name"
+"$client_dir/packaging/slack/send.sh" "Broken $BROKEN_RELEASE ($bucket_name)"
 
 report=`"$release_bin" updates-report --bucket-name="$bucket_name"`
 "$client_dir/packaging/slack/send.sh" "\`\`\`$report\`\`\`"
