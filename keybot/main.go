@@ -41,6 +41,8 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
 	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").String()
+	releaseBroken := release.Command("broken", "Mark a release as broken")
+	releaseBrokenVersion := releaseBroken.Arg("version", "Mark a release as broken").Required().String()
 
 	buildWindows := build.Command("windows", "start a windows build")
 	testWindows := test.Command("windows", "Start a windows test build")
@@ -91,6 +93,12 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 			return "", err
 		}
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a release to public, takes an optional specific release").Run("", emptyArgs)
+
+	case releaseBroken.FullCommand():
+		if err = setDarwinEnv("BROKEN_RELEASE", *releaseBrokenVersion); err != nil {
+			return "", err
+		}
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.broken"}, false, "Mark a release as broken").Run("", emptyArgs)
 	}
 	return cmd, nil
 }
