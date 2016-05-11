@@ -32,11 +32,10 @@ func linuxBuildFunc(channel string, args []string) (string, error) {
 			Title:    "failed build output",
 			Content:  string(journal),
 		}
-		api.UploadFile(snippetFile) // ignore errors here for now
+		_, _ = api.UploadFile(snippetFile) // ignore errors here for now
 		return string(out), err
-	} else {
-		return "SUCCESS", nil
 	}
+	return "SUCCESS", nil
 }
 
 func kingpinTuxbotHandler(channel string, args []string) (string, error) {

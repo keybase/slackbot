@@ -54,11 +54,11 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return usage, err
 	}
 
-	if err := setDarwinEnv("CLIENT_COMMIT", *clientCommit); err != nil {
-		return "", err
+	if setErr := setDarwinEnv("CLIENT_COMMIT", *clientCommit); setErr != nil {
+		return "", setErr
 	}
-	if err := setDarwinEnv("KBFS_COMMIT", *kbfsCommit); err != nil {
-		return "", err
+	if setErr := setDarwinEnv("KBFS_COMMIT", *kbfsCommit); setErr != nil {
+		return "", setErr
 	}
 
 	emptyArgs := []string{}

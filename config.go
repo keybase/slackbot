@@ -36,6 +36,7 @@ func getConfigPath() (string, error) {
 	return filepath.Join(currentUser.HomeDir, ".keybot"), nil
 }
 
+// ReadConfigOrDefault returns config
 func ReadConfigOrDefault() Config {
 	defaultConfig := Config{
 		DryRun: true,

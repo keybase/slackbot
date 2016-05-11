@@ -117,7 +117,7 @@ func (b *Bot) helpMessage() string {
 		command := b.commands[trigger]
 		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", trigger, command.Description()))
 	}
-	w.Flush()
+	_ = w.Flush()
 
 	return SlackBlockQuote(buf.String())
 }
@@ -141,36 +141,34 @@ func (b *Bot) Listen() {
 
 Loop:
 	for {
-		select {
-		case msg := <-b.rtm.IncomingEvents:
-			switch ev := msg.Data.(type) {
-			case *slack.HelloEvent:
+		msg := <-b.rtm.IncomingEvents
+		switch ev := msg.Data.(type) {
+		case *slack.HelloEvent:
 
-			case *slack.ConnectedEvent:
+		case *slack.ConnectedEvent:
 
-			case *slack.MessageEvent:
-				args := strings.Fields(ev.Text)
-				if len(args) > 0 && args[0] == commandPrefix {
-					cmd := args[1:]
-					b.RunCommand(cmd, ev.Channel)
-				}
-
-			case *slack.PresenceChangeEvent:
-				//log.Printf("Presence Change: %v\n", ev)
-
-			case *slack.LatencyReport:
-				//log.Printf("Current latency: %v\n", ev.Value)
-
-			case *slack.RTMError:
-				log.Printf("Error: %s\n", ev.Error())
-
-			case *slack.InvalidAuthEvent:
-				log.Printf("Invalid credentials\n")
-				break Loop
-
-			default:
-				// log.Printf("Unexpected: %v\n", msg.Data)
+		case *slack.MessageEvent:
+			args := strings.Fields(ev.Text)
+			if len(args) > 0 && args[0] == commandPrefix {
+				cmd := args[1:]
+				b.RunCommand(cmd, ev.Channel)
 			}
+
+		case *slack.PresenceChangeEvent:
+			//log.Printf("Presence Change: %v\n", ev)
+
+		case *slack.LatencyReport:
+			//log.Printf("Current latency: %v\n", ev.Value)
+
+		case *slack.RTMError:
+			log.Printf("Error: %s\n", ev.Error())
+
+		case *slack.InvalidAuthEvent:
+			log.Printf("Invalid credentials\n")
+			break Loop
+
+		default:
+			// log.Printf("Unexpected: %v\n", msg.Data)
 		}
 	}
 }
@@ -183,6 +181,7 @@ func SlackBlockQuote(s string) string {
 	return "```\n" + s + "```"
 }
 
+// GetTokenFromEnv returns slack token from the environment
 func GetTokenFromEnv() string {
 	token := os.Getenv("SLACK_TOKEN")
 	if token == "" {
