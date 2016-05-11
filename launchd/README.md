@@ -28,4 +28,10 @@ GOPATH used in the plist.
 GOPATH=/Users/test/go go get -u github.com/keybase/slackbot
 GOPATH=/Users/test/go-ios go get -u github.com/keybase/slackbot
 GOPATH=/Users/test/go-android go get -u github.com/keybase/slackbot
+
+GOPATH=/Users/test/go-ios go get golang.org/x/mobile/cmd/gomobile
+/Users/test/go-ios/bin/gomobile init
+
+GOPATH=/Users/test/go-android go get golang.org/x/mobile/cmd/gomobile
+/Users/test/go-android/bin/gomobile init
 ```
