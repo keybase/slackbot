@@ -16,7 +16,8 @@ echo "Loading release tool"
 release_bin="$GOPATH/bin/release"
 
 err_report() {
-  "$client_dir/packaging/slack/send.sh" "Error see $logpath"
+  url=`$release_bin save-log --bucket-name=prerelease.keybase.io --path=$logpath --noerr`
+  "$client_dir/packaging/slack/send.sh" "Error see $url"
 }
 
 trap 'err_report $LINENO' ERR

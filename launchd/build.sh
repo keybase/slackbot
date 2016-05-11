@@ -17,10 +17,16 @@ fi
 
 client_dir="$gopath/src/github.com/keybase/client"
 
+echo "Loading release tool"
+"$client_dir/packaging/goinstall.sh" "github.com/keybase/release"
+release_bin="$GOPATH/bin/release"
+
+
 err_report() {
-  "$client_dir/packaging/slack/send.sh" "Error building, see $logpath"
+  url=`$release_bin save-log --bucket-name=prerelease.keybase.io --path=$logpath --noerr`
+  "$client_dir/packaging/slack/send.sh" "Error building, see $url"
 }
 
 trap 'err_report $LINENO' ERR
 
-$SCRIPT_PATH
+"$SCRIPT_PATH"
