@@ -4,11 +4,13 @@
 package slackbot
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/nlopes/slack"
 )
@@ -107,14 +109,17 @@ func (b *Bot) Triggers() []string {
 }
 
 func (b *Bot) helpMessage() string {
-	msgs := []string{}
-	triggers := b.Triggers()
-	for _, trigger := range triggers {
+	w := new(tabwriter.Writer)
+	buf := new(bytes.Buffer)
+	w.Init(buf, 0, 8, 0, '\t', 0)
+	fmt.Fprintln(w, "Command\tDescription")
+	for _, trigger := range b.Triggers() {
 		command := b.commands[trigger]
-		msgs = append(msgs, fmt.Sprintf("!%s: %s", trigger, command.Description()))
+		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", trigger, command.Description()))
 	}
+	w.Flush()
 
-	return SlackBlockQuote(strings.Join(msgs, "\n"))
+	return SlackBlockQuote(buf.String())
 }
 
 // Help displays help message to the channel
