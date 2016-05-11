@@ -18,3 +18,14 @@ After editing, you need to reload the plist:
 launchctl unload file.plist
 launchctl load -w file.plist
 ```
+
+### Dependencies
+
+If you are installing a plist that has dependencies be sure to get them for the
+GOPATH used in the plist.
+
+```
+GOPATH=/Users/test/go go get -u github.com/keybase/slackbot
+GOPATH=/Users/test/go-ios go get -u github.com/keybase/slackbot
+GOPATH=/Users/test/go-android go get -u github.com/keybase/slackbot
+```
