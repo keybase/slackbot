@@ -98,6 +98,10 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		if err = setDarwinEnv("BROKEN_RELEASE", *releaseBrokenVersion); err != nil {
 			return "", err
 		}
+		// Only darwin releases are supported (since we delay them)
+		if err = setDarwinEnv("BROKEN_PLATFORM", "darwin"); err != nil {
+			return "", err
+		}
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.broken"}, false, "Mark a release as broken").Run("", emptyArgs)
 	}
 	return cmd, nil
