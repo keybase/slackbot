@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>keybase.prerelease.test</string>
+    <string>keybase.prerelease</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>GOPATH</key>
