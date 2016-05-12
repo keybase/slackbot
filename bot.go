@@ -71,7 +71,7 @@ func (b *Bot) RunCommand(args []string, channel string) {
 	}
 
 	log.Printf("Command: %#v\n", command)
-	b.SendMessage(fmt.Sprintf("Sure, I will %s.", args[0]), channel)
+	b.SendMessage(fmt.Sprintf("Sure, I will `%s`.", strings.Join(args, " ")), channel)
 
 	go b.run(args, command, channel)
 }
