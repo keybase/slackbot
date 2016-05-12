@@ -13,7 +13,4 @@ echo "Loading release tool"
 release_bin="$GOPATH/bin/release"
 
 "$release_bin" broken-release --release="$BROKEN_RELEASE" --bucket-name="$bucket_name" --platform="$BROKEN_PLATFORM"
-"$client_dir/packaging/slack/send.sh" "Broken $BROKEN_RELEASE ($bucket_name)"
-
-report=`"$release_bin" updates-report --bucket-name="$bucket_name"`
-"$client_dir/packaging/slack/send.sh" "\`\`\`$report\`\`\`"
+"$client_dir/packaging/slack/send.sh" "Removed $BROKEN_RELEASE for $BROKEN_PLATFORM ($bucket_name)"
