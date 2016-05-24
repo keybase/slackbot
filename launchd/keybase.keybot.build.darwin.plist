@@ -27,7 +27,7 @@
             <key>Weekday</key>
             <integer>1</integer>
             <key>Hour</key>
-            <integer>6</integer>
+            <integer>4</integer>
         </dict>
         <dict>
             <key>Weekday</key>
@@ -39,7 +39,7 @@
             <key>Weekday</key>
             <integer>2</integer>
             <key>Hour</key>
-            <integer>6</integer>
+            <integer>4</integer>
         </dict>
         <dict>
             <key>Weekday</key>
@@ -51,7 +51,7 @@
             <key>Weekday</key>
             <integer>3</integer>
             <key>Hour</key>
-            <integer>6</integer>
+            <integer>4</integer>
         </dict>
         <dict>
             <key>Weekday</key>
@@ -63,7 +63,7 @@
             <key>Weekday</key>
             <integer>4</integer>
             <key>Hour</key>
-            <integer>6</integer>
+            <integer>4</integer>
         </dict>
         <dict>
             <key>Weekday</key>
@@ -75,7 +75,7 @@
             <key>Weekday</key>
             <integer>5</integer>
             <key>Hour</key>
-            <integer>6</integer>
+            <integer>4</integer>
         </dict>
         <dict>
             <key>Weekday</key>
