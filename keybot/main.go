@@ -44,7 +44,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	releaseBroken := release.Command("broken", "Mark a release as broken")
 	releaseBrokenVersion := releaseBroken.Arg("version", "Mark a release as broken").Required().String()
 
-	buildWindows := build.Command("windows", "start a windows build")
+	buildWindows := build.Command("windows", "Start a windows build")
 	testWindows := test.Command("windows", "Start a windows test build")
 	cancelWindows := cancel.Command("windows", "Cancel last windows build")
 	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
