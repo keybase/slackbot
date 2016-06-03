@@ -23,7 +23,7 @@ func TestBuildPlease(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out != "Dry Run: Doing that would run `/bin/launchctl` with args: [start keybase.prerelease]" {
+	if out != "Dry Run: Doing that would run `/bin/launchctl` with args: [start keybase.darwin]" {
 		t.Errorf("Unexpected output: %s", out)
 	}
 }

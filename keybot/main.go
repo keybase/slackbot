@@ -65,11 +65,11 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	switch cmd {
 	// Darwin
 	case buildDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease"}, false, "Perform a build").Run("", emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.darwin"}, false, "Perform a darwin build").Run("", emptyArgs)
 	case testDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.test"}, false, "Test the build").Run("", emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.darwin.test"}, false, "Test the darwin build").Run("", emptyArgs)
 	case cancelDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.prerelease"}, false, "Cancel a running build").Run("", emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.darwin"}, false, "Cancel a running darwin build").Run("", emptyArgs)
 
 	// Windows
 	case buildWindows.FullCommand():
