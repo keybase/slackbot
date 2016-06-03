@@ -7,6 +7,7 @@ cd "$dir"
 
 gopath=${GOPATH:-}
 logpath=${LOG_PATH:-}
+cmd=${COMMAND:-""}
 : ${SCRIPT_PATH:?"Need to set SCRIPT_PATH to run script"}
 
 
@@ -24,7 +25,7 @@ release_bin="$GOPATH/bin/release"
 
 err_report() {
   url=`$release_bin save-log --bucket-name=prerelease.keybase.io --path=$logpath --noerr`
-  "$client_dir/packaging/slack/send.sh" "Error see $url"
+  "$client_dir/packaging/slack/send.sh" "Error ($cmd), see $url"
 }
 
 trap 'err_report $LINENO' ERR
