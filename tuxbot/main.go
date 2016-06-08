@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"log"
+	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
@@ -30,7 +31,10 @@ func linuxBuildFunc(channel string, args []string) (string, error) {
 		return "", err
 	}
 	prereleaseScriptPath := filepath.Join(currentUser.HomeDir, "slackbot/systemd/prerelease.sh")
-	err = exec.Command(prereleaseScriptPath).Run()
+	prereleaseCmd := exec.Command(prereleaseScriptPath)
+	prereleaseCmd.Stdout = os.Stdout
+	prereleaseCmd.Stderr = os.Stderr
+	err = prereleaseCmd.Run()
 	if err != nil {
 		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.keybot.service").CombinedOutput()
 		api := slack.New(slackbot.GetTokenFromEnv())
