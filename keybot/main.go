@@ -30,6 +30,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 
 	clientCommit := build.Flag("client-commit", "Build a specific client commit hash").String()
 	kbfsCommit := build.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+	testClientCommit := test.Flag("client-commit", "Test a specific client commit hash").String()
 
 	buildDarwin := build.Command("darwin", "Start a darwin build")
 	testDarwin := test.Command("darwin", "Start a darwin test build")
@@ -59,6 +60,11 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	}
 	if setErr := setDarwinEnv("KBFS_COMMIT", *kbfsCommit); setErr != nil {
 		return "", setErr
+	}
+	if *testClientCommit != "" {
+		if setErr := setDarwinEnv("CLIENT_COMMIT", *testClientCommit); setErr != nil {
+			return "", setErr
+		}
 	}
 
 	emptyArgs := []string{}
