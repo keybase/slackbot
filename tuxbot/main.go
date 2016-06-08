@@ -7,6 +7,8 @@ import (
 	"bytes"
 	"log"
 	"os/exec"
+	"os/user"
+	"path/filepath"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
@@ -17,15 +19,20 @@ import (
 func linuxBuildFunc(channel string, args []string) (string, error) {
 	config := slackbot.ReadConfigOrDefault()
 	if config.DryRun {
-		return "Dry Run: Doing that would run `systemctl --user start keybase.prerelease.service`", nil
+		return "Dry Run: Doing that would run `prerelease.sh`", nil
 	}
 	if config.Paused {
-		return "I'm paused so I can't do that, but I would have run `systemctl --user start keybase.prerelease.service`", nil
+		return "I'm paused so I can't do that, but I would have run `prerelease.sh`", nil
 	}
 
-	out, err := exec.Command("systemctl", "--user", "start", "keybase.prerelease.service").CombinedOutput()
+	currentUser, err := user.Current()
 	if err != nil {
-		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.prerelease.service").CombinedOutput()
+		return "", err
+	}
+	prereleaseScriptPath := filepath.Join(currentUser.HomeDir, "slackbot/systemd/prerelease.sh")
+	out, err := exec.Command(prereleaseScriptPath).CombinedOutput()
+	if err != nil {
+		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.keybot.service").CombinedOutput()
 		api := slack.New(slackbot.GetTokenFromEnv())
 		snippetFile := slack.FileUploadParameters{
 			Channels: []string{channel},

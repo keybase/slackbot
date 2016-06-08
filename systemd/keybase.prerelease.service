@@ -1,9 +1,0 @@
-[Unit]
-Description=Run the Keybase prerelease Linux build
-
-[Service]
-Type=oneshot
-ExecStart=/home/keybasebuild/slackbot/systemd/prerelease.sh
-
-[Install]
-WantedBy=default.target
