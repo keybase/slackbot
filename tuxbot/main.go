@@ -30,7 +30,7 @@ func linuxBuildFunc(channel string, args []string) (string, error) {
 		return "", err
 	}
 	prereleaseScriptPath := filepath.Join(currentUser.HomeDir, "slackbot/systemd/prerelease.sh")
-	out, err := exec.Command(prereleaseScriptPath).CombinedOutput()
+	err = exec.Command(prereleaseScriptPath).Run()
 	if err != nil {
 		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.keybot.service").CombinedOutput()
 		api := slack.New(slackbot.GetTokenFromEnv())
@@ -40,7 +40,7 @@ func linuxBuildFunc(channel string, args []string) (string, error) {
 			Content:  string(journal),
 		}
 		_, _ = api.UploadFile(snippetFile) // ignore errors here for now
-		return string(out), err
+		return "FAILURE", err
 	}
 	return "SUCCESS", nil
 }
