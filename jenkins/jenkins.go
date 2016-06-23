@@ -15,7 +15,7 @@ import (
 )
 
 const jenkinsURL = "http://192.168.1.10:8080"
-const jenkinsJobName = "gui_kbfs_dokan"
+const jenkinsJobName = "gui_wix"
 
 func parseQueueNumber(locationString string) string {
 	countIndex := strings.Index(locationString, "queue/item/")
@@ -36,7 +36,7 @@ func StartBuild(clientRev string, kbfsRev string, jsonUpdateFilename string) (st
 		urlValues.Add("ClientRevision", clientRev)
 	}
 	if kbfsRev != "" {
-		urlValues.Add("KFSRevision", kbfsRev)
+		urlValues.Add("KBFSRevision", kbfsRev)
 	}
 	if jsonUpdateFilename != "" {
 		urlValues.Add("JSON_UPDATE_FILENAME", jsonUpdateFilename)
