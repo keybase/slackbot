@@ -18,7 +18,7 @@ func TestAddCommands(t *testing.T) {
 	addCommands(bot)
 }
 
-func TestBuildPlease(t *testing.T) {
+func TestBuildDarwin(t *testing.T) {
 	out, err := kingpinKeybotHandler("", []string{"build", "darwin"})
 	if err != nil {
 		t.Fatal(err)
