@@ -81,7 +81,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	case buildWindows.FullCommand():
 		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "")
 	case testWindows.FullCommand():
-		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "update-windows-prod-test.json")
+		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "update-windows-prod-test-v2.json")
 	case cancelWindows.FullCommand():
 		jenkins.StopBuild(*cancelWindowsQueueID)
 		out := "Issued stop for " + *cancelWindowsQueueID
