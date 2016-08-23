@@ -48,7 +48,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	buildWindows := build.Command("windows", "Start a windows build")
 	testWindows := test.Command("windows", "Start a windows test build")
 	cancelWindows := cancel.Command("windows", "Cancel last windows build")
-	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
+	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").String()
 
 	cmd, usage, err := cli.Parse(app, args, stringBuffer)
 	if usage != "" || err != nil {
@@ -84,7 +84,10 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "update-windows-prod-test-v2.json")
 	case cancelWindows.FullCommand():
 		jenkins.StopBuild(*cancelWindowsQueueID)
-		out := "Issued stop for " + *cancelWindowsQueueID
+		out := "Issued stop"
+		if *cancelWindowsQueueID != "" {
+			out = out + " for " + *cancelWindowsQueueID
+		}
 		return out, nil
 
 	// Android
