@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-const jenkinsURL = "http://192.168.1.10:8080"
+const jenkinsURL = "https://ci.keybase.io"
 const jenkinsJobName = "gui_wix"
 
 func parseQueueNumber(locationString string) string {
@@ -27,7 +27,8 @@ func parseQueueNumber(locationString string) string {
 	return strings.TrimRight(locationString[countIndex:], "/")
 }
 
-// StartBuild starts the build and returns the queue number as a string from Jenkins
+// StartBuild starts the build and returns the queue number as a string from Jenkins.
+// Also enables/resumes auto building.
 func StartBuild(clientRev string, kbfsRev string, jsonUpdateFilename string) (string, error) {
 
 	u, err := url.Parse(jenkinsURL + "/job/" + jenkinsJobName + "/buildWithParameters")
@@ -60,6 +61,9 @@ func StartBuild(clientRev string, kbfsRev string, jsonUpdateFilename string) (st
 	}
 	loc, _ := res.Location()
 	log.Print(robots)
+
+	controlJob(true)
+
 	return fmt.Sprintf("Requested Jenkins build with queue ID %s", parseQueueNumber(loc.String())), nil
 }
 
@@ -138,10 +142,30 @@ func getLastBuildAndQueueNumbers() (currentBuild int, currentQ int, err error) {
 	return
 }
 
-// StopBuild will stop/cancel the current build.
+func controlJob(enable bool) {
+	command := "disable"
+	if enable {
+		command = "enable"
+	}
+	log.Printf("%s job\n", command)
+	// Of the form: http://<Jenkins_URL>/job/<Job_Name>/disable
+	_, err := http.Post(jenkinsURL+"/job/"+jenkinsJobName+"/" + command, "", nil)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+// StopBuild will disable auto builds and 
+// stop/cancel the current build, if specified.
 // Location is the return string from a build request, e.g.:
 // http://192.168.1.10:8080/queue/item/34/
 func StopBuild(queueEntry string) {
+
+	controlJob(false)
+
+	if queueEntry == "" {
+		return
+	}
 
 	// If the build has not started, you have the queueItem, then POST on:
 	// http://<Jenkins_URL>/queue/cancelItem?id=<queueItem>
