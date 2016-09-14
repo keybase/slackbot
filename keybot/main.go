@@ -45,6 +45,11 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	releaseBroken := release.Command("broken", "Mark a release as broken")
 	releaseBrokenVersion := releaseBroken.Arg("version", "Mark a release as broken").Required().String()
 
+	smoketestBuild := app.Command("smoketest", "Set the smoke testing status of a build")
+	smoketestBuildA := smoketestBuild.Arg("build-a", "The first of the two IDs comprising the new build").Required().String()
+	smoketestBuildPlatform := smoketestBuild.Arg("platform", "The build's platform (darwin, linux, windows)").Required().String()
+	smoketestBuildEnable := smoketestBuild.Arg("enable", "Whether smoketesting should be enabled").Required().Bool()
+
 	buildWindows := build.Command("windows", "Start a windows build")
 	testWindows := test.Command("windows", "Start a windows test build")
 	cancelWindows := cancel.Command("windows", "Cancel last windows build")
@@ -109,6 +114,17 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 			return "", err
 		}
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.broken"}, false, "Mark a release as broken").Run("", emptyArgs)
+	case smoketestBuild.FullCommand():
+		if err = setDarwinEnv("SMOKETEST_BUILD_A", *smoketestBuildA); err != nil {
+			return "", err
+		}
+		if err = setDarwinEnv("SMOKETEST_BUILD_PLATFORM", *smoketestBuildPlatform); err != nil {
+			return "", err
+		}
+		if err = setDarwinEnv("SMOKETEST_BUILD_ENABLE", *smoketestBuildEnable); err != nil {
+			return "", err
+		}
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.smoketestbuild"}, false, "Start or stop smoketesting a given build").Run("", emptyArgs)
 	}
 	return cmd, nil
 }
