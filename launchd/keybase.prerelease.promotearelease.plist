@@ -22,6 +22,8 @@
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
         <key>LOG_PATH</key>
         <string>/Users/test/Library/Logs/keybase.prerelease.promotearelease.log</string>
+        <key>BUCKET_NAME</key>
+        <string>prerelease.keybase.io</string>
         <key>SCRIPT_PATH</key>
         <string>/Users/test/go/src/github.com/keybase/slackbot/launchd/promotearelease.sh</string>
         <key>PLATFORM</key>

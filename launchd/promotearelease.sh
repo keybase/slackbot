@@ -5,7 +5,6 @@ set -e -u -o pipefail # Fail on error
 dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd "$dir"
 
-bucket_name=${BUCKET_NAME:-"prerelease.keybase.io"}
 client_dir="$GOPATH/src/github.com/keybase/client"
 
 echo "Loading release tool"
