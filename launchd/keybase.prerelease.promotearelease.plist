@@ -22,11 +22,17 @@
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
         <key>LOG_PATH</key>
         <string>/Users/test/Library/Logs/keybase.prerelease.promotearelease.log</string>
+        <key>SCRIPT_PATH</key>
+        <string>/Users/test/go/src/github.com/keybase/slackbot/launchd/promotearelease.sh</string>
+        <key>PLATFORM</key>
+        <string>darwin</string>
+        <key>COMMAND</key>
+        <string>release promote</string>
     </dict>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/test/go/src/github.com/keybase/slackbot/launchd/promotearelease.sh</string>
+        <string>/Users/test/go/src/github.com/keybase/slackbot/launchd/run.sh</string>
     </array>
     <key>StandardErrorPath</key>
     <string>/Users/test/Library/Logs/keybase.prerelease.promotearelease.log</string>
