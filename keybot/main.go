@@ -97,15 +97,15 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios"}, false, "Perform an ios build").Run("", emptyArgs)
 
 	case releasePromote.FullCommand():
-		err := env.WritePlist(launchd.Script{
+		script := launchd.Script{
 			Label:   "keybase.prerelease.promotearelease",
 			Path:    "github.com/keybase/slackbot/launchd/promotearelease.sh",
 			Command: "release promote",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
 			},
-		})
-		if err != nil {
+		}
+		if err := env.WritePlist(script); err != nil {
 			return "", err
 		}
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a release to public, takes an optional specific release").Run("", emptyArgs)

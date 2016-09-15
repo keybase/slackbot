@@ -124,8 +124,8 @@ func (e Env) Plist(script Script) ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-// WritePist writes plist
-func (e Env) WritePist(script Script) error {
+// WritePlist writes out plist
+func (e Env) WritePlist(script Script) error {
 	data, err := e.Plist(script)
 	if err != nil {
 		return err
