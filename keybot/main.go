@@ -110,6 +110,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		if err := env.WritePlist(script); err != nil {
 			return "", err
 		}
+		defer env.Cleanup(script)
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a release to public, takes an optional specific release").Run("", emptyArgs)
 
 	case releaseBroken.FullCommand():
