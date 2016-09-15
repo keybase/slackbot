@@ -128,7 +128,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		if err = setDarwinEnv("SMOKETEST_BUILD_ENABLE", buildEnable); err != nil {
 			return "", err
 		}
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.smoketestbuild"}, false, "Start or stop smoketesting a given build").Run("", emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.smoketest"}, false, "Start or stop smoketesting a given build").Run("", emptyArgs)
 	}
 	return cmd, nil
 }
