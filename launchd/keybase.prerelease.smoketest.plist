@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>keybase.prerelease.smoketest</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>GOPATH</key>
+        <string>/Users/test/go</string>
+        <key>GITHUB_TOKEN</key>
+        <string></string>
+        <key>SLACK_TOKEN</key>
+        <string></string>
+        <key>SLACK_CHANNEL</key>
+        <string></string>
+        <key>AWS_ACCESS_KEY</key>
+        <string></string>
+        <key>AWS_SECRET_KEY</key>
+        <string></string>
+        <key>PATH</key>
+        <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
+        <key>LOG_PATH</key>
+        <string>/Users/test/Library/Logs/keybase.prerelease.smoketest.log</string>
+        <key>SCRIPT_PATH</key>
+        <string>/Users/test/go/src/github.com/keybase/slackbot/launchd/smoketest.sh</string>
+        <key>PLATFORM</key>
+        <string>darwin</string>
+        <key>COMMAND</key>
+        <string>build darwin</string>
+    </dict>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/test/go/src/github.com/keybase/slackbot/launchd/run.sh</string>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>/Users/test/Library/Logs/keybase.prerelease.smoketest.log</string>
+    <key>StandardOutPath</key>
+    <string>/Users/test/Library/Logs/keybase.prerelease.smoketest.log</string>
+</dict>
+</plist>
