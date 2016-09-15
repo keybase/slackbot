@@ -10,6 +10,7 @@ import (
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
 	"github.com/keybase/slackbot/jenkins"
+	"github.com/keybase/slackbot/launchd"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -55,6 +56,8 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return usage, err
 	}
 
+	env := launchd.NewEnv()
+
 	if setErr := setDarwinEnv("CLIENT_COMMIT", *clientCommit); setErr != nil {
 		return "", setErr
 	}
@@ -94,7 +97,14 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios"}, false, "Perform an ios build").Run("", emptyArgs)
 
 	case releasePromote.FullCommand():
-		err = setDarwinEnv("RELEASE_TO_PROMOTE", *releaseToPromote)
+		err := env.WritePlist(launchd.Script{
+			Label:   "keybase.prerelease.promotearelease",
+			Path:    "github.com/keybase/slackbot/launchd/promotearelease.sh",
+			Command: "release promote",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
+			},
+		})
 		if err != nil {
 			return "", err
 		}
