@@ -20,16 +20,16 @@ type Env struct {
 	SlackChannel string
 	AWSAccessKey string
 	AWSSecretKey string
-	BucketName   string
-	Platform     string
 }
 
 // Script is what to run
 type Script struct {
-	Label   string
-	Path    string
-	Command string
-	EnvVars []EnvVar
+	Label      string
+	Path       string
+	Command    string
+	BucketName string
+	Platform   string
+	EnvVars    []EnvVar
 }
 
 // EnvVar is custom env vars
@@ -68,11 +68,11 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <key>LOG_PATH</key>
         <string>{{ .Env.Home }}/Library/Logs/{{ .Script.Label }}.log</string>
         <key>BUCKET_NAME</key>
-        <string>{{ .Env.BucketName }}</string>
+        <string>{{ .Script.BucketName }}</string>
         <key>SCRIPT_PATH</key>
         <string>{{ .Env.GoPath }}/src/{{ .Script.Path }}</string>
         <key>PLATFORM</key>
-        <string>{{ .Env.Platform }}</string>
+        <string>{{ .Script.Platform }}</string>
         <key>COMMAND</key>
         <string>{{ .Script.Command }}</string>
         {{ with .Script.EnvVars }}{{ range . }}
@@ -100,11 +100,9 @@ func NewEnv() Env {
 		GoPath:       os.Getenv("GOPATH"),
 		GithubToken:  os.Getenv("GITHUB_TOKEN"),
 		SlackToken:   os.Getenv("SLACK_TOKEN"),
-		SlackChannel: "bot",
+		SlackChannel: os.Getenv("SLACK_CHANNEL"),
 		AWSAccessKey: os.Getenv("AWS_ACCESS_KEY"),
 		AWSSecretKey: os.Getenv("AWS_SECRET_KEY"),
-		BucketName:   "prerelease.keybase.io",
-		Platform:     "darwin",
 	}
 }
 

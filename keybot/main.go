@@ -98,9 +98,11 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 
 	case releasePromote.FullCommand():
 		script := launchd.Script{
-			Label:   "keybase.prerelease.promotearelease",
-			Path:    "github.com/keybase/slackbot/launchd/promotearelease.sh",
-			Command: "release promote",
+			Label:      "keybase.prerelease.promotearelease",
+			Path:       "github.com/keybase/slackbot/launchd/promotearelease.sh",
+			Command:    "release promote",
+			BucketName: "prerelease.keybase.io",
+			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
 			},
