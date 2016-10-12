@@ -160,6 +160,11 @@ func addCommands(bot *slackbot.Bot) {
 		Fn:   kingpinKeybotHandler,
 	})
 
+	bot.AddCommand("smoketest", slackbot.FuncCommand{
+		Desc: "Smoketest all the things!",
+		Fn:   kingpinKeybotHandler,
+	})
+
 	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.keybot"}, false, "Restart the bot"))
 }
 
