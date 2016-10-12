@@ -118,7 +118,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		if err = setDarwinEnv("SMOKETEST_BUILD_A", *smoketestBuildA); err != nil {
 			return "", err
 		}
-		if err = setDarwinEnv("SMOKETEST_BUILD_PLATFORM", *smoketestBuildPlatform); err != nil {
+		if err = setDarwinEnv("SMOKETEST_PLATFORM", *smoketestBuildPlatform); err != nil {
 			return "", err
 		}
 		buildEnable := "true"
