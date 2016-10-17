@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"log"
+	"strconv"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
@@ -46,9 +47,10 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	releaseBrokenVersion := releaseBroken.Arg("version", "Mark a release as broken").Required().String()
 
 	smoketestBuild := app.Command("smoketest", "Set the smoke testing status of a build")
-	smoketestBuildA := smoketestBuild.Arg("build-a", "The first of the two IDs comprising the new build").Required().String()
-	smoketestBuildPlatform := smoketestBuild.Arg("platform", "The build's platform (darwin, linux, windows)").Required().String()
-	smoketestBuildEnable := smoketestBuild.Arg("enable", "Whether smoketesting should be enabled").Required().Bool()
+	smoketestBuildA := smoketestBuild.Flag("build-a", "The first of the two IDs comprising the new build").Required().String()
+	smoketestBuildPlatform := smoketestBuild.Flag("platform", "The build's platform (darwin, linux, windows)").Required().String()
+	smoketestBuildEnable := smoketestBuild.Flag("enable", "Whether smoketesting should be enabled").Required().Bool()
+	smoketestBuildMaxTesters := smoketestBuild.Flag("max-testers", "Max number of testers for this build").Required().Int()
 
 	buildWindows := build.Command("windows", "Start a windows build")
 	testWindows := test.Command("windows", "Start a windows test build")
@@ -119,6 +121,9 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 			return "", err
 		}
 		if err = setDarwinEnv("SMOKETEST_PLATFORM", *smoketestBuildPlatform); err != nil {
+			return "", err
+		}
+		if err = setDarwinEnv("SMOKETEST_BUILD_MAX_TESTERS", strconv.Itoa(*smoketestBuildMaxTesters)); err != nil {
 			return "", err
 		}
 		buildEnable := "true"
