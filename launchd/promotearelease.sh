@@ -5,30 +5,16 @@ set -e -u -o pipefail # Fail on error
 dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd "$dir"
 
-logpath=${LOG_PATH:-}
-
 client_dir="$GOPATH/src/github.com/keybase/client"
-bucket_name="prerelease.keybase.io"
-platform="darwin"
 
 echo "Loading release tool"
 "$client_dir/packaging/goinstall.sh" "github.com/keybase/release"
 release_bin="$GOPATH/bin/release"
 
-err_report() {
-  url=`$release_bin save-log --bucket-name=prerelease.keybase.io --path=$logpath --noerr`
-  "$client_dir/packaging/slack/send.sh" "Error see $url"
-}
-
-trap 'err_report $LINENO' ERR
-
 if [ -n "$RELEASE_TO_PROMOTE" ]; then
-  "$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$bucket_name" --platform="$platform"
-  "$client_dir/packaging/slack/send.sh" "Promoted $platform release $RELEASE_TO_PROMOTE ($bucket_name)"
+  "$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$BUCKET_NAME" --platform="$PLATFORM"
+  "$client_dir/packaging/slack/send.sh" "Promoted $PLATFORM release $RELEASE_TO_PROMOTE ($BUCKET_NAME)"
 else
-  "$release_bin" promote-releases --bucket-name="$bucket_name" --platform="$platform"
-  "$client_dir/packaging/slack/send.sh" "Promoted $platform release on ($bucket_name)"
+  "$release_bin" promote-releases --bucket-name="$BUCKET_NAME" --platform="$PLATFORM"
+  "$client_dir/packaging/slack/send.sh" "Promoted $PLATFORM release on ($BUCKET_NAME)"
 fi
-
-report=`"$release_bin" updates-report --bucket-name="$bucket_name"`
-"$client_dir/packaging/slack/send.sh" "\`\`\`$report\`\`\`"
