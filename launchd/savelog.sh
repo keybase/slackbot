@@ -11,5 +11,5 @@ echo "Loading release tool"
 "$client_dir/packaging/goinstall.sh" "github.com/keybase/release"
 release_bin="$GOPATH/bin/release"
 
-url=`"$release_bin" save-log --bucket-name=prerelease.keybase.io --path="$logpath"`
+url=`"$release_bin" save-log --bucket-name=$BUCKET_NAME --path="$READ_PATH"`
 "$client_dir/packaging/slack/send.sh" "Log saved to $url"

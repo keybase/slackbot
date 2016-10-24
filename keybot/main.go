@@ -118,12 +118,16 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return runScript(env, script)
 
 	case logCmd.FullCommand():
+		label := "keybase.savelog"
 		script := launchd.Script{
-			Label:      "keybase.savelog",
+			Label:      label,
 			Path:       "github.com/keybase/slackbot/launchd/savelog.sh",
 			Command:    "log",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "READ_PATH", Value: env.LogPath(label)},
+			},
 		}
 		return runScript(env, script)
 

@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"text/template"
 )
 
@@ -109,6 +110,11 @@ func NewEnv() Env {
 		AWSSecretKey: os.Getenv("AWS_SECRET_KEY"),
 		KeybaseToken: os.Getenv("KEYBASE_TOKEN"),
 	}
+}
+
+// LogPath returns path to log for label
+func (e Env) LogPath(label string) string {
+	return filepath.Join(e.Home, "Library/Logs", label+".log")
 }
 
 // Plist is plist for env and args
