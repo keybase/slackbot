@@ -21,6 +21,7 @@ type Env struct {
 	SlackChannel string
 	AWSAccessKey string
 	AWSSecretKey string
+	KeybaseToken string
 }
 
 // Script is what to run
@@ -64,6 +65,8 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <string>{{ .Env.AWSAccessKey }}</string>
         <key>AWS_SECRET_KEY</key>
         <string>{{ .Env.AWSSecretKey }}</string>
+				<key>KEYBASE_TOKEN</key>
+        <string>{{ .Env.KeybaseToken }}</string>
         <key>PATH</key>
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
         <key>LOG_PATH</key>
@@ -104,6 +107,7 @@ func NewEnv() Env {
 		SlackChannel: os.Getenv("SLACK_CHANNEL"),
 		AWSAccessKey: os.Getenv("AWS_ACCESS_KEY"),
 		AWSSecretKey: os.Getenv("AWS_SECRET_KEY"),
+		KeybaseToken: os.Getenv("KEYBASE_TOKEN"),
 	}
 }
 
