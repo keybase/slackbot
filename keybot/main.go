@@ -134,7 +134,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		if err := env.WritePlist(script); err != nil {
 			return "", err
 		}
-		defer env.Cleanup(script)
+		// defer env.Cleanup(script)
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", label}, false, "").Run("", emptyArgs)
 
 	case releaseBroken.FullCommand():
