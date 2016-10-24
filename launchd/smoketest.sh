@@ -11,5 +11,5 @@ echo "Loading release tool"
 "$client_dir/packaging/goinstall.sh" "github.com/keybase/release"
 release_bin="$GOPATH/bin/release"
 
-"$release_bin" set-build-in-testing --build-a="$SMOKETEST_BUILD_A" --platform="$SMOKETEST_PLATFORM" --enable="$SMOKETEST_BUILD_ENABLE --max-testers="$SMOKETEST_MAX_TESTERS"
+"$release_bin" set-build-in-testing --build-a="$SMOKETEST_BUILD_A" --platform="$SMOKETEST_PLATFORM" --enable="$SMOKETEST_BUILD_ENABLE" --max-testers="$SMOKETEST_MAX_TESTERS"
 "$client_dir/packaging/slack/send.sh" "Successfully set enable to $SMOKETEST_BUILD_ENABLE for release $SMOKETEST_BUILD_A."
