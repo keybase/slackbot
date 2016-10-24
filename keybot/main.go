@@ -105,9 +105,8 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios"}, false, "Perform an ios build").Run("", emptyArgs)
 
 	case releasePromote.FullCommand():
-		label := "keybase.prerelease.promotearelease"
 		script := launchd.Script{
-			Label:      label,
+			Label:      "keybase.prerelease.promotearelease",
 			Path:       "github.com/keybase/slackbot/launchd/promotearelease.sh",
 			Command:    "release promote",
 			BucketName: "prerelease.keybase.io",
@@ -116,26 +115,17 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
 			},
 		}
-		if err := env.WritePlist(script); err != nil {
-			return "", err
-		}
-		defer env.Cleanup(script)
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", label}, false, "Promote a release to public, takes an optional specific release").Run("", emptyArgs)
+		return runScript(env, script)
 
 	case logCmd.FullCommand():
-		label := "keybase.savelog"
 		script := launchd.Script{
-			Label:      label,
+			Label:      "keybase.savelog",
 			Path:       "github.com/keybase/slackbot/launchd/savelog.sh",
 			Command:    "log",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 		}
-		if err := env.WritePlist(script); err != nil {
-			return "", err
-		}
-		// defer env.Cleanup(script)
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", label}, false, "").Run("", emptyArgs)
+		return runScript(env, script)
 
 	case releaseBroken.FullCommand():
 		if err := setDarwinEnv("BROKEN_RELEASE", *releaseBrokenVersion); err != nil {
@@ -166,6 +156,14 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.smoketest"}, false, "Start or stop smoketesting a given build").Run("", emptyArgs)
 	}
 	return cmd, nil
+}
+
+func runScript(env launchd.Env, script launchd.Script) (string, error) {
+	if err := env.WritePlist(script); err != nil {
+		return "", err
+	}
+	// defer env.Cleanup(script)
+	return launchd.NewStartCommand(script.Label).Run("", nil)
 }
 
 func addCommands(bot *slackbot.Bot) {

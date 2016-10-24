@@ -65,7 +65,7 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <string>{{ .Env.AWSAccessKey }}</string>
         <key>AWS_SECRET_KEY</key>
         <string>{{ .Env.AWSSecretKey }}</string>
-				<key>KEYBASE_TOKEN</key>
+        <key>KEYBASE_TOKEN</key>
         <string>{{ .Env.KeybaseToken }}</string>
         <key>PATH</key>
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
