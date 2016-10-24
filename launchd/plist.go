@@ -6,10 +6,10 @@ package launchd
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
+	"text/template"
 )
 
 // Env is environment for launchd
