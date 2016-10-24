@@ -10,13 +10,15 @@ import (
 
 // StartCommand loads and starts a launchd job
 type StartCommand struct {
-	label string
+	plistPath string
+	label     string
 }
 
 // NewStartCommand creates a StartCommand
-func NewStartCommand(label string) StartCommand {
+func NewStartCommand(plistPath string, label string) StartCommand {
 	return StartCommand{
-		label: label,
+		plistPath: plistPath,
+		label:     label,
 	}
 }
 
@@ -32,12 +34,12 @@ func (c StartCommand) Run(_ string, _ []string) (string, error) {
 	// 	return fmt.Sprintf("I'm paused so I can't do that, but I would have run a launchd job (%s)", c.label), nil
 	// }
 
-	if _, err := exec.Command("/bin/launchctl", "load", c.label).CombinedOutput(); err != nil {
-		return "", err
+	if _, err := exec.Command("/bin/launchctl", "load", c.plistPath).CombinedOutput(); err != nil {
+		return "", fmt.Errorf("Error in launchctl load: %s", err)
 	}
 
 	if _, err := exec.Command("/bin/launchctl", "start", c.label).CombinedOutput(); err != nil {
-		return "", err
+		return "", fmt.Errorf("Error in launchctl start: %s", err)
 	}
 
 	return "", nil

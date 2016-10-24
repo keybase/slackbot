@@ -159,11 +159,12 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 }
 
 func runScript(env launchd.Env, script launchd.Script) (string, error) {
-	if err := env.WritePlist(script); err != nil {
+	path, err := env.WritePlist(script)
+	if err != nil {
 		return "", err
 	}
 	// defer env.Cleanup(script)
-	return launchd.NewStartCommand(script.Label).Run("", nil)
+	return launchd.NewStartCommand(path, script.Label).Run("", nil)
 }
 
 func addCommands(bot *slackbot.Bot) {
