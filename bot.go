@@ -17,10 +17,11 @@ import (
 
 // Bot defines a Slack bot
 type Bot struct {
-	api        *slack.Client
-	rtm        *slack.RTM
-	commands   map[string]Command
-	channelIDs map[string]string
+	api            *slack.Client
+	rtm            *slack.RTM
+	commands       map[string]Command
+	defaultCommand Command
+	channelIDs     map[string]string
 }
 
 // NewBot constructs a bot from a Slack token
@@ -57,23 +58,32 @@ func (b *Bot) AddCommand(trigger string, command Command) {
 	b.commands[trigger] = command
 }
 
+// SetDefault is the default command, if no command added for trigger
+func (b *Bot) SetDefault(command Command) {
+	b.defaultCommand = command
+}
+
 // RunCommand runs a command
-func (b *Bot) RunCommand(args []string, channel string) {
+func (b *Bot) RunCommand(args []string, channel string) error {
 	if len(args) == 0 || args[0] == "help" {
 		b.Help(channel)
-		return
+		return nil
 	}
 
 	command, ok := b.commands[args[0]]
 	if !ok {
-		log.Printf("Unrecognized command: %q", args)
-		return
+		if b.defaultCommand != nil {
+			command = b.defaultCommand
+		} else {
+			return fmt.Errorf("Unrecognized command: %q", args)
+		}
 	}
 
 	log.Printf("Command: %#v\n", command)
 	b.SendMessage(fmt.Sprintf("Sure, I will `%s`.", strings.Join(args, " ")), channel)
 
 	go b.run(args, command, channel)
+	return nil
 }
 
 func (b *Bot) run(args []string, command Command, channel string) {

@@ -190,38 +190,11 @@ func addCommands(bot *slackbot.Bot) {
 	bot.AddCommand("resume", slackbot.NewResumeCommand())
 	bot.AddCommand("config", slackbot.NewListConfigCommand())
 	bot.AddCommand("toggle-dryrun", slackbot.ToggleDryRunCommand{})
-
-	bot.AddCommand("build", slackbot.FuncCommand{
-		Desc: "Build all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("release", slackbot.FuncCommand{
-		Desc: "Release all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("test", slackbot.FuncCommand{
-		Desc: "Test all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("cancel", slackbot.FuncCommand{
-		Desc: "Cancel all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("smoketest", slackbot.FuncCommand{
-		Desc: "Smoketest all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("dumplog", slackbot.FuncCommand{
-		Desc: "Access logs",
-		Fn:   kingpinKeybotHandler,
-	})
-
 	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.keybot"}, false, "Restart the bot"))
+
+	bot.SetDefault(slackbot.FuncCommand{
+		Fn: kingpinKeybotHandler,
+	})
 }
 
 func main() {
