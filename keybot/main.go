@@ -60,7 +60,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
 
 	dumplogCmd := app.Command("dumplog", "Dump log for viewing")
-	dumplogName := dumplogCmd.Flag("name", "Log name").Required().String()
+	dumplogCommandArgs := dumplogCmd.Flag("command", "Command name").Required().String()
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -121,8 +121,7 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return runScript(env, script)
 
 	case dumplogCmd.FullCommand():
-		label := "keybase." + strings.Replace(*dumplogName, " ", ".", -1)
-		readPath, err := env.LogPath(label)
+		readPath, err := env.LogPath(labelForCommand(*dumplogCommandArgs))
 		if err != nil {
 			return "", err
 		}
@@ -138,14 +137,18 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return runScript(env, script)
 
 	case releaseBroken.FullCommand():
-		if err := setDarwinEnv("BROKEN_RELEASE", *releaseBrokenVersion); err != nil {
-			return "", err
+		script := launchd.Script{
+			Label:      "keybase.release.broken",
+			Path:       "github.com/keybase/slackbot/scripts/release.broken.sh",
+			Command:    "release broken",
+			BucketName: "prerelease.keybase.io",
+			Platform:   "darwin",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "BROKEN_RELEASE", Value: *releaseBrokenVersion},
+			},
 		}
-		// Only darwin releases are supported (since we delay them)
-		if err := setDarwinEnv("BROKEN_PLATFORM", "darwin"); err != nil {
-			return "", err
-		}
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.broken"}, false, "Mark a release as broken").Run("", emptyArgs)
+		return runScript(env, script)
+
 	case smoketestBuild.FullCommand():
 		if err := setDarwinEnv("SMOKETEST_BUILD_A", *smoketestBuildA); err != nil {
 			return "", err
@@ -166,6 +169,10 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.smoketest"}, false, "Start or stop smoketesting a given build").Run("", emptyArgs)
 	}
 	return cmd, nil
+}
+
+func labelForCommand(cmd string) string {
+	return "keybase." + strings.Replace(cmd, " ", ".", -1)
 }
 
 func runScript(env launchd.Env, script launchd.Script) (string, error) {
