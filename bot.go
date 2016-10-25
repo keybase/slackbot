@@ -148,7 +148,7 @@ Loop:
 		case *slack.ConnectedEvent:
 
 		case *slack.MessageEvent:
-			args := strings.Fields(ev.Text)
+			args := parseInput(ev.Text)
 			if len(args) > 0 && args[0] == commandPrefix {
 				cmd := args[1:]
 				b.RunCommand(cmd, ev.Channel)
@@ -188,4 +188,63 @@ func GetTokenFromEnv() string {
 		log.Fatal("SLACK_TOKEN is not set")
 	}
 	return token
+}
+
+func isSpace(r rune) bool {
+	switch r {
+	case ' ', '\t', '\r', '\n':
+		return true
+	}
+	return false
+}
+
+func parseInput(s string) []string {
+	buf := ""
+	args := []string{}
+	var escaped, doubleQuoted, singleQuoted bool
+	for _, r := range s {
+		if escaped {
+			buf += string(r)
+			escaped = false
+			continue
+		}
+
+		if r == '\\' {
+			if singleQuoted {
+				buf += string(r)
+			} else {
+				escaped = true
+			}
+			continue
+		}
+
+		if isSpace(r) {
+			if singleQuoted || doubleQuoted {
+				buf += string(r)
+			} else if buf != "" {
+				args = append(args, buf)
+				buf = ""
+			}
+			continue
+		}
+
+		switch r {
+		case '"':
+			if !singleQuoted {
+				doubleQuoted = !doubleQuoted
+				continue
+			}
+		case '\'':
+			if !doubleQuoted {
+				singleQuoted = !singleQuoted
+				continue
+			}
+		}
+
+		buf += string(r)
+	}
+	if buf != "" {
+		args = append(args, buf)
+	}
+	return args
 }
