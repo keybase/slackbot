@@ -34,6 +34,10 @@ func (c StartCommand) Run(_ string, _ []string) (string, error) {
 	// 	return fmt.Sprintf("I'm paused so I can't do that, but I would have run a launchd job (%s)", c.label), nil
 	// }
 
+	if _, err := exec.Command("/bin/launchctl", "unload", c.plistPath).CombinedOutput(); err != nil {
+		return "", fmt.Errorf("Error in launchctl unload: %s", err)
+	}
+
 	if _, err := exec.Command("/bin/launchctl", "load", c.plistPath).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("Error in launchctl load: %s", err)
 	}

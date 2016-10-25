@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -113,8 +114,11 @@ func NewEnv() Env {
 }
 
 // LogPath returns path to log for label
-func (e Env) LogPath(label string) string {
-	return filepath.Join(e.Home, "Library/Logs", label+".log")
+func (e Env) LogPath(label string) (string, error) {
+	if strings.Contains(label, "..") || strings.Contains(label, "/") || strings.Contains(label, `\`) {
+		return "", fmt.Errorf("Invalid label")
+	}
+	return filepath.Join(e.Home, "Library/Logs", label+".log"), nil
 }
 
 // Plist is plist for env and args

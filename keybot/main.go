@@ -29,7 +29,6 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	build := app.Command("build", "Build things")
 	test := app.Command("test", "Test")
 	cancel := app.Command("cancel", "Cancel")
-	logCmd := app.Command("log", "Access logs")
 
 	clientCommit := build.Flag("client-commit", "Build a specific client commit hash").String()
 	kbfsCommit := build.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
@@ -58,6 +57,9 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	testWindows := test.Command("windows", "Start a windows test build")
 	cancelWindows := cancel.Command("windows", "Cancel last windows build")
 	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
+
+	logCmd := app.Command("log", "Access logs")
+	logLabel := logCmd.Flag("label", "Job label").Required().String()
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -118,15 +120,18 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		return runScript(env, script)
 
 	case logCmd.FullCommand():
-		label := "keybase.savelog"
+		readPath, err := env.LogPath(*logLabel)
+		if err != nil {
+			return "", err
+		}
 		script := launchd.Script{
-			Label:      label,
+			Label:      "keybase.savelog",
 			Path:       "github.com/keybase/slackbot/launchd/savelog.sh",
 			Command:    "log",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "READ_PATH", Value: env.LogPath(label)},
+				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
 			},
 		}
 		return runScript(env, script)
