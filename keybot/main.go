@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
@@ -58,8 +59,8 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	cancelWindows := cancel.Command("windows", "Cancel last windows build")
 	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
 
-	logCmd := app.Command("log", "Access logs")
-	logLabel := logCmd.Flag("label", "Job label").Required().String()
+	dumplogCmd := app.Command("dumplog", "Dump log for viewing")
+	dumplogName := dumplogCmd.Flag("name", "Log name").Required().String()
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -108,8 +109,8 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 
 	case releasePromote.FullCommand():
 		script := launchd.Script{
-			Label:      "keybase.prerelease.promotearelease",
-			Path:       "github.com/keybase/slackbot/launchd/promotearelease.sh",
+			Label:      "keybase.release.promote",
+			Path:       "github.com/keybase/slackbot/scripts/release.promote.sh",
 			Command:    "release promote",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
@@ -119,17 +120,17 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 		}
 		return runScript(env, script)
 
-	case logCmd.FullCommand():
-		readPath, err := env.LogPath(*logLabel)
+	case dumplogCmd.FullCommand():
+		label := "keybase." + strings.Replace(*dumplogName, " ", ".", -1)
+		readPath, err := env.LogPath(label)
 		if err != nil {
 			return "", err
 		}
 		script := launchd.Script{
-			Label:      "keybase.savelog",
-			Path:       "github.com/keybase/slackbot/launchd/savelog.sh",
-			Command:    "log",
+			Label:      "keybase.dumplog",
+			Path:       "github.com/keybase/slackbot/scripts/dumplog.sh",
+			Command:    "dumplog",
 			BucketName: "prerelease.keybase.io",
-			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
 			},
