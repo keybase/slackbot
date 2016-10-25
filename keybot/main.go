@@ -173,7 +173,7 @@ func runScript(env launchd.Env, script launchd.Script) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// defer env.Cleanup(script)
+	defer env.Cleanup(script)
 	return launchd.NewStartCommand(path, script.Label).Run("", nil)
 }
 
