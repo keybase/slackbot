@@ -51,6 +51,14 @@ func (c StartCommand) Run(_ string, _ []string) (string, error) {
 	return "", nil
 }
 
+// Stop a launchd job
+func Stop(label string) (string, error) {
+	if _, err := exec.Command("/bin/launchctl", "stop", label).CombinedOutput(); err != nil {
+		return "", fmt.Errorf("Error in launchctl stop: %s", err)
+	}
+	return "", nil
+}
+
 // ShowResult decides whether to show the results from the exec
 func (c StartCommand) ShowResult() bool {
 	return false

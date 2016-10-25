@@ -113,6 +113,12 @@ func NewEnv() Env {
 	}
 }
 
+// PathFromHome returns path from home dir for env
+func (e Env) PathFromHome(path string) string {
+	dir := os.Getenv("HOME")
+	return filepath.Join(dir, path)
+}
+
 // LogPath returns path to log for label
 func (e Env) LogPath(label string) (string, error) {
 	if strings.Contains(label, "..") || strings.Contains(label, "/") || strings.Contains(label, `\`) {
