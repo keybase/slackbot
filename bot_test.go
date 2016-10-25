@@ -20,3 +20,10 @@ func TestHelp(t *testing.T) {
 	}
 	t.Logf("Help:\n%s", msg)
 }
+
+func TestParseInput(t *testing.T) {
+	args := parseInput(`!keybot dumplog --name="release promote"`)
+	if args[0] != "!keybot" || args[1] != "dumplog" || args[2] != `--name=release promote` {
+		t.Fatal("Invalid parse")
+	}
+}

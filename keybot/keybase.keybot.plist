@@ -18,6 +18,8 @@
         <string></string>
         <key>AWS_SECRET_KEY</key>
         <string></string>
+        <key>KEYBASE_TOKEN</key>
+        <string></string>
         <key>PATH</key>
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
     </dict>

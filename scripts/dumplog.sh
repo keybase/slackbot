@@ -6,11 +6,10 @@ dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd "$dir"
 
 client_dir="$GOPATH/src/github.com/keybase/client"
-bucket_name="prerelease.keybase.io"
 
 echo "Loading release tool"
 "$client_dir/packaging/goinstall.sh" "github.com/keybase/release"
 release_bin="$GOPATH/bin/release"
 
-"$release_bin" broken-release --release="$BROKEN_RELEASE" --bucket-name="$bucket_name" --platform="$BROKEN_PLATFORM"
-"$client_dir/packaging/slack/send.sh" "Removed $BROKEN_RELEASE for $BROKEN_PLATFORM ($bucket_name)"
+url=`"$release_bin" save-log --bucket-name=$BUCKET_NAME --path="$READ_PATH"`
+"$client_dir/packaging/slack/send.sh" "Log saved to $url"

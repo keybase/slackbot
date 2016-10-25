@@ -7,10 +7,10 @@ import (
 	"bytes"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
-	"github.com/keybase/slackbot/jenkins"
 	"github.com/keybase/slackbot/launchd"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -20,23 +20,20 @@ func setDarwinEnv(name string, val string) error {
 	return err
 }
 
-func kingpinKeybotHandler(channel string, args []string) (string, error) {
-	app := kingpin.New("keybot", "Command parser for keybot")
+func jobKeybotHandler(channel string, args []string) (string, error) {
+	app := kingpin.New("keybot", "Job command parser for keybot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
 	app.Writer(stringBuffer)
 
 	build := app.Command("build", "Build things")
-	test := app.Command("test", "Test")
-	cancel := app.Command("cancel", "Cancel")
-
-	clientCommit := build.Flag("client-commit", "Build a specific client commit hash").String()
-	kbfsCommit := build.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
-	testClientCommit := test.Flag("client-commit", "Test a specific client commit hash").String()
 
 	buildDarwin := build.Command("darwin", "Start a darwin build")
-	testDarwin := test.Command("darwin", "Start a darwin test build")
-	cancelDarwin := cancel.Command("darwin", "Cancel the darwin build")
+	clientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit hash").String()
+	kbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+
+	cancel := app.Command("cancel", "Cancel")
+	cancelCommandArgs := cancel.Flag("command", "Command name").Required().String()
 
 	buildAndroid := build.Command("android", "Start an android build")
 	buildIOS := build.Command("ios", "Start an ios build")
@@ -53,60 +50,60 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 	smoketestBuildEnable := smoketestBuild.Flag("enable", "Whether smoketesting should be enabled").Required().Bool()
 	smoketestBuildMaxTesters := smoketestBuild.Flag("max-testers", "Max number of testers for this build").Required().Int()
 
-	buildWindows := build.Command("windows", "Start a windows build")
-	testWindows := test.Command("windows", "Start a windows test build")
-	cancelWindows := cancel.Command("windows", "Cancel last windows build")
-	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").Required().String()
+	dumplogCmd := app.Command("dumplog", "Dump log for viewing")
+	dumplogCommandArgs := dumplogCmd.Flag("command", "Command name").Required().String()
 
-	cmd, usage, err := cli.Parse(app, args, stringBuffer)
-	if usage != "" || err != nil {
-		return usage, err
+	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
+	if usage != "" || cmdErr != nil {
+		return usage, cmdErr
 	}
 
-	env := launchd.NewEnv()
-
-	if setErr := setDarwinEnv("CLIENT_COMMIT", *clientCommit); setErr != nil {
-		return "", setErr
-	}
-	if setErr := setDarwinEnv("KBFS_COMMIT", *kbfsCommit); setErr != nil {
-		return "", setErr
-	}
-	if *testClientCommit != "" {
-		if setErr := setDarwinEnv("CLIENT_COMMIT", *testClientCommit); setErr != nil {
-			return "", setErr
-		}
-	}
-
-	emptyArgs := []string{}
 	switch cmd {
-	// Darwin
+	case cancel.FullCommand():
+		label := labelForCommand(*cancelCommandArgs)
+		return launchd.Stop(label)
+
 	case buildDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.darwin"}, false, "Perform a darwin build").Run("", emptyArgs)
-	case testDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.darwin.test"}, false, "Test the darwin build").Run("", emptyArgs)
-	case cancelDarwin.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.darwin"}, false, "Cancel a running darwin build").Run("", emptyArgs)
+		script := launchd.Script{
+			Label:      "keybase.build.darwin",
+			Path:       "github.com/keybase/client/packaging/prerelease/pull_build.sh",
+			Command:    "build darwin",
+			BucketName: "prerelease.keybase.io",
+			Platform:   "darwin",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *clientCommit},
+				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *kbfsCommit},
+			},
+		}
+		return runScript(launchd.NewEnv(), script)
 
-	// Windows
-	case buildWindows.FullCommand():
-		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "")
-	case testWindows.FullCommand():
-		return jenkins.StartBuild(*clientCommit, *kbfsCommit, "update-windows-prod-test-v2.json")
-	case cancelWindows.FullCommand():
-		jenkins.StopBuild(*cancelWindowsQueueID)
-		out := "Issued stop for " + *cancelWindowsQueueID
-		return out, nil
-
-	// Android
 	case buildAndroid.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.android"}, false, "Perform an android build").Run("", emptyArgs)
+
+		script := launchd.Script{
+			Label:      "keybase.build.android",
+			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
+			Command:    "build android",
+			BucketName: "prerelease.keybase.io",
+		}
+		env := launchd.NewEnv()
+		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
+		return runScript(env, script)
+
 	case buildIOS.FullCommand():
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.ios"}, false, "Perform an ios build").Run("", emptyArgs)
+		script := launchd.Script{
+			Label:      "keybase.build.ios",
+			Path:       "github.com/keybase/client/packaging/ios/build_and_publish.sh",
+			Command:    "build ios",
+			BucketName: "prerelease.keybase.io",
+		}
+		env := launchd.NewEnv()
+		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
+		return runScript(env, script)
 
 	case releasePromote.FullCommand():
 		script := launchd.Script{
-			Label:      "keybase.prerelease.promotearelease",
-			Path:       "github.com/keybase/slackbot/launchd/promotearelease.sh",
+			Label:      "keybase.release.promote",
+			Path:       "github.com/keybase/slackbot/scripts/release.promote.sh",
 			Command:    "release promote",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
@@ -114,41 +111,71 @@ func kingpinKeybotHandler(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
 			},
 		}
-		if err := env.WritePlist(script); err != nil {
+		return runScript(launchd.NewEnv(), script)
+
+	case dumplogCmd.FullCommand():
+		env := launchd.NewEnv()
+		readPath, err := env.LogPath(labelForCommand(*dumplogCommandArgs))
+		if err != nil {
 			return "", err
 		}
-		defer env.Cleanup(script)
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.promotearelease"}, false, "Promote a release to public, takes an optional specific release").Run("", emptyArgs)
+		script := launchd.Script{
+			Label:      "keybase.dumplog",
+			Path:       "github.com/keybase/slackbot/scripts/dumplog.sh",
+			Command:    "dumplog",
+			BucketName: "prerelease.keybase.io",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
+			},
+		}
+		return runScript(env, script)
 
 	case releaseBroken.FullCommand():
-		if err = setDarwinEnv("BROKEN_RELEASE", *releaseBrokenVersion); err != nil {
-			return "", err
+		script := launchd.Script{
+			Label:      "keybase.release.broken",
+			Path:       "github.com/keybase/slackbot/scripts/release.broken.sh",
+			Command:    "release broken",
+			BucketName: "prerelease.keybase.io",
+			Platform:   "darwin",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "BROKEN_RELEASE", Value: *releaseBrokenVersion},
+			},
 		}
-		// Only darwin releases are supported (since we delay them)
-		if err = setDarwinEnv("BROKEN_PLATFORM", "darwin"); err != nil {
-			return "", err
-		}
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.broken"}, false, "Mark a release as broken").Run("", emptyArgs)
+		return runScript(launchd.NewEnv(), script)
+
 	case smoketestBuild.FullCommand():
-		if err = setDarwinEnv("SMOKETEST_BUILD_A", *smoketestBuildA); err != nil {
+		if err := setDarwinEnv("SMOKETEST_BUILD_A", *smoketestBuildA); err != nil {
 			return "", err
 		}
-		if err = setDarwinEnv("SMOKETEST_PLATFORM", *smoketestBuildPlatform); err != nil {
+		if err := setDarwinEnv("SMOKETEST_PLATFORM", *smoketestBuildPlatform); err != nil {
 			return "", err
 		}
-		if err = setDarwinEnv("SMOKETEST_MAX_TESTERS", strconv.Itoa(*smoketestBuildMaxTesters)); err != nil {
+		if err := setDarwinEnv("SMOKETEST_MAX_TESTERS", strconv.Itoa(*smoketestBuildMaxTesters)); err != nil {
 			return "", err
 		}
 		buildEnable := "true"
 		if !*smoketestBuildEnable {
 			buildEnable = "false"
 		}
-		if err = setDarwinEnv("SMOKETEST_BUILD_ENABLE", buildEnable); err != nil {
+		if err := setDarwinEnv("SMOKETEST_BUILD_ENABLE", buildEnable); err != nil {
 			return "", err
 		}
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.smoketest"}, false, "Start or stop smoketesting a given build").Run("", emptyArgs)
+		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.smoketest"}, false, "Start or stop smoketesting a given build").Run("", nil)
 	}
 	return cmd, nil
+}
+
+func labelForCommand(cmd string) string {
+	return "keybase." + strings.Replace(cmd, " ", ".", -1)
+}
+
+func runScript(env launchd.Env, script launchd.Script) (string, error) {
+	path, err := env.WritePlist(script)
+	if err != nil {
+		return "", err
+	}
+	defer env.Cleanup(script)
+	return launchd.NewStartCommand(path, script.Label).Run("", nil)
 }
 
 func addCommands(bot *slackbot.Bot) {
@@ -157,33 +184,11 @@ func addCommands(bot *slackbot.Bot) {
 	bot.AddCommand("resume", slackbot.NewResumeCommand())
 	bot.AddCommand("config", slackbot.NewListConfigCommand())
 	bot.AddCommand("toggle-dryrun", slackbot.ToggleDryRunCommand{})
-
-	bot.AddCommand("build", slackbot.FuncCommand{
-		Desc: "Build all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("release", slackbot.FuncCommand{
-		Desc: "Release all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("test", slackbot.FuncCommand{
-		Desc: "Test all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("cancel", slackbot.FuncCommand{
-		Desc: "Cancel all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
-	bot.AddCommand("smoketest", slackbot.FuncCommand{
-		Desc: "Smoketest all the things!",
-		Fn:   kingpinKeybotHandler,
-	})
-
 	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", "keybase.keybot"}, false, "Restart the bot"))
+
+	bot.SetDefault(slackbot.FuncCommand{
+		Fn: jobKeybotHandler,
+	})
 }
 
 func main() {

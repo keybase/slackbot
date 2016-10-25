@@ -25,6 +25,7 @@ func IsParseContextValid(app *kingpin.Application, args []string) error {
 
 // Parse kingpin args and return valid command, usage, and error
 func Parse(app *kingpin.Application, args []string, stringBuffer *bytes.Buffer) (string, string, error) {
+	log.Printf("Parsing args: %#v", args)
 	// Make sure context is valid otherwise showing Usage on error will fail later.
 	// This is a workaround for a kingpin bug.
 	if err := IsParseContextValid(app, args); err != nil {
