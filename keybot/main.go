@@ -209,7 +209,7 @@ func addCommands(bot *slackbot.Bot) {
 		Fn:   kingpinKeybotHandler,
 	})
 
-	bot.AddCommand("log", slackbot.FuncCommand{
+	bot.AddCommand("dumplog", slackbot.FuncCommand{
 		Desc: "Access logs",
 		Fn:   kingpinKeybotHandler,
 	})
