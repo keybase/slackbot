@@ -35,7 +35,7 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 	kbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
 	cancel := app.Command("cancel", "Cancel")
-	cancelCommandArgs := cancel.Flag("command", "Command name").Required().String()
+	cancelCommandArgs := cancel.Arg("command", "Command name").Required().String()
 
 	buildAndroid := build.Command("android", "Start an android build")
 	buildIOS := build.Command("ios", "Start an ios build")
@@ -53,7 +53,7 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 	smoketestBuildMaxTesters := smoketestBuild.Flag("max-testers", "Max number of testers for this build").Required().Int()
 
 	dumplogCmd := app.Command("dumplog", "Dump log for viewing")
-	dumplogCommandArgs := dumplogCmd.Flag("command", "Command name").Required().String()
+	dumplogCommandArgs := dumplogCmd.Arg("command", "Command name").Required().String()
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {

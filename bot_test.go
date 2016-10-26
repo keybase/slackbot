@@ -22,8 +22,8 @@ func TestHelp(t *testing.T) {
 }
 
 func TestParseInput(t *testing.T) {
-	args := parseInput(`!keybot dumplog --name="release promote"`)
-	if args[0] != "!keybot" || args[1] != "dumplog" || args[2] != `--name=release promote` {
+	args := parseInput(`!keybot dumplog "release promote"`)
+	if args[0] != "!keybot" || args[1] != "dumplog" || args[2] != `release promote` {
 		t.Fatal("Invalid parse")
 	}
 }
