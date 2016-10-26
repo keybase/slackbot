@@ -84,6 +84,9 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
 			Command:    "build android",
 			BucketName: "prerelease.keybase.io",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "ANDROID_HOME", Value: "/usr/local/opt/android-sdk"},
+			},
 		}
 		env := launchd.NewEnv()
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
