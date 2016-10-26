@@ -16,6 +16,7 @@ import (
 
 // Env is environment for launchd
 type Env struct {
+	Path         string
 	Home         string
 	GoPath       string
 	GithubToken  string
@@ -70,7 +71,7 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <key>KEYBASE_TOKEN</key>
         <string>{{ .Env.KeybaseToken }}</string>
         <key>PATH</key>
-        <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
+        <string>{{ .Env.Path }}</string>
         <key>LOG_PATH</key>
         <string>{{ .Env.Home }}/Library/Logs/{{ .Script.Label }}.log</string>
         <key>BUCKET_NAME</key>
@@ -100,9 +101,10 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 `
 
 // NewEnv creates environment
-func NewEnv() Env {
+func NewEnv(home string, path string) Env {
 	return Env{
-		Home:         os.Getenv("HOME"),
+		Path:         path,
+		Home:         home,
 		GoPath:       os.Getenv("GOPATH"),
 		GithubToken:  os.Getenv("GITHUB_TOKEN"),
 		SlackToken:   os.Getenv("SLACK_TOKEN"),
@@ -115,8 +117,7 @@ func NewEnv() Env {
 
 // PathFromHome returns path from home dir for env
 func (e Env) PathFromHome(path string) string {
-	dir := os.Getenv("HOME")
-	return filepath.Join(dir, path)
+	return filepath.Join(os.Getenv("HOME"), path)
 }
 
 // LogPath returns path to log for label

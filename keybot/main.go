@@ -6,6 +6,8 @@ package main
 import (
 	"bytes"
 	"log"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -58,6 +60,10 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 		return usage, cmdErr
 	}
 
+	home := os.Getenv("HOME")
+	shims := filepath.Join(home, ".rbenv/shims")
+	path := "/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:" + shims
+	env := launchd.NewEnv(home, path)
 	switch cmd {
 	case cancel.FullCommand():
 		label := labelForCommand(*cancelCommandArgs)
@@ -75,7 +81,7 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *kbfsCommit},
 			},
 		}
-		return runScript(launchd.NewEnv(), script)
+		return runScript(env, script)
 
 	case buildAndroid.FullCommand():
 
@@ -88,7 +94,6 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "ANDROID_HOME", Value: "/usr/local/opt/android-sdk"},
 			},
 		}
-		env := launchd.NewEnv()
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
 		return runScript(env, script)
 
@@ -99,7 +104,6 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 			Command:    "build ios",
 			BucketName: "prerelease.keybase.io",
 		}
-		env := launchd.NewEnv()
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
 		return runScript(env, script)
 
@@ -114,10 +118,9 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
 			},
 		}
-		return runScript(launchd.NewEnv(), script)
+		return runScript(env, script)
 
 	case dumplogCmd.FullCommand():
-		env := launchd.NewEnv()
 		readPath, err := env.LogPath(labelForCommand(*dumplogCommandArgs))
 		if err != nil {
 			return "", err
@@ -144,7 +147,7 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "BROKEN_RELEASE", Value: *releaseBrokenVersion},
 			},
 		}
-		return runScript(launchd.NewEnv(), script)
+		return runScript(env, script)
 
 	case smoketestBuild.FullCommand():
 		if err := setDarwinEnv("SMOKETEST_BUILD_A", *smoketestBuildA); err != nil {
@@ -177,7 +180,6 @@ func runScript(env launchd.Env, script launchd.Script) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer env.Cleanup(script)
 	return launchd.NewStartCommand(path, script.Label).Run("", nil)
 }
 

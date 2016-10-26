@@ -3,10 +3,13 @@
 
 package launchd
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestPlist(t *testing.T) {
-	env := NewEnv()
+	env := NewEnv(os.Getenv("HOME"), "/usr/bin")
 	data, err := env.Plist(Script{Label: "test.label", Path: "foo.sh", Command: "build foo", EnvVars: []EnvVar{EnvVar{Key: "TEST", Value: "val"}}})
 	if err != nil {
 		t.Fatal(err)
