@@ -46,11 +46,11 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 	releaseBroken := release.Command("broken", "Mark a release as broken")
 	releaseBrokenVersion := releaseBroken.Arg("version", "Mark a release as broken").Required().String()
 
-	smoketestBuild := app.Command("smoketest", "Set the smoke testing status of a build")
-	smoketestBuildA := smoketestBuild.Flag("build-a", "The first of the two IDs comprising the new build").Required().String()
-	smoketestBuildPlatform := smoketestBuild.Flag("platform", "The build's platform (darwin, linux, windows)").Required().String()
-	smoketestBuildEnable := smoketestBuild.Flag("enable", "Whether smoketesting should be enabled").Required().Bool()
-	smoketestBuildMaxTesters := smoketestBuild.Flag("max-testers", "Max number of testers for this build").Required().Int()
+	smoketest := app.Command("smoketest", "Set the smoke testing status of a build")
+	smoketestBuildA := smoketest.Flag("build-a", "The first of the two IDs comprising the new build").Required().String()
+	smoketestPlatform := smoketest.Flag("platform", "The build's platform (darwin, linux, windows)").Required().String()
+	smoketestEnable := smoketest.Flag("enable", "Whether smoketesting should be enabled").Required().Bool()
+	smoketestMaxTesters := smoketest.Flag("max-testers", "Max number of testers for this build").Required().Int()
 
 	dumplogCmd := app.Command("dumplog", "Dump log for viewing")
 	dumplogCommandArgs := dumplogCmd.Arg("command", "Command name").Required().String()
@@ -77,6 +77,7 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "SMOKE_TEST", Value: "1"},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *clientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *kbfsCommit},
 			},
@@ -149,30 +150,33 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 		}
 		return runScript(env, script)
 
-	case smoketestBuild.FullCommand():
-		if err := setDarwinEnv("SMOKETEST_BUILD_A", *smoketestBuildA); err != nil {
-			return "", err
+	case smoketest.FullCommand():
+		script := launchd.Script{
+			Label:      "keybase.smoketest",
+			Path:       "github.com/keybase/slackbot/scripts/smoketest.sh",
+			Command:    "smoketest",
+			BucketName: "prerelease.keybase.io",
+			Platform:   *smoketestPlatform,
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "SMOKETEST_BUILD_A", Value: *smoketestBuildA},
+				launchd.EnvVar{Key: "SMOKETEST_MAX_TESTERS", Value: strconv.Itoa(*smoketestMaxTesters)},
+				launchd.EnvVar{Key: "SMOKETEST_ENABLE", Value: boolToString(*smoketestEnable)},
+			},
 		}
-		if err := setDarwinEnv("SMOKETEST_PLATFORM", *smoketestBuildPlatform); err != nil {
-			return "", err
-		}
-		if err := setDarwinEnv("SMOKETEST_MAX_TESTERS", strconv.Itoa(*smoketestBuildMaxTesters)); err != nil {
-			return "", err
-		}
-		buildEnable := "true"
-		if !*smoketestBuildEnable {
-			buildEnable = "false"
-		}
-		if err := setDarwinEnv("SMOKETEST_BUILD_ENABLE", buildEnable); err != nil {
-			return "", err
-		}
-		return slackbot.NewExecCommand("/bin/launchctl", []string{"start", "keybase.prerelease.smoketest"}, false, "Start or stop smoketesting a given build").Run("", nil)
+		return runScript(env, script)
 	}
 	return cmd, nil
 }
 
 func labelForCommand(cmd string) string {
 	return "keybase." + strings.Replace(cmd, " ", ".", -1)
+}
+
+func boolToString(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
 }
 
 func runScript(env launchd.Env, script launchd.Script) (string, error) {
