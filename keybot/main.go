@@ -31,14 +31,16 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 	build := app.Command("build", "Build things")
 
 	buildDarwin := build.Command("darwin", "Start a darwin build")
-	clientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit hash").String()
-	kbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+	buildDarwinCientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit hash").String()
+	buildDarwinKbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
 	cancel := app.Command("cancel", "Cancel")
 	cancelCommandArgs := cancel.Arg("command", "Command name").Required().String()
 
 	buildAndroid := build.Command("android", "Start an android build")
 	buildIOS := build.Command("ios", "Start an ios build")
+	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
+	buildIOSKbfsCommit := buildIOS.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
@@ -78,8 +80,8 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "SMOKE_TEST", Value: "1"},
-				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *clientCommit},
-				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *kbfsCommit},
+				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinCientCommit},
+				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
 			},
 		}
 		return runScript(env, script)
@@ -104,6 +106,10 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 			Path:       "github.com/keybase/client/packaging/ios/build_and_publish.sh",
 			Command:    "build ios",
 			BucketName: "prerelease.keybase.io",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
+				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildIOSKbfsCommit},
+			},
 		}
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
 		return runScript(env, script)
