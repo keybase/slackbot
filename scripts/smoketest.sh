@@ -12,4 +12,4 @@ echo "Loading release tool"
 release_bin="$GOPATH/bin/release"
 
 "$release_bin" set-build-in-testing --build-a="$SMOKETEST_BUILD_A" --platform="$PLATFORM" --enable="$SMOKETEST_ENABLE" --max-testers="$SMOKETEST_MAX_TESTERS"
-"$client_dir/packaging/slack/send.sh" "Successfully set enable to $SMOKETEST_BUILD_ENABLE for release $SMOKETEST_BUILD_A."
+"$client_dir/packaging/slack/send.sh" "Successfully set enable to $SMOKETEST_ENABLE for release $SMOKETEST_BUILD_A."
