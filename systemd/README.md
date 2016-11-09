@@ -39,6 +39,7 @@ this.)
   - With a proper login session as keybasebuild (SSH is one way):
     - `mkdir -p ~/.config/systemd/user`
     - `cp ~/slackbot/systemd/keybase.*.{service,timer} ~/.config/systemd/user/`
+      - OR! use `systemctl --user link ...`
     - `systemctl --user enable --now keybase.keybot.service`
     - `systemctl --user enable --now keybase.buildplease.timer`
 - Take the bot out of dry-run mode by messaging `!tuxbot toggle-dryrun`.
