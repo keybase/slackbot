@@ -27,6 +27,9 @@ this.)
   yubikeys.)
 - Set up s3cmd (~/.s3cfg) with credentials for
   s3://prerelease.keybase.io.
+- Test all these keys with the script
+  client/packaging/linux/test_all_credentials.sh, run as the
+  "keybasebuild" user.
 - Create /home/keybasebuild/keybot.env with the following lines:
 
     ```
