@@ -14,7 +14,7 @@ func TestHelp(t *testing.T) {
 	}
 	bot.AddCommand("date", NewExecCommand("/bin/date", nil, true, "Show the current date"))
 	bot.AddCommand("utc", NewExecCommand("/bin/date", []string{"-u"}, true, "Show the current date (utc)"))
-	msg := bot.helpMessage()
+	msg := bot.HelpMessage()
 	if msg == "" {
 		t.Fatal("No help message")
 	}

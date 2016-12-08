@@ -22,6 +22,7 @@ type Bot struct {
 	commands       map[string]Command
 	defaultCommand Command
 	channelIDs     map[string]string
+	help           string
 }
 
 // NewBot constructs a bot from a Slack token
@@ -58,6 +59,11 @@ func (b *Bot) AddCommand(trigger string, command Command) {
 	b.commands[trigger] = command
 }
 
+// SetHelp sets the help info
+func (b *Bot) SetHelp(help string) {
+	b.help = help
+}
+
 // SetDefault is the default command, if no command added for trigger
 func (b *Bot) SetDefault(command Command) {
 	b.defaultCommand = command
@@ -66,7 +72,7 @@ func (b *Bot) SetDefault(command Command) {
 // RunCommand runs a command
 func (b *Bot) RunCommand(args []string, channel string) error {
 	if len(args) == 0 || args[0] == "help" {
-		b.Help(channel)
+		b.SendHelpMessage(channel)
 		return nil
 	}
 
@@ -118,7 +124,8 @@ func (b *Bot) Triggers() []string {
 	return triggers
 }
 
-func (b *Bot) helpMessage() string {
+// HelpMessage is the default help message for the bot
+func (b *Bot) HelpMessage() string {
 	w := new(tabwriter.Writer)
 	buf := new(bytes.Buffer)
 	w.Init(buf, 0, 8, 0, '\t', 0)
@@ -132,9 +139,13 @@ func (b *Bot) helpMessage() string {
 	return SlackBlockQuote(buf.String())
 }
 
-// Help displays help message to the channel
-func (b *Bot) Help(channel string) {
-	b.SendMessage(b.helpMessage(), channel)
+// SendHelpMessage displays help message to the channel
+func (b *Bot) SendHelpMessage(channel string) {
+	help := b.help
+	if help == "" {
+		help = b.HelpMessage()
+	}
+	b.SendMessage(help, channel)
 }
 
 // Listen starts listening on the connection
