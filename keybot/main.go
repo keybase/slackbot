@@ -31,8 +31,9 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 	build := app.Command("build", "Build things")
 
 	buildDarwin := build.Command("darwin", "Start a darwin build")
-	buildDarwinCientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit hash").String()
-	buildDarwinKbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+	buildDarwinTest := buildDarwin.Flag("test", "Whether build is for testing").Bool()
+	buildDarwinCientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit").String()
+	buildDarwinKbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 
 	cancel := app.Command("cancel", "Cancel")
 	cancelCommandArgs := cancel.Arg("command", "Command name").Required().String()
@@ -80,6 +81,7 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "SMOKE_TEST", Value: "1"},
+				launchd.EnvVar{Key: "TEST", Value: boolToString(*buildDarwinTest)},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
 			},
