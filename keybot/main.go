@@ -80,8 +80,8 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "SMOKE_TEST", Value: "1"},
-				launchd.EnvVar{Key: "TEST", Value: boolToString(*buildDarwinTest)},
+				launchd.EnvVar{Key: "SMOKE_TEST", Value: boolToEnvString(true)},
+				launchd.EnvVar{Key: "TEST", Value: boolToEnvString(*buildDarwinTest)},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
 			},
@@ -185,6 +185,13 @@ func boolToString(b bool) string {
 		return "true"
 	}
 	return "false"
+}
+
+func boolToEnvString(b bool) string {
+	if b {
+		return "1"
+	}
+	return ""
 }
 
 func runScript(env launchd.Env, script launchd.Script) (string, error) {
