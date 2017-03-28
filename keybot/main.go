@@ -85,7 +85,8 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "TEST", Value: boolToEnvString(*buildDarwinTest)},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
-				launchd.EnvVar{Key: "SKIP_CI", Value: boolToEnvString(*buildDarwinSkipCI)},
+				// TODO: Rename to SKIP_CI in packaging scripts
+				launchd.EnvVar{Key: "NOWAIT", Value: boolToEnvString(*buildDarwinSkipCI)},
 			},
 		}
 		return runScript(env, script)
