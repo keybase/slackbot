@@ -34,6 +34,7 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 	buildDarwinTest := buildDarwin.Flag("test", "Whether build is for testing").Bool()
 	buildDarwinCientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit").String()
 	buildDarwinKbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit").String()
+	buildDarwinSkipCI := buildDarwin.Flag("skip-ci", "Whether to skip CI").Bool()
 
 	cancel := app.Command("cancel", "Cancel")
 	cancelCommandArgs := cancel.Arg("command", "Command name").Required().String()
@@ -84,6 +85,7 @@ func jobKeybotHandler(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "TEST", Value: boolToEnvString(*buildDarwinTest)},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
+				launchd.EnvVar{Key: "SKIP_CI", Value: boolToEnvString(*buildDarwinSkipCI)},
 			},
 		}
 		return runScript(env, script)
