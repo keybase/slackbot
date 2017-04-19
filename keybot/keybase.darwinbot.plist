@@ -20,7 +20,7 @@
         <string></string>
         <key>KEYBASE_TOKEN</key>
         <string></string>
-        <key>BOT_HANDLER</key>
+        <key>BOT_NAME</key>
         <string>darwinbot</string>
         <key>PATH</key>
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
