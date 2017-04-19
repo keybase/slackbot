@@ -15,6 +15,11 @@ import (
 	"github.com/nlopes/slack"
 )
 
+// Runner can execute bot inputs
+type Runner interface {
+	Run(channel string, args []string) (string, error)
+}
+
 // Bot defines a Slack bot
 type Bot struct {
 	api            *slack.Client
@@ -23,10 +28,13 @@ type Bot struct {
 	defaultCommand Command
 	channelIDs     map[string]string
 	help           string
+	name           string
+	label          string
+	runner         Runner
 }
 
 // NewBot constructs a bot from a Slack token
-func NewBot(token string) (*Bot, error) {
+func NewBot(token string, name string, label string, runner Runner) (*Bot, error) {
 	api := slack.New(token)
 	//api.SetDebug(true)
 
@@ -35,28 +43,47 @@ func NewBot(token string) (*Bot, error) {
 		return nil, err
 	}
 
-	bot := newBot()
+	bot := newBot(runner)
 	bot.api = api
 	bot.rtm = api.NewRTM()
 	bot.channelIDs = channelIDs
+	bot.name = name
+	bot.label = label
 
 	return bot, nil
 }
 
-func newBot() *Bot {
-	bot := Bot{}
+func newBot(runner Runner) *Bot {
+	bot := Bot{
+		runner: runner,
+	}
 	bot.commands = make(map[string]Command)
 	return &bot
 }
 
 // NewTestBot returns a bot for testing
-func NewTestBot() (*Bot, error) {
-	return newBot(), nil
+func NewTestBot(runner Runner) (*Bot, error) {
+	return newBot(runner), nil
 }
 
 // AddCommand adds a command to the Bot
 func (b *Bot) AddCommand(trigger string, command Command) {
 	b.commands[trigger] = command
+}
+
+// GetName returns bot name
+func (b *Bot) GetName() string {
+	return b.name
+}
+
+// GetLabel returns bot label
+func (b *Bot) GetLabel() string {
+	return b.label
+}
+
+// GetRunner returns bot runner
+func (b *Bot) GetRunner() Runner {
+	return b.runner
 }
 
 // SetHelp sets the help info

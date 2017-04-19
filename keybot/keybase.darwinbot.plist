@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>keybase.keybot</string>
+    <string>keybase.darwinbot</string>
     <key>EnvironmentVariables</key>
     <dict>
         <key>GOPATH</key>
@@ -21,7 +21,7 @@
         <key>KEYBASE_TOKEN</key>
         <string></string>
         <key>BOT_HANDLER</key>
-        <string>keybot</string>
+        <string>darwinbot</string>
         <key>PATH</key>
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
     </dict>
@@ -35,8 +35,8 @@
     <key>RunAtLoad</key>
     <true/>
     <key>StandardErrorPath</key>
-    <string>/Users/test/Library/Logs/keybase.keybot.log</string>
+    <string>/Users/test/Library/Logs/keybase.darwinbot.log</string>
     <key>StandardOutPath</key>
-    <string>/Users/test/Library/Logs/keybase.keybot.log</string>
+    <string>/Users/test/Library/Logs/keybase.darwinbot.log</string>
 </dict>
 </plist>

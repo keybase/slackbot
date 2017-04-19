@@ -49,7 +49,9 @@ func linuxBuildFunc(channel string, args []string) (string, error) {
 	return "SUCCESS", nil
 }
 
-func kingpinTuxbotHandler(channel string, args []string) (string, error) {
+type tuxbot struct{}
+
+func (t *tuxbot) Run(channel string, args []string) (string, error) {
 	app := kingpin.New("tuxbot", "Command parser for tuxbot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -83,12 +85,12 @@ func addCommands(bot *slackbot.Bot) {
 
 	bot.AddCommand("build", slackbot.FuncCommand{
 		Desc: "Build all the things!",
-		Fn:   kingpinTuxbotHandler,
+		Fn:   bot.GetRunner().Run,
 	})
 }
 
 func main() {
-	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv())
+	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv(), "tuxbot", "", &tuxbot{})
 	if err != nil {
 		log.Fatal(err)
 	}

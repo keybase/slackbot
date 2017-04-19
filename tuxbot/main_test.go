@@ -9,7 +9,8 @@ import (
 )
 
 func TestBuildLinux(t *testing.T) {
-	out, err := kingpinTuxbotHandler("", []string{"build", "linux"})
+	bot := &tuxbot{}
+	out, err := bot.Run("", []string{"build", "linux"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,7 +20,8 @@ func TestBuildLinux(t *testing.T) {
 }
 
 func TestInvalidUsage(t *testing.T) {
-	out, err := kingpinTuxbotHandler("", []string{"build", "oops"})
+	bot := &tuxbot{}
+	out, err := bot.Run("", []string{"build", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}

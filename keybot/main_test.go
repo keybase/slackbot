@@ -10,8 +10,16 @@ import (
 	"github.com/keybase/slackbot"
 )
 
-func TestAddCommands(t *testing.T) {
-	bot, err := slackbot.NewTestBot()
+func TestDarwinbotAddCommands(t *testing.T) {
+	bot, err := slackbot.NewTestBot(&darwinbot{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	addCommands(bot)
+}
+
+func TestKeybotAddCommands(t *testing.T) {
+	bot, err := slackbot.NewTestBot(&keybot{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,7 +27,8 @@ func TestAddCommands(t *testing.T) {
 }
 
 func TestBuildDarwin(t *testing.T) {
-	out, err := jobKeybotHandler("", []string{"build", "darwin"})
+	bot := &darwinbot{}
+	out, err := bot.Run("", []string{"build", "darwin"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +38,8 @@ func TestBuildDarwin(t *testing.T) {
 }
 
 func TestPromoteRelease(t *testing.T) {
-	out, err := jobKeybotHandler("", []string{"release", "promote", "1.2.3"})
+	bot := &keybot{}
+	out, err := bot.Run("", []string{"release", "promote", "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +49,8 @@ func TestPromoteRelease(t *testing.T) {
 }
 
 func TestInvalidUsage(t *testing.T) {
-	out, err := jobKeybotHandler("", []string{"release", "oops"})
+	bot := &keybot{}
+	out, err := bot.Run("", []string{"release", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}

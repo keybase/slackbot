@@ -8,7 +8,7 @@ import (
 )
 
 func TestHelp(t *testing.T) {
-	bot, err := NewTestBot()
+	bot, err := NewTestBot(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
