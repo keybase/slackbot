@@ -6,7 +6,6 @@ package main
 import (
 	"log"
 	"os"
-	"strings"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/launchd"
@@ -15,10 +14,6 @@ import (
 func setDarwinEnv(name string, val string) error {
 	_, err := slackbot.NewExecCommand("/bin/launchctl", []string{"setenv", name, val}, false, "Set the env").Run("", []string{})
 	return err
-}
-
-func labelForCommand(cmd string) string {
-	return "keybase." + strings.Replace(cmd, " ", ".", -1)
 }
 
 func boolToString(b bool) string {

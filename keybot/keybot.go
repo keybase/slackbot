@@ -25,7 +25,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 	build := app.Command("build", "Build things")
 
 	cancel := app.Command("cancel", "Cancel")
-	cancelCommandArgs := cancel.Arg("command", "Command name").Required().String()
+	cancelLabel := cancel.Arg("label", "Launchd job label").Required().String()
 
 	buildAndroid := build.Command("android", "Start an android build")
 	buildIOS := build.Command("ios", "Start an ios build")
@@ -44,8 +44,8 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 	smoketestEnable := smoketest.Flag("enable", "Whether smoketesting should be enabled").Required().Bool()
 	smoketestMaxTesters := smoketest.Flag("max-testers", "Max number of testers for this build").Required().Int()
 
-	dumplogCmd := app.Command("dumplog", "Dump log for viewing")
-	dumplogCommandArgs := dumplogCmd.Arg("command", "Command name").Required().String()
+	dumplogCmd := app.Command("dumplog", "Dump log launchd job label")
+	dumplogCommandLabel := dumplogCmd.Arg("label", "Launchd job label").Required().String()
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -58,8 +58,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 	env := launchd.NewEnv(home, path)
 	switch cmd {
 	case cancel.FullCommand():
-		label := labelForCommand(*cancelCommandArgs)
-		return launchd.Stop(label)
+		return launchd.Stop(*cancelLabel)
 
 	case buildAndroid.FullCommand():
 
@@ -103,7 +102,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 		return runScript(env, script)
 
 	case dumplogCmd.FullCommand():
-		readPath, err := env.LogPath(labelForCommand(*dumplogCommandArgs))
+		readPath, err := env.LogPathForLaunchdLabel(*dumplogCommandLabel)
 		if err != nil {
 			return "", err
 		}

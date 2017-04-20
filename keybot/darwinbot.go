@@ -30,7 +30,7 @@ func (j *darwinbot) Run(channel string, args []string) (string, error) {
 	buildDarwinSkipCI := buildDarwin.Flag("skip-ci", "Whether to skip CI").Bool()
 
 	cancel := app.Command("cancel", "Cancel")
-	cancelCommandArgs := cancel.Arg("command", "Command name").Required().String()
+	cancelLabel := cancel.Arg("label", "Launchd job label").Required().String()
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -43,8 +43,7 @@ func (j *darwinbot) Run(channel string, args []string) (string, error) {
 	env := launchd.NewEnv(home, path)
 	switch cmd {
 	case cancel.FullCommand():
-		label := labelForCommand(*cancelCommandArgs)
-		return launchd.Stop(label)
+		return launchd.Stop(*cancelLabel)
 
 	case buildDarwin.FullCommand():
 		script := launchd.Script{

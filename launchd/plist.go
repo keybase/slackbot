@@ -120,8 +120,8 @@ func (e Env) PathFromHome(path string) string {
 	return filepath.Join(os.Getenv("HOME"), path)
 }
 
-// LogPath returns path to log for label
-func (e Env) LogPath(label string) (string, error) {
+// LogPathForLaunchdLabel returns path to log for label
+func (e Env) LogPathForLaunchdLabel(label string) (string, error) {
 	if strings.Contains(label, "..") || strings.Contains(label, "/") || strings.Contains(label, `\`) {
 		return "", fmt.Errorf("Invalid label")
 	}

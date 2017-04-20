@@ -113,7 +113,14 @@ func (b *Bot) RunCommand(args []string, channel string) error {
 	}
 
 	log.Printf("Command: %#v\n", command)
-	b.SendMessage(fmt.Sprintf("Sure, I will `%s`.", strings.Join(args, " ")), channel)
+
+	var msg string
+	if b.label != "" {
+		msg = fmt.Sprintf("Sure, I will `%s` with label `%s`. To cancel `!%s cancel %s`.", strings.Join(args, " "), b.label, b.name, b.label)
+	} else {
+		msg = fmt.Sprintf("Sure, I will `%s`.", strings.Join(args, " "))
+	}
+	b.SendMessage(msg, channel)
 
 	go b.run(args, command, channel)
 	return nil
