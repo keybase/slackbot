@@ -27,8 +27,11 @@ func TestKeybotAddCommands(t *testing.T) {
 }
 
 func TestBuildDarwin(t *testing.T) {
-	bot := &darwinbot{}
-	out, err := bot.Run("", []string{"build", "darwin"})
+	bot, err := slackbot.NewTestBot(&darwinbot{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := bot.Runner().Run(bot, "", []string{"build", "darwin"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,8 +41,11 @@ func TestBuildDarwin(t *testing.T) {
 }
 
 func TestPromoteRelease(t *testing.T) {
-	bot := &keybot{}
-	out, err := bot.Run("", []string{"release", "promote", "1.2.3"})
+	bot, err := slackbot.NewTestBot(&keybot{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := bot.Runner().Run(bot, "", []string{"release", "promote", "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,8 +55,11 @@ func TestPromoteRelease(t *testing.T) {
 }
 
 func TestInvalidUsage(t *testing.T) {
-	bot := &keybot{}
-	out, err := bot.Run("", []string{"release", "oops"})
+	bot, err := slackbot.NewTestBot(&keybot{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := bot.Runner().Run(bot, "", []string{"release", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}

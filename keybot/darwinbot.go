@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
 	"github.com/keybase/slackbot/launchd"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -15,7 +16,7 @@ import (
 
 type darwinbot struct{}
 
-func (j *darwinbot) Run(channel string, args []string) (string, error) {
+func (j *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("darwinbot", "Job command parser for darwinbot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -61,7 +62,7 @@ func (j *darwinbot) Run(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "NOWAIT", Value: boolToEnvString(*buildDarwinSkipCI)},
 			},
 		}
-		return runScript(env, script)
+		return runScript(bot, channel, env, script)
 	}
 	return cmd, nil
 }

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
 	"github.com/keybase/slackbot/launchd"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -16,7 +17,7 @@ import (
 
 type keybot struct{}
 
-func (j *keybot) Run(channel string, args []string) (string, error) {
+func (j *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("keybot", "Job command parser for keybot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -72,7 +73,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 			},
 		}
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
-		return runScript(env, script)
+		return runScript(bot, channel, env, script)
 
 	case buildIOS.FullCommand():
 		script := launchd.Script{
@@ -86,7 +87,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
-		return runScript(env, script)
+		return runScript(bot, channel, env, script)
 
 	case releasePromote.FullCommand():
 		script := launchd.Script{
@@ -99,7 +100,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
 			},
 		}
-		return runScript(env, script)
+		return runScript(bot, channel, env, script)
 
 	case dumplogCmd.FullCommand():
 		readPath, err := env.LogPathForLaunchdLabel(*dumplogCommandLabel)
@@ -115,7 +116,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
 			},
 		}
-		return runScript(env, script)
+		return runScript(bot, channel, env, script)
 
 	case releaseBroken.FullCommand():
 		script := launchd.Script{
@@ -128,7 +129,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "BROKEN_RELEASE", Value: *releaseBrokenVersion},
 			},
 		}
-		return runScript(env, script)
+		return runScript(bot, channel, env, script)
 
 	case smoketest.FullCommand():
 		script := launchd.Script{
@@ -143,7 +144,7 @@ func (j *keybot) Run(channel string, args []string) (string, error) {
 				launchd.EnvVar{Key: "SMOKETEST_ENABLE", Value: boolToString(*smoketestEnable)},
 			},
 		}
-		return runScript(env, script)
+		return runScript(bot, channel, env, script)
 	}
 	return cmd, nil
 }

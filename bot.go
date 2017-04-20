@@ -15,13 +15,21 @@ import (
 	"github.com/nlopes/slack"
 )
 
-// Runner can execute bot inputs
-type Runner interface {
-	Run(channel string, args []string) (string, error)
+// Bot describes a generic bot
+type Bot interface {
+	Name() string
+	Runner() Runner
+	AddCommand(trigger string, command Command)
+	SendMessage(text string, channel string)
+	HelpMessage() string
+	SetHelp(help string)
+	Label() string
+	SetDefault(command Command)
+	Listen()
 }
 
-// Bot defines a Slack bot
-type Bot struct {
+// SlackBot is a Slack bot
+type SlackBot struct {
 	api            *slack.Client
 	rtm            *slack.RTM
 	commands       map[string]Command
@@ -33,8 +41,13 @@ type Bot struct {
 	runner         Runner
 }
 
+// Runner can execute bot inputs
+type Runner interface {
+	Run(b Bot, channel string, args []string) (string, error)
+}
+
 // NewBot constructs a bot from a Slack token
-func NewBot(token string, name string, label string, runner Runner) (*Bot, error) {
+func NewBot(token string, name string, label string, runner Runner) (Bot, error) {
 	api := slack.New(token)
 	//api.SetDebug(true)
 
@@ -53,51 +66,51 @@ func NewBot(token string, name string, label string, runner Runner) (*Bot, error
 	return bot, nil
 }
 
-func newBot(runner Runner) *Bot {
-	bot := Bot{
-		runner: runner,
+func newBot(runner Runner) *SlackBot {
+	bot := SlackBot{
+		runner:   runner,
+		commands: make(map[string]Command),
 	}
-	bot.commands = make(map[string]Command)
 	return &bot
 }
 
 // NewTestBot returns a bot for testing
-func NewTestBot(runner Runner) (*Bot, error) {
+func NewTestBot(runner Runner) (Bot, error) {
 	return newBot(runner), nil
 }
 
 // AddCommand adds a command to the Bot
-func (b *Bot) AddCommand(trigger string, command Command) {
+func (b *SlackBot) AddCommand(trigger string, command Command) {
 	b.commands[trigger] = command
 }
 
-// GetName returns bot name
-func (b *Bot) GetName() string {
+// Name returns bot name
+func (b *SlackBot) Name() string {
 	return b.name
 }
 
-// GetLabel returns bot label
-func (b *Bot) GetLabel() string {
+// Label returns bot label
+func (b *SlackBot) Label() string {
 	return b.label
 }
 
-// GetRunner returns bot runner
-func (b *Bot) GetRunner() Runner {
+// Runner returns bot runner
+func (b *SlackBot) Runner() Runner {
 	return b.runner
 }
 
 // SetHelp sets the help info
-func (b *Bot) SetHelp(help string) {
+func (b *SlackBot) SetHelp(help string) {
 	b.help = help
 }
 
 // SetDefault is the default command, if no command added for trigger
-func (b *Bot) SetDefault(command Command) {
+func (b *SlackBot) SetDefault(command Command) {
 	b.defaultCommand = command
 }
 
 // RunCommand runs a command
-func (b *Bot) RunCommand(args []string, channel string) error {
+func (b *SlackBot) RunCommand(args []string, channel string) error {
 	if len(args) == 0 || args[0] == "help" {
 		b.SendHelpMessage(channel)
 		return nil
@@ -114,20 +127,15 @@ func (b *Bot) RunCommand(args []string, channel string) error {
 
 	log.Printf("Command: %#v\n", command)
 
-	var msg string
-	if b.label != "" {
-		msg = fmt.Sprintf("Sure, I will `%s` with label `%s`. To cancel `!%s cancel %s`.", strings.Join(args, " "), b.label, b.name, b.label)
-	} else {
-		msg = fmt.Sprintf("Sure, I will `%s`.", strings.Join(args, " "))
-	}
+	msg := fmt.Sprintf("Sure, I will `%s`.", strings.Join(args, " "))
 	b.SendMessage(msg, channel)
 
 	go b.run(args, command, channel)
 	return nil
 }
 
-func (b *Bot) run(args []string, command Command, channel string) {
-	out, err := command.Run(channel, args)
+func (b *SlackBot) run(args []string, command Command, channel string) {
+	out, err := command.Run(b, channel, args)
 	if err != nil {
 		log.Printf("Error %s running: %#v; %s\n", err, command, out)
 		b.SendMessage(fmt.Sprintf("Oops, there was an error in %q:\n%s", strings.Join(args, " "), SlackBlockQuote(out)), channel)
@@ -140,16 +148,18 @@ func (b *Bot) run(args []string, command Command, channel string) {
 }
 
 // SendMessage sends a message to a channel
-func (b *Bot) SendMessage(text string, channel string) {
+func (b *SlackBot) SendMessage(text string, channel string) {
 	cid := b.channelIDs[channel]
 	if cid == "" {
 		cid = channel
 	}
-	b.rtm.SendMessage(b.rtm.NewOutgoingMessage(text, cid))
+	if b.rtm != nil {
+		b.rtm.SendMessage(b.rtm.NewOutgoingMessage(text, cid))
+	}
 }
 
 // Triggers returns list of supported triggers
-func (b *Bot) Triggers() []string {
+func (b *SlackBot) Triggers() []string {
 	triggers := make([]string, 0, len(b.commands))
 	for trigger := range b.commands {
 		triggers = append(triggers, trigger)
@@ -159,7 +169,7 @@ func (b *Bot) Triggers() []string {
 }
 
 // HelpMessage is the default help message for the bot
-func (b *Bot) HelpMessage() string {
+func (b *SlackBot) HelpMessage() string {
 	w := new(tabwriter.Writer)
 	buf := new(bytes.Buffer)
 	w.Init(buf, 0, 8, 0, '\t', 0)
@@ -174,7 +184,7 @@ func (b *Bot) HelpMessage() string {
 }
 
 // SendHelpMessage displays help message to the channel
-func (b *Bot) SendHelpMessage(channel string) {
+func (b *SlackBot) SendHelpMessage(channel string) {
 	help := b.help
 	if help == "" {
 		help = b.HelpMessage()
@@ -183,7 +193,7 @@ func (b *Bot) SendHelpMessage(channel string) {
 }
 
 // Listen starts listening on the connection
-func (b *Bot) Listen() {
+func (b *SlackBot) Listen() {
 	go b.rtm.ManageConnection()
 
 	auth, err := b.api.AuthTest()

@@ -68,3 +68,8 @@ func (c StartCommand) ShowResult() bool {
 func (c StartCommand) Description() string {
 	return fmt.Sprintf("Run launchd job (%s)", c.label)
 }
+
+// Label returns job label
+func (c StartCommand) Label() string {
+	return c.label
+}

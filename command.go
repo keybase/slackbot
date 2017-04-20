@@ -10,7 +10,7 @@ import (
 
 // Command is the interface the bot uses to run things
 type Command interface {
-	Run(channel string, args []string) (string, error)
+	Run(bot Bot, channel string, args []string) (string, error)
 	ShowResult() bool // Whether to output result back to channel
 	Description() string
 }
@@ -29,7 +29,7 @@ type ToggleDryRunCommand struct{}
 // FuncCommand runs an arbitrary function on trigger
 type FuncCommand struct {
 	Desc string
-	Fn   func(channel string, args []string) (string, error)
+	Fn   func(bot Bot, channel string, args []string) (string, error)
 }
 
 // NewExecCommand creates an ExecCommand
@@ -43,7 +43,7 @@ func NewExecCommand(exec string, args []string, showResult bool, description str
 }
 
 // Run runs the exec command
-func (c ExecCommand) Run(_ string, _ []string) (string, error) {
+func (c ExecCommand) Run(_ Bot, _ string, _ []string) (string, error) {
 	config := ReadConfigOrDefault()
 
 	if config.DryRun {
@@ -71,7 +71,7 @@ func (c ExecCommand) Description() string {
 }
 
 // Run toggles the dry run state. (Itself is never run under dry run mode)
-func (c ToggleDryRunCommand) Run(_ string, _ []string) (string, error) {
+func (c ToggleDryRunCommand) Run(_ Bot, _ string, _ []string) (string, error) {
 	config, err := updateConfig(func(c Config) (Config, error) {
 		c.DryRun = !c.DryRun
 		return c, nil
@@ -95,8 +95,8 @@ func (c ToggleDryRunCommand) Description() string {
 }
 
 // Run runs the Fn func
-func (c FuncCommand) Run(channel string, args []string) (string, error) {
-	return c.Fn(channel, args)
+func (c FuncCommand) Run(bot Bot, channel string, args []string) (string, error) {
+	return c.Fn(bot, channel, args)
 }
 
 // ShowResult always shows results

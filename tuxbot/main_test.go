@@ -6,11 +6,16 @@ package main
 import (
 	"strings"
 	"testing"
+
+	"github.com/keybase/slackbot"
 )
 
 func TestBuildLinux(t *testing.T) {
-	bot := &tuxbot{}
-	out, err := bot.Run("", []string{"build", "linux"})
+	bot, err := slackbot.NewTestBot(&tuxbot{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := bot.Runner().Run(bot, "", []string{"build", "linux"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,8 +25,11 @@ func TestBuildLinux(t *testing.T) {
 }
 
 func TestInvalidUsage(t *testing.T) {
-	bot := &tuxbot{}
-	out, err := bot.Run("", []string{"build", "oops"})
+	bot, err := slackbot.NewTestBot(&tuxbot{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := bot.Runner().Run(bot, "", []string{"build", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}

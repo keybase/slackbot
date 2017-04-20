@@ -4,17 +4,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/launchd"
 )
-
-func setDarwinEnv(name string, val string) error {
-	_, err := slackbot.NewExecCommand("/bin/launchctl", []string{"setenv", name, val}, false, "Set the env").Run("", []string{})
-	return err
-}
 
 func boolToString(b bool) string {
 	if b {
@@ -30,15 +26,17 @@ func boolToEnvString(b bool) string {
 	return ""
 }
 
-func runScript(env launchd.Env, script launchd.Script) (string, error) {
+func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd.Script) (string, error) {
 	path, err := env.WritePlist(script)
 	if err != nil {
 		return "", err
 	}
+	msg := fmt.Sprintf("Starting job `%s`. To cancel run `!%s cancel %s`", script.Label, bot.Name(), script.Label)
+	bot.SendMessage(msg, channel)
 	return launchd.NewStartCommand(path, script.Label).Run("", nil)
 }
 
-func addCommands(bot *slackbot.Bot) {
+func addCommands(bot slackbot.Bot) {
 	helpMessage := bot.HelpMessage()
 
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
@@ -46,14 +44,14 @@ func addCommands(bot *slackbot.Bot) {
 	bot.AddCommand("resume", slackbot.NewResumeCommand())
 	bot.AddCommand("config", slackbot.NewListConfigCommand())
 	bot.AddCommand("toggle-dryrun", slackbot.ToggleDryRunCommand{})
-	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", bot.GetLabel()}, false, "Restart the bot"))
+	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", bot.Label()}, false, "Restart the bot"))
 
-	jobHelp, _ := bot.GetRunner().Run("", nil)
+	jobHelp, _ := bot.Runner().Run(bot, "", nil)
 	helpMessage = helpMessage + "\n\n" + jobHelp
 	bot.SetHelp(helpMessage)
 
 	bot.SetDefault(slackbot.FuncCommand{
-		Fn: bot.GetRunner().Run,
+		Fn: bot.Runner().Run,
 	})
 }
 

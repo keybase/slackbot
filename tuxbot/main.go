@@ -17,7 +17,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-func linuxBuildFunc(channel string, args []string) (string, error) {
+func linuxBuildFunc(bot slackbot.Bot, channel string, args []string) (string, error) {
 	config := slackbot.ReadConfigOrDefault()
 	if config.DryRun {
 		return "Dry Run: Doing that would run `prerelease.sh`", nil
@@ -51,7 +51,7 @@ func linuxBuildFunc(channel string, args []string) (string, error) {
 
 type tuxbot struct{}
 
-func (t *tuxbot) Run(channel string, args []string) (string, error) {
+func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("tuxbot", "Command parser for tuxbot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -70,13 +70,13 @@ func (t *tuxbot) Run(channel string, args []string) (string, error) {
 		return slackbot.FuncCommand{
 			Desc: "Perform a linux build",
 			Fn:   linuxBuildFunc,
-		}.Run(channel, args)
+		}.Run(bot, channel, args)
 	}
 
 	return cmd, nil
 }
 
-func addCommands(bot *slackbot.Bot) {
+func addCommands(bot slackbot.Bot) {
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
 	bot.AddCommand("pause", slackbot.NewPauseCommand())
 	bot.AddCommand("resume", slackbot.NewResumeCommand())
@@ -85,7 +85,7 @@ func addCommands(bot *slackbot.Bot) {
 
 	bot.AddCommand("build", slackbot.FuncCommand{
 		Desc: "Build all the things!",
-		Fn:   bot.GetRunner().Run,
+		Fn:   bot.Runner().Run,
 	})
 }
 
