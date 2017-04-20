@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -16,7 +17,7 @@ import (
 
 type darwinbot struct{}
 
-func (j *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
+func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("darwinbot", "Job command parser for darwinbot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -36,6 +37,10 @@ func (j *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
 		return usage, cmdErr
+	}
+
+	if bot.Config().DryRun() {
+		return fmt.Sprintf("I would have run: `%#v`", cmd), nil
 	}
 
 	home := os.Getenv("HOME")
@@ -65,4 +70,12 @@ func (j *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 		return runScript(bot, channel, env, script)
 	}
 	return cmd, nil
+}
+
+func (d *darwinbot) Help(bot slackbot.Bot) string {
+	out, err := d.Run(bot, "", nil)
+	if err != nil {
+		return fmt.Sprintf("Error getting help: %s", err)
+	}
+	return out
 }

@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -17,7 +18,7 @@ import (
 
 type keybot struct{}
 
-func (j *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
+func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("keybot", "Job command parser for keybot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -51,6 +52,10 @@ func (j *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
 		return usage, cmdErr
+	}
+
+	if bot.Config().DryRun() {
+		return fmt.Sprintf("I would have run: `%#v`", cmd), nil
 	}
 
 	home := os.Getenv("HOME")
@@ -147,4 +152,12 @@ func (j *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		return runScript(bot, channel, env, script)
 	}
 	return cmd, nil
+}
+
+func (k *keybot) Help(bot slackbot.Bot) string {
+	out, err := k.Run(bot, "", nil)
+	if err != nil {
+		return fmt.Sprintf("Error getting help: %s", err)
+	}
+	return out
 }

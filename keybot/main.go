@@ -27,6 +27,14 @@ func boolToEnvString(b bool) string {
 }
 
 func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd.Script) (string, error) {
+	if bot.Config().DryRun() {
+		return fmt.Sprintf("I would have run a launchd job (%s)", script.Label), nil
+	}
+
+	if bot.Config().Paused() {
+		return fmt.Sprintf("I'm paused so I can't do that, but I would have run a launchd job (%s)", script.Label), nil
+	}
+
 	path, err := env.WritePlist(script)
 	if err != nil {
 		return "", err
@@ -36,46 +44,48 @@ func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd
 	return launchd.NewStartCommand(path, script.Label).Run("", nil)
 }
 
-func addCommands(bot slackbot.Bot) {
-	helpMessage := bot.HelpMessage()
+func addBasicCommands(bot slackbot.Bot) {
+	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", bot.Config()))
+	bot.AddCommand("pause", slackbot.NewPauseCommand(bot.Config()))
+	bot.AddCommand("resume", slackbot.NewResumeCommand(bot.Config()))
+	bot.AddCommand("config", slackbot.NewShowConfigCommand(bot.Config()))
+	bot.AddCommand("toggle-dryrun", slackbot.NewToggleDryRunCommand(bot.Config()))
+	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", bot.Label()}, false, "Restart the bot", bot.Config()))
+}
 
-	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
-	bot.AddCommand("pause", slackbot.NewPauseCommand())
-	bot.AddCommand("resume", slackbot.NewResumeCommand())
-	bot.AddCommand("config", slackbot.NewListConfigCommand())
-	bot.AddCommand("toggle-dryrun", slackbot.ToggleDryRunCommand{})
-	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", bot.Label()}, false, "Restart the bot"))
-
-	jobHelp, _ := bot.Run("", nil)
-	helpMessage = helpMessage + "\n\n" + jobHelp
-	bot.SetHelp(helpMessage)
-
-	bot.SetDefault(slackbot.FuncCommand{
-		Fn: bot.Run,
-	})
+type extension interface {
+	Run(b slackbot.Bot, channel string, args []string) (string, error)
+	Help(bot slackbot.Bot) string
 }
 
 func main() {
 	name := os.Getenv("BOT_NAME")
 	var label string
-	var runner slackbot.Runner
+	var ext extension
 	switch name {
 	case "keybot":
-		runner = &keybot{}
+		ext = &keybot{}
 		label = "keybase.keybot"
 	case "darwinbot":
-		runner = &darwinbot{}
+		ext = &darwinbot{}
 		label = "keybase.darwinbot"
 	default:
 		log.Fatal("Invalid BOT_NAME")
 	}
 
-	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv(), name, label, runner)
+	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv(), name, label, slackbot.ReadConfigOrDefault())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	addCommands(bot)
+	addBasicCommands(bot)
+
+	// Extension
+	runFn := func(channel string, args []string) (string, error) {
+		return ext.Run(bot, channel, args)
+	}
+	bot.SetDefault(slackbot.NewFuncCommand(runFn, "Extension", bot.Config()))
+	bot.SetHelp(bot.HelpMessage() + "\n\n" + ext.Help(bot))
 
 	log.Printf("Started %s\n", name)
 	bot.Listen()

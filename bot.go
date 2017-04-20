@@ -18,6 +18,7 @@ import (
 // Bot describes a generic bot
 type Bot interface {
 	Name() string
+	Config() Config
 	AddCommand(trigger string, command Command)
 	SendMessage(text string, channel string)
 	HelpMessage() string
@@ -25,7 +26,6 @@ type Bot interface {
 	Label() string
 	SetDefault(command Command)
 	Listen()
-	Run(channel string, args []string) (string, error)
 }
 
 // SlackBot is a Slack bot
@@ -38,16 +38,11 @@ type SlackBot struct {
 	help           string
 	name           string
 	label          string
-	runner         Runner
-}
-
-// Runner can execute bot inputs
-type Runner interface {
-	Run(b Bot, channel string, args []string) (string, error)
+	config         Config
 }
 
 // NewBot constructs a bot from a Slack token
-func NewBot(token string, name string, label string, runner Runner) (Bot, error) {
+func NewBot(token string, name string, label string, config Config) (Bot, error) {
 	api := slack.New(token)
 	//api.SetDebug(true)
 
@@ -56,7 +51,7 @@ func NewBot(token string, name string, label string, runner Runner) (Bot, error)
 		return nil, err
 	}
 
-	bot := newBot(runner)
+	bot := newBot(config)
 	bot.api = api
 	bot.rtm = api.NewRTM()
 	bot.channelIDs = channelIDs
@@ -66,17 +61,17 @@ func NewBot(token string, name string, label string, runner Runner) (Bot, error)
 	return bot, nil
 }
 
-func newBot(runner Runner) *SlackBot {
+func newBot(config Config) *SlackBot {
 	bot := SlackBot{
-		runner:   runner,
+		config:   config,
 		commands: make(map[string]Command),
 	}
 	return &bot
 }
 
 // NewTestBot returns a bot for testing
-func NewTestBot(runner Runner) (Bot, error) {
-	return newBot(runner), nil
+func NewTestBot() (Bot, error) {
+	return newBot(NewConfig(true, false)), nil
 }
 
 // AddCommand adds a command to the Bot
@@ -94,6 +89,11 @@ func (b *SlackBot) Label() string {
 	return b.label
 }
 
+// Config returns bot config
+func (b *SlackBot) Config() Config {
+	return b.config
+}
+
 // SetHelp sets the help info
 func (b *SlackBot) SetHelp(help string) {
 	b.help = help
@@ -102,14 +102,6 @@ func (b *SlackBot) SetHelp(help string) {
 // SetDefault is the default command, if no command added for trigger
 func (b *SlackBot) SetDefault(command Command) {
 	b.defaultCommand = command
-}
-
-// Run runs args in the bot
-func (b *SlackBot) Run(channel string, args []string) (string, error) {
-	if b.runner != nil {
-		return b.runner.Run(b, channel, args)
-	}
-	return "", nil
 }
 
 // RunCommand runs a command
@@ -126,6 +118,11 @@ func (b *SlackBot) RunCommand(args []string, channel string) error {
 		} else {
 			return fmt.Errorf("Unrecognized command: %q", args)
 		}
+	}
+
+	if args[0] != "resume" && args[0] != "config" && b.Config().Paused() {
+		b.SendMessage("I can't do that, I'm paused.", channel)
+		return nil
 	}
 
 	go b.run(args, command, channel)
@@ -153,6 +150,8 @@ func (b *SlackBot) SendMessage(text string, channel string) {
 	}
 	if b.rtm != nil {
 		b.rtm.SendMessage(b.rtm.NewOutgoingMessage(text, cid))
+	} else {
+		log.Printf("Unable to send message: %s", text)
 	}
 }
 

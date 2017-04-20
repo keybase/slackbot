@@ -15,43 +15,30 @@ type Command interface {
 	Description() string
 }
 
-// ExecCommand is a Command that does an exec.Command(...) on the system
-type ExecCommand struct {
+// execCommand is a Command that does an exec.Command(...) on the system
+type execCommand struct {
 	exec        string   // Command to execute
 	args        []string // Args for exec.Command
 	showResult  bool
 	description string
-}
-
-// ToggleDryRunCommand is a special command that toggles dry run state
-type ToggleDryRunCommand struct{}
-
-// FuncCommand runs an arbitrary function on trigger
-type FuncCommand struct {
-	Desc string
-	Fn   func(channel string, args []string) (string, error)
+	config      Config
 }
 
 // NewExecCommand creates an ExecCommand
-func NewExecCommand(exec string, args []string, showResult bool, description string) ExecCommand {
-	return ExecCommand{
+func NewExecCommand(exec string, args []string, showResult bool, description string, config Config) Command {
+	return execCommand{
 		exec:        exec,
 		args:        args,
 		showResult:  showResult,
 		description: description,
+		config:      config,
 	}
 }
 
 // Run runs the exec command
-func (c ExecCommand) Run(_ string, _ []string) (string, error) {
-	config := ReadConfigOrDefault()
-
-	if config.DryRun {
-		return fmt.Sprintf("I'm in dry run mode, but I would have run `%s` with args: %s", c.exec, c.args), nil
-	}
-
-	if config.Paused {
-		return fmt.Sprintf("I'm paused so I can't do that, but I would have run `%s` with args: %s", c.exec, c.args), nil
+func (c execCommand) Run(_ string, _ []string) (string, error) {
+	if c.config.DryRun() {
+		return fmt.Sprintf("I'm in dry run mode. I would have run `%s` with args: %s", c.exec, c.args), nil
 	}
 
 	out, err := exec.Command(c.exec, c.args...).CombinedOutput()
@@ -60,86 +47,41 @@ func (c ExecCommand) Run(_ string, _ []string) (string, error) {
 }
 
 // ShowResult decides whether to show the results from the exec
-func (c ExecCommand) ShowResult() bool {
-	config := ReadConfigOrDefault()
-	return config.DryRun || config.Paused || c.showResult
+func (c execCommand) ShowResult() bool {
+	return c.config.DryRun() || c.showResult
 }
 
 // Description describes the command
-func (c ExecCommand) Description() string {
+func (c execCommand) Description() string {
 	return c.description
 }
 
-// Run toggles the dry run state. (Itself is never run under dry run mode)
-func (c ToggleDryRunCommand) Run(_ string, _ []string) (string, error) {
-	config, err := updateConfig(func(c Config) (Config, error) {
-		c.DryRun = !c.DryRun
-		return c, nil
-	})
+// CommandFn is the function that is run for this command
+type CommandFn func(channel string, args []string) (string, error)
 
-	if err != nil {
-		return "", err
+// NewFuncCommand creates a new function command
+func NewFuncCommand(fn CommandFn, desc string, config Config) Command {
+	return funcCommand{
+		fn:     fn,
+		desc:   desc,
+		config: config,
 	}
-
-	if config.DryRun {
-		return "We are in dry run mode.", nil
-	}
-	return "We are not longer in dry run mode", nil
 }
 
-// ShowResult always shows results for toggling dry run
-func (c ToggleDryRunCommand) ShowResult() bool {
+type funcCommand struct {
+	desc   string
+	fn     CommandFn
+	config Config
+}
+
+func (c funcCommand) Run(channel string, args []string) (string, error) {
+	return c.fn(channel, args)
+}
+
+func (c funcCommand) ShowResult() bool {
 	return true
 }
 
-// Description describes what it does
-func (c ToggleDryRunCommand) Description() string {
-	return "Toggles the dry run mode"
-}
-
-// Run runs the Fn func
-func (c FuncCommand) Run(channel string, args []string) (string, error) {
-	return c.Fn(channel, args)
-}
-
-// ShowResult always shows results
-func (c FuncCommand) ShowResult() bool {
-	return true
-}
-
-// Description describes what it does
-func (c FuncCommand) Description() string {
-	return c.Desc
-}
-
-// NewPauseCommand sets Paused config to true
-func NewPauseCommand() Command {
-	return ConfigCommand{
-		Desc: "Pause the bot",
-		Updater: func(c Config) (Config, error) {
-			c.Paused = true
-			return c, nil
-		},
-	}
-}
-
-// NewResumeCommand sets Paused config to false
-func NewResumeCommand() Command {
-	return ConfigCommand{
-		Desc: "Resume the bot",
-		Updater: func(c Config) (Config, error) {
-			c.Paused = false
-			return c, nil
-		},
-	}
-}
-
-// NewListConfigCommand is a command that shows current config
-func NewListConfigCommand() Command {
-	return ConfigCommand{
-		Desc: "List current config",
-		Updater: func(c Config) (Config, error) {
-			return c, nil
-		},
-	}
+func (c funcCommand) Description() string {
+	return c.desc
 }

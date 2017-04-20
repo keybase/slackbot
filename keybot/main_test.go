@@ -10,28 +10,21 @@ import (
 	"github.com/keybase/slackbot"
 )
 
-func TestDarwinbotAddCommands(t *testing.T) {
-	bot, err := slackbot.NewTestBot(&darwinbot{})
+func TestAddBasicCommands(t *testing.T) {
+	bot, err := slackbot.NewTestBot()
 	if err != nil {
 		t.Fatal(err)
 	}
-	addCommands(bot)
-}
-
-func TestKeybotAddCommands(t *testing.T) {
-	bot, err := slackbot.NewTestBot(&keybot{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	addCommands(bot)
+	addBasicCommands(bot)
 }
 
 func TestBuildDarwin(t *testing.T) {
-	bot, err := slackbot.NewTestBot(&darwinbot{})
+	bot, err := slackbot.NewTestBot()
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Run("", []string{"build", "darwin"})
+	ext := &darwinbot{}
+	out, err := ext.Run(bot, "", []string{"build", "darwin"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,11 +34,12 @@ func TestBuildDarwin(t *testing.T) {
 }
 
 func TestPromoteRelease(t *testing.T) {
-	bot, err := slackbot.NewTestBot(&keybot{})
+	bot, err := slackbot.NewTestBot()
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Run("", []string{"release", "promote", "1.2.3"})
+	ext := &keybot{}
+	out, err := ext.Run(bot, "", []string{"release", "promote", "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,11 +49,12 @@ func TestPromoteRelease(t *testing.T) {
 }
 
 func TestInvalidUsage(t *testing.T) {
-	bot, err := slackbot.NewTestBot(&keybot{})
+	bot, err := slackbot.NewTestBot()
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Run("", []string{"release", "oops"})
+	ext := &keybot{}
+	out, err := ext.Run(bot, "", []string{"release", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}

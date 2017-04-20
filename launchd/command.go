@@ -6,8 +6,6 @@ package launchd
 import (
 	"fmt"
 	"os/exec"
-
-	"github.com/keybase/slackbot"
 )
 
 // StartCommand loads and starts a launchd job
@@ -26,16 +24,6 @@ func NewStartCommand(plistPath string, label string) StartCommand {
 
 // Run runs the exec command
 func (c StartCommand) Run(_ string, _ []string) (string, error) {
-	config := slackbot.ReadConfigOrDefault()
-
-	if config.DryRun {
-		return fmt.Sprintf("I would have run a launchd job (%s)", c.label), nil
-	}
-
-	if config.Paused {
-		return fmt.Sprintf("I'm paused so I can't do that, but I would have run a launchd job (%s)", c.label), nil
-	}
-
 	if _, err := exec.Command("/bin/launchctl", "unload", c.plistPath).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("Error in launchctl unload: %s", err)
 	}

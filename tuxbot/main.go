@@ -18,14 +18,6 @@ import (
 )
 
 func linuxBuildFunc(channel string, args []string) (string, error) {
-	config := slackbot.ReadConfigOrDefault()
-	if config.DryRun {
-		return "Dry Run: Doing that would run `prerelease.sh`", nil
-	}
-	if config.Paused {
-		return "I'm paused so I can't do that, but I would have run `prerelease.sh`", nil
-	}
-
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", err
@@ -67,6 +59,13 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	switch cmd {
 	case buildLinux.FullCommand():
+		if bot.Config().DryRun() {
+			return "Dry Run: Doing that would run `prerelease.sh`", nil
+		}
+		if bot.Config().Paused() {
+			return "I'm paused so I can't do that, but I would have run `prerelease.sh`", nil
+		}
+
 		return slackbot.FuncCommand{
 			Desc: "Perform a linux build",
 			Fn:   linuxBuildFunc,
@@ -77,11 +76,11 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 }
 
 func addCommands(bot slackbot.Bot) {
-	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date"))
-	bot.AddCommand("pause", slackbot.NewPauseCommand())
-	bot.AddCommand("resume", slackbot.NewResumeCommand())
-	bot.AddCommand("config", slackbot.NewListConfigCommand())
-	bot.AddCommand("toggle-dryrun", slackbot.ToggleDryRunCommand{})
+	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", bot.Config()))
+	bot.AddCommand("pause", slackbot.NewPauseCommand(bot.Config()))
+	bot.AddCommand("resume", slackbot.NewResumeCommand(bot.Config()))
+	bot.AddCommand("config", slackbot.NewShowConfigCommand(bot.Config()))
+	bot.AddCommand("toggle-dryrun", slackbot.NewToggleDryRunCommand(bot.Config()))
 
 	bot.AddCommand("build", slackbot.FuncCommand{
 		Desc: "Build all the things!",
@@ -90,7 +89,7 @@ func addCommands(bot slackbot.Bot) {
 }
 
 func main() {
-	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv(), "tuxbot", "", &tuxbot{})
+	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv(), "tuxbot", "", &tuxbot{}, slackbot.ReadConfigOrDefault())
 	if err != nil {
 		log.Fatal(err)
 	}

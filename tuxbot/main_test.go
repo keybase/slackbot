@@ -11,11 +11,12 @@ import (
 )
 
 func TestBuildLinux(t *testing.T) {
-	bot, err := slackbot.NewTestBot(&tuxbot{})
+	bot, err := slackbot.NewTestBot()
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Run("", []string{"build", "linux"})
+	ext := &tuxbot{}
+	out, err := ext.Run(bot, "", []string{"build", "linux"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,11 +26,12 @@ func TestBuildLinux(t *testing.T) {
 }
 
 func TestInvalidUsage(t *testing.T) {
-	bot, err := slackbot.NewTestBot(&tuxbot{})
+	bot, err := slackbot.NewTestBot()
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Run("", []string{"build", "oops"})
+	ext := &tuxbot{}
+	out, err := ext.Run(bot, "", []string{"build", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}
