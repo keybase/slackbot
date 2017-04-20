@@ -31,7 +31,7 @@ func TestBuildDarwin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Runner().Run(bot, "", []string{"build", "darwin"})
+	out, err := bot.Run("", []string{"build", "darwin"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestPromoteRelease(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Runner().Run(bot, "", []string{"release", "promote", "1.2.3"})
+	out, err := bot.Run("", []string{"release", "promote", "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestInvalidUsage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Runner().Run(bot, "", []string{"release", "oops"})
+	out, err := bot.Run("", []string{"release", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}

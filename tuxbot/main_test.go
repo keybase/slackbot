@@ -15,7 +15,7 @@ func TestBuildLinux(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Runner().Run(bot, "", []string{"build", "linux"})
+	out, err := bot.Run("", []string{"build", "linux"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func TestInvalidUsage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := bot.Runner().Run(bot, "", []string{"build", "oops"})
+	out, err := bot.Run("", []string{"build", "oops"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -17,7 +17,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-func linuxBuildFunc(bot slackbot.Bot, channel string, args []string) (string, error) {
+func linuxBuildFunc(channel string, args []string) (string, error) {
 	config := slackbot.ReadConfigOrDefault()
 	if config.DryRun {
 		return "Dry Run: Doing that would run `prerelease.sh`", nil
@@ -70,7 +70,7 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		return slackbot.FuncCommand{
 			Desc: "Perform a linux build",
 			Fn:   linuxBuildFunc,
-		}.Run(bot, channel, args)
+		}.Run(channel, args)
 	}
 
 	return cmd, nil
@@ -85,7 +85,7 @@ func addCommands(bot slackbot.Bot) {
 
 	bot.AddCommand("build", slackbot.FuncCommand{
 		Desc: "Build all the things!",
-		Fn:   bot.Runner().Run,
+		Fn:   bot.Run,
 	})
 }
 

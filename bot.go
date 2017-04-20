@@ -18,7 +18,6 @@ import (
 // Bot describes a generic bot
 type Bot interface {
 	Name() string
-	Runner() Runner
 	AddCommand(trigger string, command Command)
 	SendMessage(text string, channel string)
 	HelpMessage() string
@@ -26,6 +25,7 @@ type Bot interface {
 	Label() string
 	SetDefault(command Command)
 	Listen()
+	Run(channel string, args []string) (string, error)
 }
 
 // SlackBot is a Slack bot
@@ -94,11 +94,6 @@ func (b *SlackBot) Label() string {
 	return b.label
 }
 
-// Runner returns bot runner
-func (b *SlackBot) Runner() Runner {
-	return b.runner
-}
-
 // SetHelp sets the help info
 func (b *SlackBot) SetHelp(help string) {
 	b.help = help
@@ -107,6 +102,11 @@ func (b *SlackBot) SetHelp(help string) {
 // SetDefault is the default command, if no command added for trigger
 func (b *SlackBot) SetDefault(command Command) {
 	b.defaultCommand = command
+}
+
+// Run runs args in the bot
+func (b *SlackBot) Run(channel string, args []string) (string, error) {
+	return b.runner.Run(b, channel, args)
 }
 
 // RunCommand runs a command
@@ -135,7 +135,7 @@ func (b *SlackBot) RunCommand(args []string, channel string) error {
 }
 
 func (b *SlackBot) run(args []string, command Command, channel string) {
-	out, err := command.Run(b, channel, args)
+	out, err := command.Run(channel, args)
 	if err != nil {
 		log.Printf("Error %s running: %#v; %s\n", err, command, out)
 		b.SendMessage(fmt.Sprintf("Oops, there was an error in %q:\n%s", strings.Join(args, " "), SlackBlockQuote(out)), channel)

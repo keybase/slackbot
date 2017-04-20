@@ -46,12 +46,12 @@ func addCommands(bot slackbot.Bot) {
 	bot.AddCommand("toggle-dryrun", slackbot.ToggleDryRunCommand{})
 	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", bot.Label()}, false, "Restart the bot"))
 
-	jobHelp, _ := bot.Runner().Run(bot, "", nil)
+	jobHelp, _ := bot.Run("", nil)
 	helpMessage = helpMessage + "\n\n" + jobHelp
 	bot.SetHelp(helpMessage)
 
 	bot.SetDefault(slackbot.FuncCommand{
-		Fn: bot.Runner().Run,
+		Fn: bot.Run,
 	})
 }
 
