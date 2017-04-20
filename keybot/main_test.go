@@ -28,7 +28,7 @@ func TestBuildDarwin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out != "I would have run a launchd job (keybase.build.darwin)" {
+	if out != "I would have run: `\"build darwin\"`" {
 		t.Errorf("Unexpected output: %s", out)
 	}
 }
@@ -43,7 +43,7 @@ func TestPromoteRelease(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out != "I would have run a launchd job (keybase.release.promote)" {
+	if out != "I would have run: `\"release promote\"`" {
 		t.Errorf("Unexpected output: %s", out)
 	}
 }
