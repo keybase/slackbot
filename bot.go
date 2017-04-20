@@ -106,7 +106,10 @@ func (b *SlackBot) SetDefault(command Command) {
 
 // Run runs args in the bot
 func (b *SlackBot) Run(channel string, args []string) (string, error) {
-	return b.runner.Run(b, channel, args)
+	if b.runner != nil {
+		return b.runner.Run(b, channel, args)
+	}
+	return "", nil
 }
 
 // RunCommand runs a command
@@ -124,11 +127,6 @@ func (b *SlackBot) RunCommand(args []string, channel string) error {
 			return fmt.Errorf("Unrecognized command: %q", args)
 		}
 	}
-
-	log.Printf("Command: %#v\n", command)
-
-	msg := fmt.Sprintf("Sure, I will `%s`.", strings.Join(args, " "))
-	b.SendMessage(msg, channel)
 
 	go b.run(args, command, channel)
 	return nil
@@ -172,7 +170,7 @@ func (b *SlackBot) Triggers() []string {
 func (b *SlackBot) HelpMessage() string {
 	w := new(tabwriter.Writer)
 	buf := new(bytes.Buffer)
-	w.Init(buf, 0, 8, 0, '\t', 0)
+	w.Init(buf, 8, 8, 8, ' ', 0)
 	fmt.Fprintln(w, "Command\tDescription")
 	for _, trigger := range b.Triggers() {
 		command := b.commands[trigger]

@@ -5,11 +5,11 @@ package slackbot
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os/user"
 	"path/filepath"
+	"strings"
 )
 
 // ConfigCommand is a Command that sets some saved state
@@ -39,7 +39,7 @@ func getConfigPath() (string, error) {
 // ReadConfigOrDefault returns config
 func ReadConfigOrDefault() Config {
 	defaultConfig := Config{
-		DryRun: true,
+		DryRun: false,
 		Paused: false,
 	}
 
@@ -52,14 +52,13 @@ func ReadConfigOrDefault() Config {
 	fileBytes, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		log.Printf("Couldn't read config file:%s\n", err)
 		return defaultConfig
 	}
 
 	var config Config
 	err = json.Unmarshal(fileBytes, &config)
 	if err != nil {
-		log.Printf("Couldn't read config file:%s\n", err)
+		log.Printf("Couldn't read config file: %s\n", err)
 		return defaultConfig
 	}
 
@@ -97,19 +96,25 @@ func updateConfig(updater func(c Config) (Config, error)) (Config, error) {
 
 // Run the config change
 func (c ConfigCommand) Run(_ string, _ []string) (string, error) {
-	config := ReadConfigOrDefault()
-
-	if config.DryRun {
-		return fmt.Sprintf("Dry Run: %s", c.Description()), nil
-	}
-
 	newConfig, err := updateConfig(c.Updater)
 
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("Config is now: %+v", newConfig), nil
+	if !newConfig.Paused && !newConfig.DryRun {
+		return "I'm running normally.", nil
+	}
+
+	lines := []string{}
+	if newConfig.Paused {
+		lines = append(lines, "I'm paused.")
+	}
+	if newConfig.DryRun {
+		lines = append(lines, "I'm in dry run mode.")
+	}
+
+	return strings.Join(lines, " "), nil
 }
 
 // ShowResult will always show the results of a config change

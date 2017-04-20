@@ -6,12 +6,8 @@
 
 ```
 export SLACK_TOKEN=...
-go install github.com/keybase/slackbot/keybot
-$GOPATH/bin/keybot
+go install github.com/keybase/slackbot/examplebot
+$GOPATH/bin/examplebot
 ```
 
-### Development
-
-```
-pre-commit install
-```
+Then invite the bot to a channel and then post '!examplebot help'.

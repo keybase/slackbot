@@ -47,7 +47,7 @@ func (c ExecCommand) Run(_ string, _ []string) (string, error) {
 	config := ReadConfigOrDefault()
 
 	if config.DryRun {
-		return fmt.Sprintf("Dry Run: Doing that would run `%s` with args: %s", c.exec, c.args), nil
+		return fmt.Sprintf("I'm in dry run mode, but I would have run `%s` with args: %s", c.exec, c.args), nil
 	}
 
 	if config.Paused {
@@ -81,7 +81,10 @@ func (c ToggleDryRunCommand) Run(_ string, _ []string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("Dry Run Value is now: %t", config.DryRun), nil
+	if config.DryRun {
+		return "We are in dry run mode.", nil
+	}
+	return "We are not longer in dry run mode", nil
 }
 
 // ShowResult always shows results for toggling dry run
@@ -91,7 +94,7 @@ func (c ToggleDryRunCommand) ShowResult() bool {
 
 // Description describes what it does
 func (c ToggleDryRunCommand) Description() string {
-	return "Toggles the Dry Run value"
+	return "Toggles the dry run mode"
 }
 
 // Run runs the Fn func
@@ -112,7 +115,7 @@ func (c FuncCommand) Description() string {
 // NewPauseCommand sets Paused config to true
 func NewPauseCommand() Command {
 	return ConfigCommand{
-		Desc: "Pause any future builds",
+		Desc: "Pause the bot",
 		Updater: func(c Config) (Config, error) {
 			c.Paused = true
 			return c, nil
@@ -123,7 +126,7 @@ func NewPauseCommand() Command {
 // NewResumeCommand sets Paused config to false
 func NewResumeCommand() Command {
 	return ConfigCommand{
-		Desc: "Continue any future builds",
+		Desc: "Resume the bot",
 		Updater: func(c Config) (Config, error) {
 			c.Paused = false
 			return c, nil
