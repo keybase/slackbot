@@ -34,6 +34,7 @@ type Script struct {
 	Command    string
 	BucketName string
 	Platform   string
+	LogPath    string
 	EnvVars    []EnvVar
 }
 
@@ -44,8 +45,9 @@ type EnvVar struct {
 }
 
 type job struct {
-	Env    Env
-	Script Script
+	Env     Env
+	Script  Script
+	LogPath string
 }
 
 const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
@@ -93,9 +95,9 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <string>{{ .Env.GoPath }}/src/github.com/keybase/slackbot/launchd/run.sh</string>
     </array>
     <key>StandardErrorPath</key>
-    <string>{{ .Env.Home }}/Library/Logs/{{ .Script.Label }}.log</string>
+    <string>{{ .LogPath }}</string>
     <key>StandardOutPath</key>
-    <string>{{ .Env.Home }}/Library/Logs/{{ .Script.Label }}.log</string>
+    <string>{{ .LogPath }}</string>
 </dict>
 </plist>
 `
@@ -131,7 +133,11 @@ func (e Env) LogPathForLaunchdLabel(label string) (string, error) {
 // Plist is plist for env and args
 func (e Env) Plist(script Script) ([]byte, error) {
 	t := template.New("Plist template")
-	j := job{Env: e, Script: script}
+	logPath, lerr := e.LogPathForLaunchdLabel(script.Label)
+	if lerr != nil {
+		return nil, lerr
+	}
+	j := job{Env: e, Script: script, LogPath: logPath}
 	t, err := t.Parse(plistTemplate)
 	if err != nil {
 		return nil, err
@@ -168,4 +174,19 @@ func (e Env) Cleanup(script Script) error {
 	path := fmt.Sprintf("%s/%s.plist", plistDir, script.Label)
 	log.Printf("Removing %s", path)
 	return os.Remove(path)
+}
+
+// CleanupLog removes log path
+func CleanupLog(env Env, label string) error {
+	// Remove log
+	logPath, lerr := env.LogPathForLaunchdLabel(label)
+	if lerr != nil {
+		return lerr
+	}
+	if _, err := os.Stat(logPath); err == nil {
+		if err := os.Remove(logPath); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -35,10 +35,17 @@ func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd
 		return fmt.Sprintf("I'm paused so I can't do that, but I would have run a launchd job (%s)", script.Label), nil
 	}
 
+	// Write job plist
 	path, err := env.WritePlist(script)
 	if err != nil {
 		return "", err
 	}
+
+	// Remove previous log
+	if err := launchd.CleanupLog(env, script.Label); err != nil {
+		return "", err
+	}
+
 	msg := fmt.Sprintf("Starting job `%s`. To cancel run `!%s cancel %s`", script.Label, bot.Name(), script.Label)
 	bot.SendMessage(msg, channel)
 	return launchd.NewStartCommand(path, script.Label).Run("", nil)
