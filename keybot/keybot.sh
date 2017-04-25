@@ -7,5 +7,4 @@ cd $dir
 
 git pull --ff-only
 GO15VENDOREXPERIMENT=1 go install github.com/keybase/slackbot/keybot
-../send/send.sh "Starting..."
 "$GOPATH/bin/keybot"

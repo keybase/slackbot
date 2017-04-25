@@ -148,6 +148,12 @@ func (b *SlackBot) SendMessage(text string, channel string) {
 	if cid == "" {
 		cid = channel
 	}
+
+	if channel == "" {
+		log.Printf("No channel to send message: %s", text)
+		return
+	}
+
 	if b.rtm != nil {
 		b.rtm.SendMessage(b.rtm.NewOutgoingMessage(text, cid))
 	} else {

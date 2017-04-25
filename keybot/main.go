@@ -94,6 +94,6 @@ func main() {
 	bot.SetDefault(slackbot.NewFuncCommand(runFn, "Extension", bot.Config()))
 	bot.SetHelp(bot.HelpMessage() + "\n\n" + ext.Help(bot))
 
-	log.Printf("Started %s\n", name)
+	bot.SendMessage("I'm running.", os.Getenv("SLACK_CHANNEL"))
 	bot.Listen()
 }
