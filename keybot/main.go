@@ -46,7 +46,7 @@ func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd
 		return "", err
 	}
 
-	msg := fmt.Sprintf("Starting job `%s`. To cancel run `!%s cancel %s`", script.Label, bot.Name(), script.Label)
+	msg := fmt.Sprintf("I'm starting the job `%s`. To cancel run `!%s cancel %s`", script.Label, bot.Name(), script.Label)
 	bot.SendMessage(msg, channel)
 	return launchd.NewStartCommand(path, script.Label).Run("", nil)
 }

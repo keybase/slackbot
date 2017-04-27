@@ -44,7 +44,7 @@ func Stop(label string) (string, error) {
 	if _, err := exec.Command("/bin/launchctl", "stop", label).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("Error in launchctl stop: %s", err)
 	}
-	return "", nil
+	return fmt.Sprintf("I stopped the job `%s`.", label), nil
 }
 
 // ShowResult decides whether to show the results from the exec
