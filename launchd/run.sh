@@ -26,9 +26,12 @@ release_bin="$GOPATH/bin/release"
 
 err_report() {
   url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
-  "$client_dir/packaging/slack/send.sh" "Error (`$cmd`), see $url"
+  "$client_dir/packaging/slack/send.sh" "Error `$cmd`, see $url"
 }
 
 trap 'err_report $LINENO' ERR
 
 "$SCRIPT_PATH"
+
+url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
+"$client_dir/packaging/slack/send.sh" "Finished `$cmd`, view log at $url"
