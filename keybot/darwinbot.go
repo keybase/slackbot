@@ -55,7 +55,6 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 		script := launchd.Script{
 			Label:      "keybase.build.darwin",
 			Path:       "github.com/keybase/client/packaging/prerelease/pull_build.sh",
-			Command:    "build darwin",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{

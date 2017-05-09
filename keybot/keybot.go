@@ -71,7 +71,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		script := launchd.Script{
 			Label:      "keybase.build.android",
 			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
-			Command:    "build android",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "ANDROID_HOME", Value: "/usr/local/opt/android-sdk"},
@@ -84,7 +83,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		script := launchd.Script{
 			Label:      "keybase.build.ios",
 			Path:       "github.com/keybase/client/packaging/ios/build_and_publish.sh",
-			Command:    "build ios",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
@@ -98,7 +96,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		script := launchd.Script{
 			Label:      "keybase.release.promote",
 			Path:       "github.com/keybase/slackbot/scripts/release.promote.sh",
-			Command:    "release promote",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
@@ -115,7 +112,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		script := launchd.Script{
 			Label:      "keybase.dumplog",
 			Path:       "github.com/keybase/slackbot/scripts/dumplog.sh",
-			Command:    "dumplog",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
@@ -127,7 +123,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		script := launchd.Script{
 			Label:      "keybase.release.broken",
 			Path:       "github.com/keybase/slackbot/scripts/release.broken.sh",
-			Command:    "release broken",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
@@ -140,7 +135,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		script := launchd.Script{
 			Label:      "keybase.smoketest",
 			Path:       "github.com/keybase/slackbot/scripts/smoketest.sh",
-			Command:    "smoketest",
 			BucketName: "prerelease.keybase.io",
 			Platform:   *smoketestPlatform,
 			EnvVars: []launchd.EnvVar{

@@ -31,7 +31,6 @@ type Env struct {
 type Script struct {
 	Label      string
 	Path       string
-	Command    string
 	BucketName string
 	Platform   string
 	LogPath    string
@@ -82,8 +81,8 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <string>{{ .Env.GoPath }}/src/{{ .Script.Path }}</string>
         <key>PLATFORM</key>
         <string>{{ .Script.Platform }}</string>
-        <key>COMMAND</key>
-        <string>{{ .Script.Command }}</string>
+        <key>LABEL</key>
+        <string>{{ .Script.Label }}</string>
         {{ with .Script.EnvVars }}{{ range . }}
         <key>{{ .Key }}</key>
         <string>{{ .Value }}</string>
