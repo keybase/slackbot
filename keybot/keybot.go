@@ -115,6 +115,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
+				launchd.EnvVar{Key: "NOLOG", Value: boolToEnvString(true)},
 			},
 		}
 		return runScript(bot, channel, env, script)

@@ -7,7 +7,7 @@ cd "$dir"
 
 gopath=${GOPATH:-}
 logpath=${LOG_PATH:-}
-label=${LABEL:-""}
+nolog=${NOLOG:-""}
 bucket_name=${BUCKET_NAME:-"prerelease.keybase.io"}
 : ${SCRIPT_PATH:?"Need to set SCRIPT_PATH to run script"}
 
@@ -33,5 +33,7 @@ trap 'err_report $LINENO' ERR
 
 "$SCRIPT_PATH"
 
-url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
-"$client_dir/packaging/slack/send.sh" "Finished `$label`, view log at $url"
+if [ "$nolog" = "" ]; then
+  url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
+  "$client_dir/packaging/slack/send.sh" "Finished `$LABEL`, view log at $url"
+fi
