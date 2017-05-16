@@ -18,9 +18,10 @@
 			"revisionTime": "2015-10-22T17:55:26+11:00"
 		},
 		{
+			"checksumSHA1": "kEuS6hbYWOde2eHiqPdsitxzfDg=",
 			"path": "github.com/nlopes/slack",
-			"revision": "14b5c06da227e7d8fe3e411b58ace3977df0d00d",
-			"revisionTime": "2016-03-30T08:13:57+01:00"
+			"revision": "72d15a0fc0b773a59c00f78b9e7d97eeb8c4281f",
+			"revisionTime": "2017-04-26T19:14:31Z"
 		},
 		{
 			"path": "golang.org/x/net/websocket",
@@ -32,5 +33,6 @@
 			"revision": "8cccfa8eb2e3183254457fb1749b2667fbc364c7",
 			"revisionTime": "2016-02-17T20:03:01+11:00"
 		}
-	]
+	],
+	"rootPath": "github.com/keybase/slackbot"
 }
