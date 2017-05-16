@@ -7,7 +7,7 @@ cd "$dir"
 
 gopath=${GOPATH:-}
 logpath=${LOG_PATH:-}
-nolog=${NOLOG:-""}
+nolog=${NOLOG:-""} # Don't show log at end of job
 bucket_name=${BUCKET_NAME:-"prerelease.keybase.io"}
 : ${SCRIPT_PATH:?"Need to set SCRIPT_PATH to run script"}
 
