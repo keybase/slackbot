@@ -34,6 +34,9 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 	cancel := app.Command("cancel", "Cancel")
 	cancelLabel := cancel.Arg("label", "Launchd job label").Required().String()
 
+	dumplogCmd := app.Command("dumplog", "Show the log file")
+	dumplogCommandLabel := dumplogCmd.Arg("label", "Launchd job label").Required().String()
+
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
 		return usage, cmdErr
@@ -64,6 +67,20 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
 				// TODO: Rename to SKIP_CI in packaging scripts
 				launchd.EnvVar{Key: "NOWAIT", Value: boolToEnvString(*buildDarwinSkipCI)},
+			},
+		}
+		return runScript(bot, channel, env, script)
+	case dumplogCmd.FullCommand():
+		readPath, err := env.LogPathForLaunchdLabel(*dumplogCommandLabel)
+		if err != nil {
+			return "", err
+		}
+		script := launchd.Script{
+			Label:      "keybase.dumplog",
+			Path:       "github.com/keybase/slackbot/scripts/dumplog.sh",
+			BucketName: "prerelease.keybase.io",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
 			},
 		}
 		return runScript(bot, channel, env, script)

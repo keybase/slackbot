@@ -46,7 +46,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	smoketestEnable := smoketest.Flag("enable", "Whether smoketesting should be enabled").Required().Bool()
 	smoketestMaxTesters := smoketest.Flag("max-testers", "Max number of testers for this build").Required().Int()
 
-	dumplogCmd := app.Command("dumplog", "Dump log launchd job label")
+	dumplogCmd := app.Command("dumplog", "Show the log file")
 	dumplogCommandLabel := dumplogCmd.Arg("label", "Launchd job label").Required().String()
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
