@@ -90,8 +90,8 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 		return runScript(bot, channel, env, script)
 	case upgrade.FullCommand():
 		script := launchd.Script{
-			Label: "keybase.update",
-			Path:  "github.com/keybase/slackbot/scripts/update.sh",
+			Label: "keybase.upgrade",
+			Path:  "github.com/keybase/slackbot/scripts/upgrade.sh",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "NAME", Value: *upgradePackageName},
 			},
