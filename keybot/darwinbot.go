@@ -37,6 +37,9 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 	dumplogCmd := app.Command("dumplog", "Show the log file")
 	dumplogCommandLabel := dumplogCmd.Arg("label", "Launchd job label").Required().String()
 
+	upgrade := app.Command("upgrade", "Upgrade package")
+	upgradePackageName := upgrade.Arg("name", "Package name (yarn, go, fastlane, etc)").Required().String()
+
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
 		return usage, cmdErr
@@ -82,6 +85,15 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
 				launchd.EnvVar{Key: "NOLOG", Value: boolToEnvString(true)},
+			},
+		}
+		return runScript(bot, channel, env, script)
+	case upgrade.FullCommand():
+		script := launchd.Script{
+			Label: "keybase.update",
+			Path:  "github.com/keybase/slackbot/scripts/update.sh",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "NAME", Value: *upgradePackageName},
 			},
 		}
 		return runScript(bot, channel, env, script)
