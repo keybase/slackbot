@@ -49,6 +49,9 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	dumplogCmd := app.Command("dumplog", "Show the log file")
 	dumplogCommandLabel := dumplogCmd.Arg("label", "Launchd job label").Required().String()
 
+	upgrade := app.Command("upgrade", "Upgrade package")
+	upgradePackageName := upgrade.Arg("name", "Package name (yarn, go, fastlane, etc)").Required().String()
+
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
 		return usage, cmdErr
@@ -142,6 +145,16 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 				launchd.EnvVar{Key: "SMOKETEST_BUILD_A", Value: *smoketestBuildA},
 				launchd.EnvVar{Key: "SMOKETEST_MAX_TESTERS", Value: strconv.Itoa(*smoketestMaxTesters)},
 				launchd.EnvVar{Key: "SMOKETEST_ENABLE", Value: boolToString(*smoketestEnable)},
+			},
+		}
+		return runScript(bot, channel, env, script)
+
+	case upgrade.FullCommand():
+		script := launchd.Script{
+			Label: "keybase.update",
+			Path:  "github.com/keybase/slackbot/scripts/update.sh",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "NAME", Value: *upgradePackageName},
 			},
 		}
 		return runScript(bot, channel, env, script)
