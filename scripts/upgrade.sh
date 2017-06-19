@@ -7,7 +7,7 @@ cd "$dir"
 
 name=${NAME:-}
 
-# NAME comes from the slack command, so It's a good idea to completely
+# NAME comes from the slack command, so it's a good idea to completely
 # whitelist the package names here.
 if [ "$name" = "go" ]; then
   brew upgrade go

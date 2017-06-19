@@ -7,6 +7,7 @@ cd "$dir"
 
 gopath=${GOPATH:-}
 logpath=${LOG_PATH:-}
+label=${LABEL:-}
 nolog=${NOLOG:-""} # Don't show log at end of job
 bucket_name=${BUCKET_NAME:-"prerelease.keybase.io"}
 : ${SCRIPT_PATH:?"Need to set SCRIPT_PATH to run script"}
@@ -26,7 +27,7 @@ release_bin="$GOPATH/bin/release"
 
 err_report() {
   url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
-  "$client_dir/packaging/slack/send.sh" "Error `$label`, see $url"
+  "$client_dir/packaging/slack/send.sh" "Error $label, see $url"
 }
 
 trap 'err_report $LINENO' ERR
@@ -35,5 +36,5 @@ trap 'err_report $LINENO' ERR
 
 if [ "$nolog" = "" ]; then
   url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
-  "$client_dir/packaging/slack/send.sh" "Finished `$LABEL`, view log at $url"
+  "$client_dir/packaging/slack/send.sh" "Finished $label, view log at $url"
 fi
