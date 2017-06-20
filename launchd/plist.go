@@ -19,6 +19,7 @@ type Env struct {
 	Path         string
 	Home         string
 	GoPath       string
+	GoPathForBot string
 	GithubToken  string
 	SlackToken   string
 	SlackChannel string
@@ -91,7 +92,7 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>{{ .Env.GoPath }}/src/github.com/keybase/slackbot/launchd/run.sh</string>
+        <string>{{ .Env.GoPathForBot }}/src/github.com/keybase/slackbot/launchd/run.sh</string>
     </array>
     <key>StandardErrorPath</key>
     <string>{{ .LogPath }}</string>
@@ -107,6 +108,7 @@ func NewEnv(home string, path string) Env {
 		Path:         path,
 		Home:         home,
 		GoPath:       os.Getenv("GOPATH"),
+		GoPathForBot: os.Getenv("GOPATH"),
 		GithubToken:  os.Getenv("GITHUB_TOKEN"),
 		SlackToken:   os.Getenv("SLACK_TOKEN"),
 		SlackChannel: os.Getenv("SLACK_CHANNEL"),
