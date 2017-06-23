@@ -12,6 +12,7 @@ import (
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
+	"github.com/keybase/slackbot/jenkins"
 	"github.com/keybase/slackbot/launchd"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -33,6 +34,13 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildIOS := build.Command("ios", "Start an ios build")
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
 	buildIOSKbfsCommit := buildIOS.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+
+	buildWindows := build.Command("windows", "Start a windows build")
+	cancelWindows := cancel.Command("windows", "Cancel last windows build")
+	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").String()
+	buildWindowsCientCommit := buildWindows.Flag("client-commit", "Build a specific client commit hash").String()
+	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+	buildWindowsUpdateChannel := buildWindows.Flag("update-channel", "Smoke, SmokeCI (default), Test").String()
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
@@ -158,7 +166,19 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			},
 		}
 		return runScript(bot, channel, env, script)
+
+	// Windows
+	case buildWindows.FullCommand():
+		return jenkins.StartBuild(*buildWindowsCientCommit, *buildWindowsKbfsCommit, *buildWindowsUpdateChannel)
+	case cancelWindows.FullCommand():
+		jenkins.StopBuild(*cancelWindowsQueueID)
+		out := "Issued stop"
+		if *cancelWindowsQueueID != "" {
+			out = out + " for " + *cancelWindowsQueueID
+		}
+		return out, nil
 	}
+
 	return cmd, nil
 }
 

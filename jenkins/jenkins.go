@@ -5,17 +5,59 @@ package jenkins
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
-const jenkinsURL = "http://192.168.1.10:8080"
-const jenkinsJobName = "gui_wix"
+const jenkinsURL = "https://ci.keyba.se"
+const jenkinsJobName = "windows-installer"
+
+type CrumbResult struct {
+	Crumb string
+	Err   error
+	Time  time.Time
+}
+
+var lastCrumb CrumbResult
+var crumbGetChan chan bool
+var crumbResultChan chan CrumbResult
+
+// Make a worker gofunc to cache the Jenkins crumb for
+// a certain amount of time
+func init() {
+	crumbGetChan = make(chan bool)
+	crumbResultChan = make(chan CrumbResult)
+	go func() {
+		for {
+			<-crumbGetChan
+			if time.Since(lastCrumb.Time) > time.Hour || lastCrumb.Err != nil || lastCrumb.Crumb == "" {
+				lastCrumb.Crumb, lastCrumb.Err = getJenkinsCrumb()
+				if lastCrumb.Err == nil {
+					lastCrumb.Time = time.Now()
+				}
+			}
+			crumbResultChan <- lastCrumb
+		}
+	}()
+}
+
+// SetLastCrumb is for testing
+func SetLastCrumb(crumb CrumbResult) {
+	lastCrumb = crumb
+}
+
+// GetLastCrumb is for testing
+func GetLastCrumb() CrumbResult {
+	return lastCrumb
+}
 
 func parseQueueNumber(locationString string) string {
 	countIndex := strings.Index(locationString, "queue/item/")
@@ -27,9 +69,74 @@ func parseQueueNumber(locationString string) string {
 	return strings.TrimRight(locationString[countIndex:], "/")
 }
 
-// StartBuild starts the build and returns the queue number as a string from Jenkins
-func StartBuild(clientRev string, kbfsRev string, jsonUpdateFilename string) (string, error) {
+func getJenkinsCrumb() (string, error) {
+	name := os.Getenv("JENKINS_WINDOWS_USERNAME")
+	password := os.Getenv("JENKINS_WINDOWS_PASSWORD")
+	if name == "" || password == "" {
+		return "", errors.New("Jenkins Windows username and password required")
+	}
+	u, err := url.Parse(jenkinsURL + "/crumbIssuer/api/json")
+	if err != nil {
+		return "", err
+	}
 
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	req.SetBasicAuth(name, password)
+	res, err := client.Do(req)
+	defer func() { _ = res.Body.Close() }()
+
+	if err != nil {
+		return "", err
+	}
+	response, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return "", err
+	}
+	if res.StatusCode < 200 || res.StatusCode > 201 {
+		return "", fmt.Errorf("Build request returned %d", res.StatusCode)
+	}
+
+	var responseMap map[string]interface{}
+	err = json.Unmarshal([]byte(response), &responseMap)
+	if err != nil {
+		return "", err
+	}
+	crumb := responseMap["crumb"]
+	if crumb == nil || crumb.(string) == "" {
+		return "", errors.New("no crumb in response")
+	}
+	return crumb.(string), nil
+}
+
+func doJenkinsPost(buildurl string) (*http.Response, error) {
+	log.Printf("Posting: %s \n", buildurl)
+
+	crumbGetChan <- true
+	crumb := <-crumbResultChan
+	if crumb.Err != nil {
+		return nil, crumb.Err
+	}
+	name := os.Getenv("JENKINS_WINDOWS_USERNAME")
+	password := os.Getenv("JENKINS_WINDOWS_PASSWORD")
+	if name == "" || password == "" {
+		return nil, errors.New("Jenkins Windows username and password required")
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", buildurl, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(name, password)
+	req.Header.Add("Jenkins-Crumb", crumb.Crumb)
+	return client.Do(req)
+}
+
+// StartBuild starts the build and returns the queue number as a string from Jenkins.
+// Also enables/resumes auto building.
+func StartBuild(clientRev string, kbfsRev string, updateChannel string) (string, error) {
 	u, err := url.Parse(jenkinsURL + "/job/" + jenkinsJobName + "/buildWithParameters")
 	urlValues := url.Values{}
 	if clientRev != "" {
@@ -38,13 +145,14 @@ func StartBuild(clientRev string, kbfsRev string, jsonUpdateFilename string) (st
 	if kbfsRev != "" {
 		urlValues.Add("KBFSRevision", kbfsRev)
 	}
-	if jsonUpdateFilename != "" {
-		urlValues.Add("JSON_UPDATE_FILENAME", jsonUpdateFilename)
+	if updateChannel != "" {
+		urlValues.Add("UpdateChannel", updateChannel)
 	}
 	u.RawQuery = urlValues.Encode()
 	buildurl := u.String()
-	log.Printf("Posting: %s \n", buildurl)
-	res, err := http.Post(buildurl, "", nil)
+
+	res, err := doJenkinsPost(buildurl)
+
 	defer func() { _ = res.Body.Close() }()
 
 	if err != nil {
@@ -59,14 +167,17 @@ func StartBuild(clientRev string, kbfsRev string, jsonUpdateFilename string) (st
 		return "", fmt.Errorf("Build request returned %d", res.StatusCode)
 	}
 	loc, _ := res.Location()
-	log.Print(robots)
+	log.Printf("StartBuild robots: %v", robots)
+
+	controlJob(true)
+
 	return fmt.Sprintf("Requested Jenkins build with queue ID %s", parseQueueNumber(loc.String())), nil
 }
 
 func stopBuildByID(buildID string) {
 	log.Printf("Stopping build %s \n", buildID)
 	// Of the form: http://<Jenkins_URL>/job/<Job_Name>/<Build_Number>/stop
-	res, err := http.Post(jenkinsURL+"/job/"+jenkinsJobName+"/"+buildID+"/stop", "", nil)
+	res, err := doJenkinsPost(jenkinsURL + "/job/" + jenkinsJobName + "/" + buildID + "/stop")
 	if err != nil {
 		log.Print(err)
 	}
@@ -80,7 +191,7 @@ func stopBuildByID(buildID string) {
 
 func getJSON(url string, target interface{}) error {
 	fmt.Printf("posting to: %s\n", url)
-	r, err := http.Post(url, "", nil)
+	r, err := doJenkinsPost(url)
 	if err != nil {
 		return err
 	}
@@ -98,7 +209,7 @@ func cancelQueueItem(queueEntry string) {
 	u.RawQuery = urlValues.Encode()
 	cancelURL := u.String()
 
-	res, err := http.Post(cancelURL, "", nil)
+	res, err := doJenkinsPost(cancelURL)
 
 	if err != nil {
 		log.Print(err)
@@ -138,10 +249,30 @@ func getLastBuildAndQueueNumbers() (currentBuild int, currentQ int, err error) {
 	return
 }
 
-// StopBuild will stop/cancel the current build.
+func controlJob(enable bool) {
+	command := "disable"
+	if enable {
+		command = "enable"
+	}
+	log.Printf("%s job\n", command)
+	// Of the form: http://<Jenkins_URL>/job/<Job_Name>/disable
+	_, err := doJenkinsPost(jenkinsURL + "/job/" + jenkinsJobName + "/" + command)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+// StopBuild will disable auto builds and
+// stop/cancel the current build, if specified.
 // Location is the return string from a build request, e.g.:
 // http://192.168.1.10:8080/queue/item/34/
 func StopBuild(queueEntry string) {
+
+	controlJob(false)
+
+	if queueEntry == "" {
+		return
+	}
 
 	// If the build has not started, you have the queueItem, then POST on:
 	// http://<Jenkins_URL>/queue/cancelItem?id=<queueItem>
