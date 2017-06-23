@@ -29,6 +29,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	cancel := app.Command("cancel", "Cancel")
 	cancelLabel := cancel.Arg("label", "Launchd job label").Required().String()
+	cancelWin := cancel.Flag("windows", "Specify Windows build (label = jenkins job)").Bool()
 
 	buildAndroid := build.Command("android", "Start an android build")
 	buildIOS := build.Command("ios", "Start an ios build")
@@ -36,8 +37,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildIOSKbfsCommit := buildIOS.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
 	buildWindows := build.Command("windows", "Start a windows build")
-	cancelWindows := cancel.Command("windows", "Cancel last windows build")
-	cancelWindowsQueueID := cancelWindows.Arg("quid", "Queue id of build to stop").String()
 	buildWindowsCientCommit := buildWindows.Flag("client-commit", "Build a specific client commit hash").String()
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 	buildWindowsUpdateChannel := buildWindows.Flag("update-channel", "Smoke, SmokeCI (default), Test").String()
@@ -75,8 +74,15 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	env := launchd.NewEnv(home, path)
 	switch cmd {
 	case cancel.FullCommand():
+		if *cancelWin {
+			jenkins.StopBuild(*cancelLabel)
+			out := "Issued cancel"
+			if *cancelLabel != "" {
+				out = out + " for " + *cancelLabel
+			}
+			return out, nil
+		}
 		return launchd.Stop(*cancelLabel)
-
 	case buildAndroid.FullCommand():
 
 		script := launchd.Script{
@@ -170,13 +176,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	// Windows
 	case buildWindows.FullCommand():
 		return jenkins.StartBuild(*buildWindowsCientCommit, *buildWindowsKbfsCommit, *buildWindowsUpdateChannel)
-	case cancelWindows.FullCommand():
-		jenkins.StopBuild(*cancelWindowsQueueID)
-		out := "Issued stop"
-		if *cancelWindowsQueueID != "" {
-			out = out + " for " + *cancelWindowsQueueID
-		}
-		return out, nil
 	}
 
 	return cmd, nil
