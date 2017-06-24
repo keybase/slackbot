@@ -139,6 +139,7 @@ func doJenkinsPost(buildurl string) (*http.Response, error) {
 func StartBuild(clientRev string, kbfsRev string, updateChannel string) (string, error) {
 	u, err := url.Parse(jenkinsURL + "/job/" + jenkinsJobName + "/buildWithParameters")
 	urlValues := url.Values{}
+	urlValues.Add("SlackBot", "true")
 	if clientRev != "" {
 		urlValues.Add("ClientRevision", clientRev)
 	}
