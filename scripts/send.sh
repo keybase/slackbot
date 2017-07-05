@@ -7,13 +7,7 @@ cd "$dir"
 
 "$dir/goinstall.sh" "github.com/keybase/slackbot"
 
-# Outputs to slack if you have slackbot installed and SLACK_TOKEN and
-# SLACK_CHANNEL set, otherwise it does nothing (errors are ignored on purpose).
+go install "github.com/keybase/slackbot/send"
+send_bin="$GOPATH/bin/send"
 
-sender="$dir/../send/main.go"
-
-if [ -f $sender ]; then
-  go run $sender -i=1 "$@"
-else
-  echo "[No sender] $@"
-fi
+"$send_bin" -i=1 "$@"
