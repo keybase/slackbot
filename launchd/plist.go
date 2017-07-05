@@ -92,7 +92,7 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>{{ .Env.GoPathForBot }}/src/github.com/keybase/slackbot/launchd/run.sh</string>
+        <string>{{ .Env.GoPathForBot }}/src/github.com/keybase/slackbot/scripts/run.sh</string>
     </array>
     <key>StandardErrorPath</key>
     <string>{{ .LogPath }}</string>

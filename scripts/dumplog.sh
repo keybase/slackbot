@@ -10,4 +10,4 @@ echo "Loading release tool"
 release_bin="$GOPATH/bin/release"
 
 url=`"$release_bin" save-log --bucket-name=$BUCKET_NAME --path="$READ_PATH"`
-"$dir/../send/send.sh" "Log saved to $url"
+"$dir/send.sh" "Log saved to $url"

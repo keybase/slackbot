@@ -11,8 +11,8 @@ release_bin="$GOPATH/bin/release"
 
 if [ -n "$RELEASE_TO_PROMOTE" ]; then
   "$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$BUCKET_NAME" --platform="$PLATFORM"
-  "$dir/../send/send.sh" "Promoted $PLATFORM release $RELEASE_TO_PROMOTE ($BUCKET_NAME)"
+  "$dir/send.sh" "Promoted $PLATFORM release $RELEASE_TO_PROMOTE ($BUCKET_NAME)"
 else
   "$release_bin" promote-releases --bucket-name="$BUCKET_NAME" --platform="$PLATFORM"
-  "$dir/../send/send.sh" "Promoted $PLATFORM release on ($BUCKET_NAME)"
+  "$dir/send.sh" "Promoted $PLATFORM release on ($BUCKET_NAME)"
 fi

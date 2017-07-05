@@ -10,4 +10,4 @@ echo "Loading release tool"
 release_bin="$GOPATH/bin/release"
 
 "$release_bin" broken-release --release="$BROKEN_RELEASE" --bucket-name="$BUCKET_NAME" --platform="$PLATFORM"
-"$dir/../send/send.sh" "Removed $BROKEN_RELEASE for $PLATFORM ($BUCKET_NAME)"
+"$dir/send.sh" "Removed $BROKEN_RELEASE for $PLATFORM ($BUCKET_NAME)"

@@ -12,12 +12,12 @@ bucket_name=${BUCKET_NAME:-"prerelease.keybase.io"}
 : ${SCRIPT_PATH:?"Need to set SCRIPT_PATH to run script"}
 
 echo "Loading release tool"
-"$dir/../scripts/goinstall.sh" "github.com/keybase/release"
+"$dir/goinstall.sh" "github.com/keybase/release"
 release_bin="$GOPATH/bin/release"
 
 err_report() {
   url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
-  "$dir/../send/send.sh" "Error \`$label\`, see $url"
+  "$dir/send.sh" "Error \`$label\`, see $url"
 }
 
 trap 'err_report $LINENO' ERR
@@ -26,5 +26,5 @@ trap 'err_report $LINENO' ERR
 
 if [ "$nolog" = "" ]; then
   url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
-  "$dir/../send/send.sh" "Finished \`$label\`, view log at $url"
+  "$dir/send.sh" "Finished \`$label\`, view log at $url"
 fi

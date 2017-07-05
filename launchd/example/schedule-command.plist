@@ -18,7 +18,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/test/go/src/github.com/keybase/slackbot/send/send.sh</string>
+        <string>/Users/test/go/src/github.com/keybase/slackbot/scripts/send.sh</string>
         <string>!keybot build darwin</string>
     </array>
     <key>StartCalendarInterval</key>
