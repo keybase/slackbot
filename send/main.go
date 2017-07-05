@@ -14,8 +14,9 @@ import (
 
 var ignoreError = flag.Bool("i", false, "Ignore error (always exit 0)")
 
-func error(s string) {
+func handleError(s string, text string) {
 	if *ignoreError {
+		log.Printf("[Unable to send: %s] %s", s, text)
 		os.Exit(0)
 	}
 	log.Fatal(s)
@@ -23,10 +24,11 @@ func error(s string) {
 
 func main() {
 	flag.Parse()
+	text := flag.Arg(0)
 
 	channel := os.Getenv("SLACK_CHANNEL")
 	if channel == "" {
-		error("SLACK_CHANNEL is not set")
+		handleError("SLACK_CHANNEL is not set", text)
 	}
 
 	api := slack.New(slackbot.GetTokenFromEnv())
@@ -34,16 +36,16 @@ func main() {
 
 	channelIDs, err := slackbot.LoadChannelIDs(*api)
 	if err != nil {
-		error(err.Error())
+		handleError(err.Error(), text)
 	}
-
-	text := flag.Arg(0)
 
 	params := slack.NewPostMessageParameters()
 	params.AsUser = true
-	_, _, err = api.PostMessage(channelIDs[channel], text, params)
+	channelID := channelIDs[channel]
+	_, _, err = api.PostMessage(channelID, text, params)
 	if err != nil {
-		error(err.Error())
+		handleError(err.Error(), text)
+	} else {
+		log.Printf("[%s (%s)] %s\n", channel, channelID, text)
 	}
-
 }
