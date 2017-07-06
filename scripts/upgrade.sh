@@ -14,6 +14,10 @@ if [ "$name" = "go" ]; then
 elif [ "$name" = "yarn" ]; then
   brew upgrade yarn
 elif [ "$name" = "fastlane" ]; then
+  which ruby
+  ruby --version
+  which gem
+  gem --version
   gem update fastlane
   gem cleanup
 fi

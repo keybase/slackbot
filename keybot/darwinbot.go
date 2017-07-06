@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
@@ -50,8 +49,7 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 	}
 
 	home := os.Getenv("HOME")
-	shims := filepath.Join(home, ".rbenv/shims")
-	path := "/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:" + shims
+	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin"
 	env := launchd.NewEnv(home, path)
 	switch cmd {
 	case cancel.FullCommand():
