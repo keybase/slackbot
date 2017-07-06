@@ -73,41 +73,44 @@ func getJenkinsCrumb() (string, error) {
 	name := os.Getenv("JENKINS_WINDOWS_USERNAME")
 	password := os.Getenv("JENKINS_WINDOWS_PASSWORD")
 	if name == "" || password == "" {
-		return "", errors.New("Jenkins Windows username and password required")
+		err := errors.New("Jenkins Windows username and password required")
+		return err.Error(), err
 	}
 	u, err := url.Parse(jenkinsURL + "/crumbIssuer/api/json")
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 	req.SetBasicAuth(name, password)
 	res, err := client.Do(req)
 	defer func() { _ = res.Body.Close() }()
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 	response, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 	if res.StatusCode < 200 || res.StatusCode > 201 {
-		return "", fmt.Errorf("Build request returned %d", res.StatusCode)
+		err = fmt.Errorf("Build request returned %d", res.StatusCode)
+		return err.Error(), err
 	}
 
 	var responseMap map[string]interface{}
 	err = json.Unmarshal([]byte(response), &responseMap)
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 	crumb := responseMap["crumb"]
 	if crumb == nil || crumb.(string) == "" {
-		return "", errors.New("no crumb in response")
+		err = errors.New("no crumb in response")
+		return err.Error(), err
 	}
 	return crumb.(string), nil
 }
@@ -141,7 +144,7 @@ func doJenkinsPost(buildurl string) (*http.Response, error) {
 func StartBuild(clientRev string, kbfsRev string, updateChannel string) (string, error) {
 	u, err := url.Parse(jenkinsURL + "/job/" + jenkinsJobName + "/buildWithParameters")
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 	urlValues := url.Values{}
 	urlValues.Add("SlackBot", "true")
@@ -158,19 +161,21 @@ func StartBuild(clientRev string, kbfsRev string, updateChannel string) (string,
 	buildurl := u.String()
 
 	res, err := doJenkinsPost(buildurl)
-
-	defer func() { _ = res.Body.Close() }()
+	if res != nil {
+		defer func() { _ = res.Body.Close() }()
+	}
 
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 	robots, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 	if res.StatusCode != 201 {
-		return "", fmt.Errorf("Build request returned %d", res.StatusCode)
+		err = fmt.Errorf("Build request returned %d", res.StatusCode)
+		return err.Error(), err
 	}
 	loc, _ := res.Location()
 	log.Printf("StartBuild robots: %v", robots)
