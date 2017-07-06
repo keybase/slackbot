@@ -152,7 +152,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	case upgrade.FullCommand():
 		script := launchd.Script{
 			Label: "keybase.update",
-			Path:  "github.com/keybase/slackbot/scripts/update.sh",
+			Path:  "github.com/keybase/slackbot/scripts/upgrade.sh",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "NAME", Value: *upgradePackageName},
 			},
