@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,7 +29,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	build := app.Command("build", "Build things")
 
 	cancel := app.Command("cancel", "Cancel")
-	cancelLabel := cancel.Arg("label", "Launchd job label").Required().String()
+	cancelLabel := cancel.Arg("label", "Launchd job label").String()
 	cancelWin := cancel.Flag("windows", "Specify Windows build (label = jenkins job)").Bool()
 
 	buildAndroid := build.Command("android", "Start an android build")
@@ -81,6 +82,8 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 				out = out + " for " + *cancelLabel
 			}
 			return out, nil
+		} else if *cancelLabel == "" {
+			return "Label required for cancel", errors.New("Label required for cancel")
 		}
 		return launchd.Stop(*cancelLabel)
 	case buildAndroid.FullCommand():
@@ -173,7 +176,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		}
 		return runScript(bot, channel, env, script)
 
-	// Windows
 	case buildWindows.FullCommand():
 		return jenkins.StartBuild(*buildWindowsCientCommit, *buildWindowsKbfsCommit, *buildWindowsUpdateChannel)
 	}
