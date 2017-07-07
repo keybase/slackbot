@@ -56,20 +56,32 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 		return launchd.Stop(*cancelLabel)
 
 	case buildDarwin.FullCommand():
+		smokeTest := true
+		skipCI := *buildDarwinSkipCI
+		testBuild := *buildDarwinTest
+		// Don't smoke, wait for CI or promote test if custom build
+		if *buildDarwinCientCommit != "" || *buildDarwinKbfsCommit != "" {
+			smokeTest = false
+			skipCI = true
+			testBuild = true
+		}
 		script := launchd.Script{
 			Label:      "keybase.build.darwin",
 			Path:       "github.com/keybase/client/packaging/prerelease/pull_build.sh",
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "SMOKE_TEST", Value: boolToEnvString(true)},
-				launchd.EnvVar{Key: "TEST", Value: boolToEnvString(*buildDarwinTest)},
+				launchd.EnvVar{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
+				launchd.EnvVar{Key: "TEST", Value: boolToEnvString(testBuild)},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
 				// TODO: Rename to SKIP_CI in packaging scripts
-				launchd.EnvVar{Key: "NOWAIT", Value: boolToEnvString(*buildDarwinSkipCI)},
+				launchd.EnvVar{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
 			},
 		}
+		// msg := fmt.Sprintf("I'll run the build as job `%s` (skip-ci=%s smoke=%s test=%s).", script.Label, boolToString(skipCI), boolToString(smokeTest), boolToString(testBuild))
+		// bot.SendMessage(msg, channel)
+
 		return runScript(bot, channel, env, script)
 	case dumplogCmd.FullCommand():
 		readPath, err := env.LogPathForLaunchdLabel(*dumplogCommandLabel)
