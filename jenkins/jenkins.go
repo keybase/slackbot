@@ -5,17 +5,59 @@ package jenkins
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
-const jenkinsURL = "http://192.168.1.10:8080"
-const jenkinsJobName = "gui_wix"
+const jenkinsURL = "https://ci.keyba.se"
+const jenkinsJobName = "windows-installer"
+
+type CrumbResult struct {
+	Crumb string
+	Err   error
+	Time  time.Time
+}
+
+var lastCrumb CrumbResult
+var crumbGetChan chan bool
+var crumbResultChan chan CrumbResult
+
+// Make a worker gofunc to cache the Jenkins crumb for
+// a certain amount of time
+func init() {
+	crumbGetChan = make(chan bool)
+	crumbResultChan = make(chan CrumbResult)
+	go func() {
+		for {
+			<-crumbGetChan
+			if time.Since(lastCrumb.Time) > time.Hour || lastCrumb.Err != nil || lastCrumb.Crumb == "" {
+				lastCrumb.Crumb, lastCrumb.Err = getJenkinsCrumb()
+				if lastCrumb.Err == nil {
+					lastCrumb.Time = time.Now()
+				}
+			}
+			crumbResultChan <- lastCrumb
+		}
+	}()
+}
+
+// SetLastCrumb is for testing
+func SetLastCrumb(crumb CrumbResult) {
+	lastCrumb = crumb
+}
+
+// GetLastCrumb is for testing
+func GetLastCrumb() CrumbResult {
+	return lastCrumb
+}
 
 func parseQueueNumber(locationString string) string {
 	countIndex := strings.Index(locationString, "queue/item/")
@@ -27,60 +69,140 @@ func parseQueueNumber(locationString string) string {
 	return strings.TrimRight(locationString[countIndex:], "/")
 }
 
-// StartBuild starts the build and returns the queue number as a string from Jenkins
-func StartBuild(clientRev string, kbfsRev string, jsonUpdateFilename string) (string, error) {
+func getJenkinsCrumb() (string, error) {
+	name := os.Getenv("JENKINS_WINDOWS_USERNAME")
+	password := os.Getenv("JENKINS_WINDOWS_PASSWORD")
+	if name == "" || password == "" {
+		err := errors.New("Jenkins Windows username and password required")
+		return err.Error(), err
+	}
+	u, err := url.Parse(jenkinsURL + "/crumbIssuer/api/json")
+	if err != nil {
+		return err.Error(), err
+	}
 
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return err.Error(), err
+	}
+	req.SetBasicAuth(name, password)
+	res, err := client.Do(req)
+	defer func() { _ = res.Body.Close() }()
+	if err != nil {
+		return err.Error(), err
+	}
+	response, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return err.Error(), err
+	}
+	if res.StatusCode < 200 || res.StatusCode > 201 {
+		err = fmt.Errorf("Build request returned %d", res.StatusCode)
+		return err.Error(), err
+	}
+
+	var responseMap map[string]interface{}
+	err = json.Unmarshal([]byte(response), &responseMap)
+	if err != nil {
+		return err.Error(), err
+	}
+	crumb := responseMap["crumb"]
+	if crumb == nil || crumb.(string) == "" {
+		err = errors.New("no crumb in response")
+		return err.Error(), err
+	}
+	return crumb.(string), nil
+}
+
+func doJenkinsPost(buildurl string) (*http.Response, error) {
+	log.Printf("Posting: %s \n", buildurl)
+
+	crumbGetChan <- true
+	crumb := <-crumbResultChan
+	if crumb.Err != nil {
+		return nil, crumb.Err
+	}
+	name := os.Getenv("JENKINS_WINDOWS_USERNAME")
+	password := os.Getenv("JENKINS_WINDOWS_PASSWORD")
+	if name == "" || password == "" {
+		return nil, errors.New("Jenkins Windows username and password required")
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", buildurl, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(name, password)
+	req.Header.Add("Jenkins-Crumb", crumb.Crumb)
+	return client.Do(req)
+}
+
+// StartBuild starts the build and returns the queue number as a string from Jenkins.
+// Also enables/resumes auto building.
+func StartBuild(clientRev string, kbfsRev string, updateChannel string) (string, error) {
 	u, err := url.Parse(jenkinsURL + "/job/" + jenkinsJobName + "/buildWithParameters")
+	if err != nil {
+		return err.Error(), err
+	}
 	urlValues := url.Values{}
+	urlValues.Add("SlackBot", "true")
 	if clientRev != "" {
 		urlValues.Add("ClientRevision", clientRev)
 	}
 	if kbfsRev != "" {
 		urlValues.Add("KBFSRevision", kbfsRev)
 	}
-	if jsonUpdateFilename != "" {
-		urlValues.Add("JSON_UPDATE_FILENAME", jsonUpdateFilename)
+	if updateChannel != "" {
+		urlValues.Add("UpdateChannel", updateChannel)
 	}
 	u.RawQuery = urlValues.Encode()
 	buildurl := u.String()
-	log.Printf("Posting: %s \n", buildurl)
-	res, err := http.Post(buildurl, "", nil)
-	defer func() { _ = res.Body.Close() }()
+
+	res, err := doJenkinsPost(buildurl)
+	if res != nil {
+		defer func() { _ = res.Body.Close() }()
+	}
 
 	if err != nil {
-		log.Fatal(err)
+		return err.Error(), err
 	}
 	robots, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return "", err
+		return err.Error(), err
 	}
 	if res.StatusCode != 201 {
-		return "", fmt.Errorf("Build request returned %d", res.StatusCode)
+		err = fmt.Errorf("Build request returned %d", res.StatusCode)
+		return err.Error(), err
 	}
 	loc, _ := res.Location()
-	log.Print(robots)
-	return fmt.Sprintf("Requested Jenkins build with queue ID %s", parseQueueNumber(loc.String())), nil
+	log.Printf("StartBuild robots: %v", robots)
+
+	err = controlJob(true)
+
+	return fmt.Sprintf("Requested Jenkins build with queue ID %s", parseQueueNumber(loc.String())), err
 }
 
-func stopBuildByID(buildID string) {
+func stopBuildByID(buildID string) error {
 	log.Printf("Stopping build %s \n", buildID)
 	// Of the form: http://<Jenkins_URL>/job/<Job_Name>/<Build_Number>/stop
-	res, err := http.Post(jenkinsURL+"/job/"+jenkinsJobName+"/"+buildID+"/stop", "", nil)
+	res, err := doJenkinsPost(jenkinsURL + "/job/" + jenkinsJobName + "/" + buildID + "/stop")
 	if err != nil {
-		log.Print(err)
+		return err
 	}
 	_, err = ioutil.ReadAll(res.Body)
 	_ = res.Body.Close()
-	if err != nil {
-		log.Print(err)
+	if err == nil {
+		log.Printf("Status code: %v \n", res.StatusCode)
 	}
-	log.Printf("Status code: %v \n", res.StatusCode)
+	return err
 }
 
 func getJSON(url string, target interface{}) error {
 	fmt.Printf("posting to: %s\n", url)
-	r, err := http.Post(url, "", nil)
+	r, err := doJenkinsPost(url)
 	if err != nil {
 		return err
 	}
@@ -89,29 +211,30 @@ func getJSON(url string, target interface{}) error {
 	return json.NewDecoder(r.Body).Decode(target)
 }
 
-func cancelQueueItem(queueEntry string) {
+func cancelQueueItem(queueEntry string) error {
 	log.Printf("Looking to cancel queue item: %s\n", queueEntry)
 	// Try removing from queue, even though it's probably not in there
 	u, err := url.Parse(jenkinsURL + "/queue/cancelItem")
+	if err != nil {
+		return err
+	}
 	urlValues := url.Values{}
 	urlValues.Add("id", queueEntry)
 	u.RawQuery = urlValues.Encode()
 	cancelURL := u.String()
 
-	res, err := http.Post(cancelURL, "", nil)
+	res, err := doJenkinsPost(cancelURL)
 
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 
 	_, err = ioutil.ReadAll(res.Body)
 	_ = res.Body.Close()
-	if err != nil {
-		log.Print(err)
-		return
+	if err == nil {
+		fmt.Printf("Status code: %v \n", res.StatusCode)
 	}
-	fmt.Printf("Status code: %v \n", res.StatusCode)
+	return err
 }
 
 func getLastBuildAndQueueNumbers() (currentBuild int, currentQ int, err error) {
@@ -138,10 +261,28 @@ func getLastBuildAndQueueNumbers() (currentBuild int, currentQ int, err error) {
 	return
 }
 
-// StopBuild will stop/cancel the current build.
+func controlJob(enable bool) error {
+	command := "disable"
+	if enable {
+		command = "enable"
+	}
+	log.Printf("%s job\n", command)
+	// Of the form: http://<Jenkins_URL>/job/<Job_Name>/disable
+	_, err := doJenkinsPost(jenkinsURL + "/job/" + jenkinsJobName + "/" + command)
+	return err
+}
+
+// StopBuild will disable auto builds and
+// stop/cancel the current build, if specified.
 // Location is the return string from a build request, e.g.:
 // http://192.168.1.10:8080/queue/item/34/
-func StopBuild(queueEntry string) {
+func StopBuild(queueEntry string) error {
+
+	err := controlJob(false)
+
+	if queueEntry == "" {
+		return err
+	}
 
 	// If the build has not started, you have the queueItem, then POST on:
 	// http://<Jenkins_URL>/queue/cancelItem?id=<queueItem>
@@ -149,18 +290,21 @@ func StopBuild(queueEntry string) {
 	// http://<Jenkins_URL>/job/<Job_Name>/<Build_Number>/stop
 	// ...but we have to fish out the build number
 
-	cancelQueueItem(queueEntry)
-	startedQ, err := strconv.Atoi(queueEntry)
+	err = cancelQueueItem(queueEntry)
 	if err != nil {
+		return err
+	}
+	startedQ, err2 := strconv.Atoi(queueEntry)
+	if err2 != nil {
 		log.Printf("Bad queue item: %s", queueEntry)
-		return
+		return err2
 	}
 
 	// Walk down the running jobs until we find the one we started
 	// http://<Jenkins_URL>/job/<Job_Name>/<Build_Number>/stop
 	var currentBuild, currentQ int
 	if currentBuild, currentQ, err = getLastBuildAndQueueNumbers(); err != nil {
-		return
+		return err
 	}
 
 	fmt.Printf("Got build number %d, currentQ = %d\n", currentBuild, currentQ)
@@ -171,7 +315,7 @@ func StopBuild(queueEntry string) {
 		err = getJSON(jenkinsURL+"/job/"+jenkinsJobName+"/"+strconv.Itoa(currentBuild)+"/api/json", &f)
 		if err != nil {
 			log.Printf("No build %d", currentBuild)
-			return
+			return err
 		}
 		m := f.(map[string]interface{})
 		if _, ok := m["queueId"]; ok {
@@ -179,6 +323,7 @@ func StopBuild(queueEntry string) {
 		}
 	}
 	if currentQ == startedQ {
-		stopBuildByID(strconv.Itoa(currentBuild))
+		err = stopBuildByID(strconv.Itoa(currentBuild))
 	}
+	return err
 }

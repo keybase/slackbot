@@ -5,12 +5,14 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
+	"github.com/keybase/slackbot/jenkins"
 	"github.com/keybase/slackbot/launchd"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -26,12 +28,18 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	build := app.Command("build", "Build things")
 
 	cancel := app.Command("cancel", "Cancel")
-	cancelLabel := cancel.Arg("label", "Launchd job label").Required().String()
+	cancelLabel := cancel.Arg("label", "Launchd job label").String()
+	cancelWin := cancel.Flag("windows", "Specify Windows build (label = jenkins job)").Bool()
 
 	buildAndroid := build.Command("android", "Start an android build")
 	buildIOS := build.Command("ios", "Start an ios build")
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
 	buildIOSKbfsCommit := buildIOS.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+
+	buildWindows := build.Command("windows", "Start a windows build")
+	buildWindowsCientCommit := buildWindows.Flag("client-commit", "Build a specific client commit hash").String()
+	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
+	buildWindowsUpdateChannel := buildWindows.Flag("update-channel", "Smoke, SmokeCI (default), Test").String()
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
@@ -65,8 +73,17 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	env := launchd.NewEnv(home, path)
 	switch cmd {
 	case cancel.FullCommand():
+		if *cancelWin {
+			jenkins.StopBuild(*cancelLabel)
+			out := "Issued cancel"
+			if *cancelLabel != "" {
+				out = out + " for " + *cancelLabel
+			}
+			return out, nil
+		} else if *cancelLabel == "" {
+			return "Label required for cancel", errors.New("Label required for cancel")
+		}
 		return launchd.Stop(*cancelLabel)
-
 	case buildAndroid.FullCommand():
 
 		script := launchd.Script{
@@ -156,7 +173,11 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			},
 		}
 		return runScript(bot, channel, env, script)
+
+	case buildWindows.FullCommand():
+		return jenkins.StartBuild(*buildWindowsCientCommit, *buildWindowsKbfsCommit, *buildWindowsUpdateChannel)
 	}
+
 	return cmd, nil
 }
 
