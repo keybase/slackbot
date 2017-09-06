@@ -32,7 +32,9 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	cancelWin := cancel.Flag("windows", "Specify Windows build (label = jenkins job)").Bool()
 
 	buildAndroid := build.Command("android", "Start an android build")
+	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildIOS := build.Command("ios", "Start an ios build")
+	buildIOSSkipCI := buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
 	buildIOSKbfsCommit := buildIOS.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
@@ -85,19 +87,21 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		}
 		return launchd.Stop(*cancelLabel)
 	case buildAndroid.FullCommand():
-
+		skipCI := *buildAndroidSkipCI
 		script := launchd.Script{
 			Label:      "keybase.build.android",
 			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "ANDROID_HOME", Value: "/usr/local/opt/android-sdk"},
+				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
 		return runScript(bot, channel, env, script)
 
 	case buildIOS.FullCommand():
+		skipCI := *buildIOSSkipCI
 		script := launchd.Script{
 			Label:      "keybase.build.ios",
 			Path:       "github.com/keybase/client/packaging/ios/build_and_publish.sh",
@@ -105,6 +109,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildIOSKbfsCommit},
+				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
