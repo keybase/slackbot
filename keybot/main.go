@@ -23,12 +23,12 @@ func boolToEnvString(b bool) string {
 	if b {
 		return "1"
 	}
-	return ""
+	return "0"
 }
 
 func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd.Script) (string, error) {
 	if bot.Config().DryRun() {
-		return fmt.Sprintf("I would have run a launchd job (%s)", script.Label), nil
+		return fmt.Sprintf("I would have run a launchd job (%s)\nPath: %#v\nEnvVars: %#v", script.Label, script.Path, script.EnvVars), nil
 	}
 
 	if bot.Config().Paused() {

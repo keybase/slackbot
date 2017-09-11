@@ -66,10 +66,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		return usage, cmdErr
 	}
 
-	if bot.Config().DryRun() {
-		return fmt.Sprintf("I would have run: `%#v`", cmd), nil
-	}
-
 	home := os.Getenv("HOME")
 	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin"
 	env := launchd.NewEnv(home, path)
