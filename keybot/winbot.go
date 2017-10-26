@@ -4,11 +4,12 @@
 package main
 
 import (
-	"io/ioutil"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
@@ -35,7 +36,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	dumplogCmd := app.Command("dumplog", "Show the last log file")
 
-	logFileName := os.TempDir() + "winbot.log"
+	logFileName := path.Join(os.TempDir() + "winbot.log")
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -68,25 +69,25 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			skipCI = true
 			testBuild = true
 		}
-		
+
 		updateChannel := "None"
 		if testBuild {
 			updateChannel = "Test"
-		}
-		if smokeTest {
+		} else if smokeTest {
 			updateChannel = "Smoke"
-			if ! skipCI {
+			if !skipCI {
 				updateChannel = "SmokeCI"
 			}
 		}
 
 		// TODO: use SMOKE_TEST and TEST like other scripts
-		cmd := exec.Command("github.com/keybase/client/packaging/windows/dorelease.cmd")
+
+		cmd := exec.Command(path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"))
 		cmd.Env = append(os.Environ(),
-			"ClientRevision=" + *buildWindowsCientCommit,
-			"KbfsRevision=" + *buildWindowsKbfsCommit,
-			"SKIP_CI=" + boolToEnvString(skipCI),
-			"UpdateChannel=" + updateChannel,
+			"ClientRevision="+*buildWindowsCientCommit,
+			"KbfsRevision="+*buildWindowsKbfsCommit,
+			"SKIP_CI="+boolToEnvString(skipCI),
+			"UpdateChannel="+updateChannel,
 		)
 		currentCmd = cmd
 		stdoutStderr, err := cmd.CombinedOutput()
