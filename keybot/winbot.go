@@ -36,7 +36,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	dumplogCmd := app.Command("dumplog", "Show the last log file")
 
-	logFileName := path.Join(os.TempDir() + "winbot.log")
+	logFileName := path.Join(os.TempDir(), "keybase.build.windows.log")
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -81,25 +81,55 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		}
 
 		// TODO: use SMOKE_TEST and TEST like other scripts
-
-		cmd := exec.Command(path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"))
+		cmd := exec.Command(
+			"cmd", "/c",
+			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"),
+			">",
+			logFileName,
+			"2>&1")
 		cmd.Env = append(os.Environ(),
 			"ClientRevision="+*buildWindowsCientCommit,
 			"KbfsRevision="+*buildWindowsKbfsCommit,
 			"SKIP_CI="+boolToEnvString(skipCI),
 			"UpdateChannel="+updateChannel,
+			"SlackBot=1",
 		)
+		msg := fmt.Sprintf("I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
+		bot.SendMessage(msg, channel)
 		currentCmd = cmd
-		stdoutStderr, err := cmd.CombinedOutput()
+		err := cmd.Run()
 		currentCmd = nil
-		os.Remove(logFileName)
-		ioutil.WriteFile(logFileName, stdoutStderr, 0644)
 
-		index := 0
-		if len(stdoutStderr) > 4000 {
-			index = len(stdoutStderr) - 4000
+		bucketName := os.Getenv("BUCKET_NAME")
+		if bucketName == "" {
+			bucketName = "prerelease.keybase.io"
 		}
-		return string(stdoutStderr[index:]), err
+		sendLogCmd := exec.Command(
+			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/release/release.exe"),
+			"save-log",
+			"--bucket-name="+bucketName,
+			"--path="+logFileName,
+		)
+		urlBytes, err2 := sendLogCmd.Output()
+		if err2 != nil {
+			msg := fmt.Sprintf("Finished the job `windows build`, log upload error %s", err2.Error())
+			bot.SendMessage(msg, channel)
+		} else {
+			msg := fmt.Sprintf("Finished the job `windows build`, view log at %s", string(urlBytes[:]))
+			bot.SendMessage(msg, channel)
+		}
+
+		if err != nil {
+			index := 0
+			logContents, err := ioutil.ReadFile(logFileName)
+			if err != nil {
+				return "Error reading " + logFileName, err
+			}
+			if len(logContents) > 160 {
+				index = len(logContents) - 160
+			}
+			return string(logContents[index:]), err
+		}
 
 	case dumplogCmd.FullCommand():
 		logContents, err := ioutil.ReadFile(logFileName)
