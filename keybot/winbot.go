@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"sync"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
@@ -17,6 +18,9 @@ import (
 )
 
 type winbot struct{}
+
+var buildProcess *os.Process
+var mutex sync.Mutex
 
 func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("winbot", "Job command parser for winbot")
@@ -47,15 +51,14 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		return fmt.Sprintf("I would have run: `%#v`", cmd), nil
 	}
 
-	var currentCmd *exec.Cmd
-
 	switch cmd {
 	case cancel.FullCommand():
-		tempCmd := currentCmd
-		if tempCmd == nil {
+		mutex.Lock()
+		defer mutex.Unlock()
+		if buildProcess == nil {
 			return "No build running", nil
 		}
-		if err := tempCmd.Process.Kill(); err != nil {
+		if err := buildProcess.Kill(); err != nil {
 			return "failed to cancel build", err
 		}
 
@@ -96,47 +99,58 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		)
 		msg := fmt.Sprintf("I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
 		bot.SendMessage(msg, channel)
-		currentCmd = cmd
-		err := cmd.Run()
-		currentCmd = nil
 
-		bucketName := os.Getenv("BUCKET_NAME")
-		if bucketName == "" {
-			bucketName = "prerelease.keybase.io"
-		}
-		sendLogCmd := exec.Command(
-			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/release/release.exe"),
-			"save-log",
-			"--bucket-name="+bucketName,
-			"--path="+logFileName,
-		)
-		urlBytes, err2 := sendLogCmd.Output()
-		if err2 != nil {
-			msg := fmt.Sprintf("Finished the job `windows build`, log upload error %s", err2.Error())
-			bot.SendMessage(msg, channel)
-		} else {
-			msg := fmt.Sprintf("Finished the job `windows build`, view log at %s", string(urlBytes[:]))
-			bot.SendMessage(msg, channel)
-		}
+		go func() {
+			err := cmd.Start()
+			mutex.Lock()
+			buildProcess = cmd.Process
+			mutex.Unlock()
+			err = cmd.Wait()
 
-		if err != nil {
-			index := 0
-			logContents, err := ioutil.ReadFile(logFileName)
+			bucketName := os.Getenv("BUCKET_NAME")
+			if bucketName == "" {
+				bucketName = "prerelease.keybase.io"
+			}
+			sendLogCmd := exec.Command(
+				path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/release/release.exe"),
+				"save-log",
+				"--bucket-name="+bucketName,
+				"--path="+logFileName,
+			)
+			resultMsg := "Finished the job `windows build`"
 			if err != nil {
-				return "Error reading " + logFileName, err
+				resultMsg = "Error in job `windows build`"
+				// Send a log snippet too
+				index := 0
+				logContents, err := ioutil.ReadFile(logFileName)
+				if err != nil {
+					bot.SendMessage("Error reading "+logFileName+": "+err.Error(), channel)
+				}
+				if len(logContents) > 500 {
+					index = len(logContents) - 500
+				}
+				bot.SendMessage("`"+string(logContents[index:])+"`", channel)
 			}
-			if len(logContents) > 160 {
-				index = len(logContents) - 160
+			urlBytes, err2 := sendLogCmd.Output()
+			if err2 != nil {
+				msg := fmt.Sprintf("%s, log upload error %s", resultMsg, err2.Error())
+				bot.SendMessage(msg, channel)
+			} else {
+				msg := fmt.Sprintf("%s, view log at %s", resultMsg, string(urlBytes[:]))
+				bot.SendMessage(msg, channel)
 			}
-			return string(logContents[index:]), err
-		}
-
+		}()
+		return "", nil
 	case dumplogCmd.FullCommand():
 		logContents, err := ioutil.ReadFile(logFileName)
 		if err != nil {
 			return "Error reading " + logFileName, err
 		}
-		return string(logContents[:]), nil
+		index := 0
+		if len(logContents) > 1000 {
+			index = len(logContents) - 1000
+		}
+		bot.SendMessage(string(logContents[index:]), channel)
 	}
 	return cmd, nil
 }
