@@ -76,6 +76,9 @@ func main() {
 	case "darwinbot":
 		ext = &darwinbot{}
 		label = "keybase.darwinbot"
+	case "winbot":
+		ext = &winbot{}
+		label = "keybase.winbot"
 	default:
 		log.Fatal("Invalid BOT_NAME")
 	}
