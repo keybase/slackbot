@@ -1,9 +1,10 @@
-// Copyright 2015 Keybase, Inc. All rights reserved. Use of
+// Copyright 2017 Keybase, Inc. All rights reserved. Use of
 // this source code is governed by the included BSD license.
 
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -19,8 +20,12 @@ import (
 
 type winbot struct{}
 
+const numLogLines = 10
+
+// Keep track of the current build process, protected with a mutex,
+// to support cancellation
+var buildProcessMutex sync.Mutex
 var buildProcess *os.Process
-var mutex sync.Mutex
 
 func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("winbot", "Job command parser for winbot")
@@ -53,8 +58,8 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	switch cmd {
 	case cancel.FullCommand():
-		mutex.Lock()
-		defer mutex.Unlock()
+		buildProcessMutex.Lock()
+		defer buildProcessMutex.Unlock()
 		if buildProcess == nil {
 			return "No build running", nil
 		}
@@ -83,7 +88,6 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			}
 		}
 
-		// TODO: use SMOKE_TEST and TEST like other scripts
 		cmd := exec.Command(
 			"cmd", "/c",
 			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"),
@@ -96,15 +100,17 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			"SKIP_CI="+boolToEnvString(skipCI),
 			"UpdateChannel="+updateChannel,
 			"SlackBot=1",
+			"SMOKE_TEST="+boolToEnvString(smokeTest),
+			"TEST="+boolToEnvString(testBuild),
 		)
 		msg := fmt.Sprintf("I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
 		bot.SendMessage(msg, channel)
 
 		go func() {
 			err := cmd.Start()
-			mutex.Lock()
+			buildProcessMutex.Lock()
 			buildProcess = cmd.Process
-			mutex.Unlock()
+			buildProcessMutex.Unlock()
 			err = cmd.Wait()
 
 			bucketName := os.Getenv("BUCKET_NAME")
@@ -120,16 +126,31 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			resultMsg := "Finished the job `windows build`"
 			if err != nil {
 				resultMsg = "Error in job `windows build`"
+				var lines [numLogLines]string
 				// Send a log snippet too
 				index := 0
-				logContents, err := ioutil.ReadFile(logFileName)
+				lineCount := 0
+
+				f, err := os.Open(logFileName)
 				if err != nil {
 					bot.SendMessage("Error reading "+logFileName+": "+err.Error(), channel)
 				}
-				if len(logContents) > 500 {
-					index = len(logContents) - 500
+
+				scanner := bufio.NewScanner(f)
+				for scanner.Scan() {
+					lines[lineCount%numLogLines] = scanner.Text()
+					lineCount += 1
 				}
-				bot.SendMessage("`"+string(logContents[index:])+"`", channel)
+				if err := scanner.Err(); err != nil {
+					bot.SendMessage("Error scanning "+logFileName+": "+err.Error(), channel)
+				}
+				if lineCount > numLogLines {
+					index = lineCount % numLogLines
+					lineCount = numLogLines
+				}
+				for i := 0; i < lineCount; i++ {
+					bot.SendMessage("`"+lines[(i+index)%numLogLines]+"`\n", channel)
+				}
 			}
 			urlBytes, err2 := sendLogCmd.Output()
 			if err2 != nil {
