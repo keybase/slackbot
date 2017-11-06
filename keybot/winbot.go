@@ -148,9 +148,12 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 					index = lineCount % numLogLines
 					lineCount = numLogLines
 				}
+				snippet := "```\n"
 				for i := 0; i < lineCount; i++ {
-					bot.SendMessage("`"+lines[(i+index)%numLogLines]+"`\n", channel)
+					snippet += lines[(i+index)%numLogLines] + "\n"
 				}
+				snippet += "```"
+				bot.SendMessage(snippet, channel)
 			}
 			urlBytes, err2 := sendLogCmd.Output()
 			if err2 != nil {
