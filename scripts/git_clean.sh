@@ -6,15 +6,16 @@
 
 set -e -u -o pipefail
 
-addGOPATHPrefix="${addGOPATH:-}"
+addGOPATHPrefix="${PREFIX_GOPATH:-}"
 repo="${REPO:-}"
-if [ ! -z "addGOPATHPrefix" ] ; then
-  repo="$GOPATH/src/$repo"
-fi
 
 if [ -z "$repo" ] ; then
   echo "git_clean.sh needs a repo argument."
   exit 1
+fi
+
+if [ -n "$addGOPATHPrefix" ] ; then
+  repo="$GOPATH/src/$repo"
 fi
 
 if [ ! -d "$repo" ] ; then

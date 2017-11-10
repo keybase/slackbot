@@ -36,8 +36,7 @@ current_status="$(git status --porcelain)"
 if [ -n "$current_status" ] ; then
   echo "Repo '$repo' isn't clean."
   echo "$current_status"
+  git diff
+else
+  echo "Repo '$repo' is clean."
 fi
-
-gdiff="$(git diff)"
-echo "Diff is:"
-echo "$gdiff"

@@ -13,4 +13,4 @@ fi
 
 result=$($script)
 
-echo "\`$script\`:\`\`\`$result\`\`\`"
+"$dir/send.sh" "\`$script\`:\`\`\`$result\`\`\`"
