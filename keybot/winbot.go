@@ -33,13 +33,12 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	stringBuffer := new(bytes.Buffer)
 	app.Writer(stringBuffer)
 
-	build := app.Command("build", "Build things")
-
-	buildWindows := build.Command("windows", "Start a windows build")
-	buildWindowsTest := buildWindows.Flag("test", "Whether build is for testing").Bool()
+	buildWindows := app.Command("build", "Start a windows build")
+	buildWindowsTest := buildWindows.Flag("test", "Whether build is for testing (skips CI and smoke)").Bool()
 	buildWindowsCientCommit := buildWindows.Flag("client-commit", "Build a specific client commit").String()
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
 
 	cancel := app.Command("cancel", "Cancel current")
 
@@ -68,18 +67,15 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		}
 
 	case buildWindows.FullCommand():
-		smokeTest := true
+		smokeTest := *buildWindowsSmoke
 		skipCI := *buildWindowsSkipCI
 		testBuild := *buildWindowsTest
-		// Don't smoke, wait for CI or promote test if custom build
-		if *buildWindowsCientCommit != "" || *buildWindowsKbfsCommit != "" {
-			smokeTest = false
-			skipCI = true
-			testBuild = true
-		}
 
 		updateChannel := "None"
 		if testBuild {
+			if smokeTest {
+				return "Test and Smoke are exclusive options", nil
+			}
 			updateChannel = "Test"
 		} else if smokeTest {
 			updateChannel = "Smoke"
@@ -120,6 +116,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			sendLogCmd := exec.Command(
 				path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/release/release.exe"),
 				"save-log",
+				"--maxsize=2000000",
 				"--bucket-name="+bucketName,
 				"--path="+logFileName,
 			)
