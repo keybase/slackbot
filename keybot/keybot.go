@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
@@ -50,6 +51,12 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	dumplogCmd := app.Command("dumplog", "Show the log file")
 	dumplogCommandLabel := dumplogCmd.Arg("label", "Launchd job label").Required().String()
+
+	gitDiffCmd := app.Command("gdiff", "Show the git diff")
+	gitDiffRepo := gitDiffCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
+
+	gitCleanCmd := app.Command("gclean", "Clean the repo")
+	gitCleanRepo := gitCleanCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
 	upgrade := app.Command("upgrade", "Upgrade package")
 	upgradePackageName := upgrade.Arg("name", "Package name (yarn, go, fastlane, etc)").Required().String()
@@ -121,6 +128,38 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
 				launchd.EnvVar{Key: "NOLOG", Value: boolToEnvString(true)},
+			},
+		}
+		return runScript(bot, channel, env, script)
+
+	case gitDiffCmd.FullCommand():
+		rawRepoText := *gitDiffRepo
+		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+
+		script := launchd.Script{
+			Label:      "keybase.gitdiff",
+			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
+			BucketName: "prerelease.keybase.io",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "REPO", Value: repoParsed},
+				launchd.EnvVar{Key: "PREFIX_GOPATH", Value: boolToEnvString(true)},
+				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./git_diff.sh"},
+			},
+		}
+		return runScript(bot, channel, env, script)
+
+	case gitCleanCmd.FullCommand():
+		rawRepoText := *gitCleanRepo
+		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+
+		script := launchd.Script{
+			Label:      "keybase.gitdiff",
+			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
+			BucketName: "prerelease.keybase.io",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "REPO", Value: repoParsed},
+				launchd.EnvVar{Key: "PREFIX_GOPATH", Value: boolToEnvString(true)},
+				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./git_clean.sh"},
 			},
 		}
 		return runScript(bot, channel, env, script)
