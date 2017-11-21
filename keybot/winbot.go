@@ -93,6 +93,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		msg := fmt.Sprintf("I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
 		bot.SendMessage(msg, channel)
 
+		os.Remove(logFileName)
 		logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			return "Unable to open logfile", err
