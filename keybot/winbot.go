@@ -48,6 +48,11 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	cancel := app.Command("cancel", "Cancel current")
 
 	dumplogCmd := app.Command("dumplog", "Show the last log file")
+	gitDiffCmd := app.Command("gdiff", "Show the git diff")
+	gitDiffRepo := gitDiffCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
+
+	gitCleanCmd := app.Command("gclean", "Clean the repo")
+	gitCleanRepo := gitCleanCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
 	logFileName := path.Join(os.TempDir(), "keybase.build.windows.log")
 
@@ -160,7 +165,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		cmd := exec.Command(
 			"cmd", "/c",
 			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"),
-			">",
+			">>",
 			logFileName,
 			"2>&1")
 		cmd.Env = append(os.Environ(),
