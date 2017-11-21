@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"sync"
 
 	"github.com/keybase/slackbot"
@@ -43,6 +44,11 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	cancel := app.Command("cancel", "Cancel current")
 
 	dumplogCmd := app.Command("dumplog", "Show the last log file")
+	gitDiffCmd := app.Command("gdiff", "Show the git diff")
+	gitDiffRepo := gitDiffCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
+
+	gitCleanCmd := app.Command("gclean", "Clean the repo")
+	gitCleanRepo := gitCleanCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
 	logFileName := path.Join(os.TempDir(), "keybase.build.windows.log")
 
@@ -84,10 +90,56 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			}
 		}
 
+		msg := fmt.Sprintf("I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
+		bot.SendMessage(msg, channel)
+
+		logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			return "Unable to open logfile", err
+		}
+
+		gitCmd := exec.Command(
+			"git.exe",
+			"checkout",
+			"master",
+		)
+		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+		stdoutStderr, err := gitCmd.CombinedOutput()
+		logf.Write(stdoutStderr)
+		if err != nil {
+			logf.Close()
+			return string(stdoutStderr), err
+		}
+
+		gitCmd = exec.Command(
+			"git.exe",
+			"pull",
+		)
+		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+		stdoutStderr, err = gitCmd.CombinedOutput()
+		logf.Write(stdoutStderr)
+		if err != nil {
+			logf.Close()
+			return string(stdoutStderr), err
+		}
+
+		gitCmd = exec.Command(
+			"git.exe",
+			"checkout",
+			*buildWindowsCientCommit,
+		)
+		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+		stdoutStderr, err = gitCmd.CombinedOutput()
+		logf.Write(stdoutStderr)
+		logf.Close()
+		if err != nil {
+			return string(stdoutStderr), err
+		}
+
 		cmd := exec.Command(
 			"cmd", "/c",
 			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"),
-			">",
+			">>",
 			logFileName,
 			"2>&1")
 		cmd.Env = append(os.Environ(),
@@ -99,8 +151,6 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			"SMOKE_TEST="+boolToEnvString(smokeTest),
 			"TEST="+boolToEnvString(testBuild),
 		)
-		msg := fmt.Sprintf("I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
-		bot.SendMessage(msg, channel)
 
 		go func() {
 			err := cmd.Start()
@@ -172,6 +222,47 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			index = len(logContents) - 1000
 		}
 		bot.SendMessage(string(logContents[index:]), channel)
+
+	case gitDiffCmd.FullCommand():
+		rawRepoText := *gitDiffRepo
+		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+
+		gitDiffCmd := exec.Command(
+			"git.exe",
+			"diff",
+		)
+		gitDiffCmd.Dir = os.ExpandEnv(path.Join("$GOPATH/src", repoParsed))
+
+		if exists, err := Exists(path.Join(gitDiffCmd.Dir, ".git")); !exists {
+			return "Not a git repo", err
+		}
+
+		stdoutStderr, err := gitDiffCmd.CombinedOutput()
+		if err != nil {
+			return "Error", err
+		}
+		bot.SendMessage(string(stdoutStderr), channel)
+
+	case gitCleanCmd.FullCommand():
+		rawRepoText := *gitCleanRepo
+		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+
+		gitCleanCmd := exec.Command(
+			"git.exe",
+			"clean",
+			"-f",
+		)
+		gitCleanCmd.Dir = os.ExpandEnv(path.Join("$GOPATH/src", repoParsed))
+
+		if exists, err := Exists(path.Join(gitCleanCmd.Dir, ".git")); !exists {
+			return "Not a git repo", err
+		}
+
+		stdoutStderr, err := gitCleanCmd.CombinedOutput()
+		if err != nil {
+			return "Error", err
+		}
+		bot.SendMessage(string(stdoutStderr), channel)
 	}
 	return cmd, nil
 }
@@ -182,4 +273,12 @@ func (d *winbot) Help(bot slackbot.Bot) string {
 		return fmt.Sprintf("Error getting help: %s", err)
 	}
 	return out
+}
+
+func Exists(name string) (bool, error) {
+	_, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return err != nil, err
 }
