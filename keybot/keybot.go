@@ -32,8 +32,10 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	buildAndroid := build.Command("android", "Start an android build")
 	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildAndroidAutomated := buildAndroid.Flag("automated", "Whether this is a timed build").Bool()
 	buildIOS := build.Command("ios", "Start an ios build")
 	buildIOSSkipCI := buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildIOSAutomated := buildIOS.Flag("automated", "Whether this is a timed build").Bool()
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
 	buildIOSKbfsCommit := buildIOS.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
@@ -77,6 +79,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		return launchd.Stop(*cancelLabel)
 	case buildAndroid.FullCommand():
 		skipCI := *buildAndroidSkipCI
+		automated := *buildAndroidAutomated
 		script := launchd.Script{
 			Label:      "keybase.build.android",
 			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
@@ -84,6 +87,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "ANDROID_HOME", Value: "/usr/local/opt/android-sdk"},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(!automated)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
@@ -91,6 +95,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	case buildIOS.FullCommand():
 		skipCI := *buildIOSSkipCI
+		automated := *buildIOSAutomated
 		script := launchd.Script{
 			Label:      "keybase.build.ios",
 			Path:       "github.com/keybase/client/packaging/ios/build_and_publish.sh",
@@ -99,6 +104,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildIOSKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(!automated)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
