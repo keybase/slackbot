@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -109,8 +110,6 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			}
 		}
 
-<<<<<<< Updated upstream
-=======
 		msg := fmt.Sprintf(autoBuild+"I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
 		bot.SendMessage(msg, channel)
 
@@ -158,7 +157,6 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			return string(stdoutStderr), err
 		}
 
->>>>>>> Stashed changes
 		cmd := exec.Command(
 			"cmd", "/c",
 			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"),
@@ -248,8 +246,6 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			index = len(logContents) - 1000
 		}
 		bot.SendMessage(string(logContents[index:]), channel)
-<<<<<<< Updated upstream
-=======
 
 	case gitDiffCmd.FullCommand():
 		rawRepoText := *gitDiffRepo
@@ -293,7 +289,6 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 		bot.SendMessage(string(stdoutStderr), channel)
 
->>>>>>> Stashed changes
 	}
 	return cmd, nil
 }
@@ -305,8 +300,6 @@ func (d *winbot) Help(bot slackbot.Bot) string {
 	}
 	return out
 }
-<<<<<<< Updated upstream
-=======
 
 func Exists(name string) (bool, error) {
 	_, err := os.Stat(name)
@@ -345,4 +338,3 @@ func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string) {
 		}
 	}
 }
->>>>>>> Stashed changes
