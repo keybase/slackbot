@@ -43,7 +43,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
-	buildWindowsAuto := buildWindows.Flag("auto", "Specify build was triggered automatically").Bool().Hidden()
+	buildWindowsAuto := buildWindows.Flag("auto", "Specify build was triggered automatically").Hidden().Bool()
 
 	cancel := app.Command("cancel", "Cancel current")
 
@@ -173,8 +173,6 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			"TEST="+boolToEnvString(testBuild),
 			"AUTOMATED_BULD="+autoBuild,
 		)
-		msg := fmt.Sprintf("I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
-		bot.SendMessage(msg, channel)
 
 		go func() {
 			err := cmd.Start()
