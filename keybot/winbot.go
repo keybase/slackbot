@@ -57,7 +57,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	logFileName := path.Join(os.TempDir(), "keybase.build.windows.log")
 
 	testAutoBuild := app.Command("testauto", "Simulate an automated daily build").Hidden()
-	startAutoTimer := app.Command("startAutoTimer", "Start the auto build timer").Hidden()
+	startAutoTimer := app.Command("startAutoTimer", "Start the auto build timer")
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/launchd"
@@ -99,8 +98,6 @@ func main() {
 	bot.SetHelp(bot.HelpMessage() + "\n\n" + ext.Help(bot))
 
 	bot.SendMessage("I'm running.", os.Getenv("SLACK_CHANNEL"))
-	if runtime.GOOS == "windows" {
-		ext.Run(bot, os.Getenv("SLACK_CHANNEL"), []string{"startAutoTimer"})
-	}
+
 	bot.Listen()
 }
