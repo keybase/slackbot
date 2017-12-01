@@ -317,19 +317,19 @@ func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string) {
 	for {
 		hour := time.Now().Hour()
 		hour = ((24 - hour) + 7)
-		next := time.Now().Add(time.Duration(hour))
+		next := time.Now().Add(time.Hour * time.Duration(hour))
 		if next.Weekday() == time.Saturday {
 			hour += 48
 		}
 		if next.Weekday() == time.Sunday {
 			hour += 24
 		}
-		next = time.Now().Add(time.Duration(hour))
-
-		args := []string{"build", "--auto"}
+		next = time.Now().Add(time.Hour * time.Duration(hour))
 
 		msg := fmt.Sprintf("Next automatic build at %s", next.Format(time.RFC822))
 		bot.SendMessage(msg, channel)
+
+		args := []string{"build", "--auto"}
 
 		select {
 		case <-d.testAuto:
