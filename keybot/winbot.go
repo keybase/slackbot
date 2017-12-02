@@ -11,14 +11,18 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-type winbot struct{}
+type winbot struct {
+	testAuto chan struct{}
+}
 
 const numLogLines = 10
 
@@ -39,16 +43,39 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
+	buildWindowsAuto := buildWindows.Flag("auto", "Specify build was triggered automatically").Hidden().Bool()
 
 	cancel := app.Command("cancel", "Cancel current")
 
 	dumplogCmd := app.Command("dumplog", "Show the last log file")
+	gitDiffCmd := app.Command("gdiff", "Show the git diff")
+	gitDiffRepo := gitDiffCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
+
+	gitCleanCmd := app.Command("gclean", "Clean the repo")
+	gitCleanRepo := gitCleanCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
 	logFileName := path.Join(os.TempDir(), "keybase.build.windows.log")
+
+	testAutoBuild := app.Command("testauto", "Simulate an automated daily build").Hidden()
+	startAutoTimer := app.Command("startAutoTimer", "Start the auto build timer")
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
 		return usage, cmdErr
+	}
+
+	// do these regardless of dry run status
+	if cmd == testAutoBuild.FullCommand() {
+		d.testAuto <- struct{}{}
+		return "Sent test signal", nil
+	}
+
+	if cmd == startAutoTimer.FullCommand() {
+		if d.testAuto != nil {
+			return "Timer already running", nil
+		}
+		go d.winAutoBuild(bot, channel)
+		return "", nil
 	}
 
 	if bot.Config().DryRun() {
@@ -70,6 +97,10 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		smokeTest := *buildWindowsSmoke
 		skipCI := *buildWindowsSkipCI
 		testBuild := *buildWindowsTest
+		var autoBuild string
+		if *buildWindowsAuto {
+			autoBuild = "Automatic Build: "
+		}
 
 		updateChannel := "None"
 		if testBuild {
@@ -84,10 +115,57 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			}
 		}
 
+		msg := fmt.Sprintf(autoBuild+"I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
+		bot.SendMessage(msg, channel)
+
+		os.Remove(logFileName)
+		logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			return "Unable to open logfile", err
+		}
+
+		gitCmd := exec.Command(
+			"git.exe",
+			"checkout",
+			"master",
+		)
+		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+		stdoutStderr, err := gitCmd.CombinedOutput()
+		logf.Write(stdoutStderr)
+		if err != nil {
+			logf.Close()
+			return string(stdoutStderr), err
+		}
+
+		gitCmd = exec.Command(
+			"git.exe",
+			"pull",
+		)
+		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+		stdoutStderr, err = gitCmd.CombinedOutput()
+		logf.Write(stdoutStderr)
+		if err != nil {
+			logf.Close()
+			return string(stdoutStderr), err
+		}
+
+		gitCmd = exec.Command(
+			"git.exe",
+			"checkout",
+			*buildWindowsCientCommit,
+		)
+		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+		stdoutStderr, err = gitCmd.CombinedOutput()
+		logf.Write(stdoutStderr)
+		logf.Close()
+		if err != nil {
+			return string(stdoutStderr), err
+		}
+
 		cmd := exec.Command(
 			"cmd", "/c",
 			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"),
-			">",
+			">>",
 			logFileName,
 			"2>&1")
 		cmd.Env = append(os.Environ(),
@@ -98,9 +176,8 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			"SlackBot=1",
 			"SMOKE_TEST="+boolToEnvString(smokeTest),
 			"TEST="+boolToEnvString(testBuild),
+			"AUTOMATED_BULD="+autoBuild,
 		)
-		msg := fmt.Sprintf("I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
-		bot.SendMessage(msg, channel)
 
 		go func() {
 			err := cmd.Start()
@@ -120,9 +197,9 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 				"--bucket-name="+bucketName,
 				"--path="+logFileName,
 			)
-			resultMsg := "Finished the job `windows build`"
+			resultMsg := autoBuild + "Finished the job `windows build`"
 			if err != nil {
-				resultMsg = "Error in job `windows build`"
+				resultMsg = autoBuild + "Error in job `windows build`"
 				var lines [numLogLines]string
 				// Send a log snippet too
 				index := 0
@@ -130,7 +207,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 				f, err := os.Open(logFileName)
 				if err != nil {
-					bot.SendMessage("Error reading "+logFileName+": "+err.Error(), channel)
+					bot.SendMessage(autoBuild+"Error reading "+logFileName+": "+err.Error(), channel)
 				}
 
 				scanner := bufio.NewScanner(f)
@@ -139,7 +216,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 					lineCount += 1
 				}
 				if err := scanner.Err(); err != nil {
-					bot.SendMessage("Error scanning "+logFileName+": "+err.Error(), channel)
+					bot.SendMessage(autoBuild+"Error scanning "+logFileName+": "+err.Error(), channel)
 				}
 				if lineCount > numLogLines {
 					index = lineCount % numLogLines
@@ -172,6 +249,49 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			index = len(logContents) - 1000
 		}
 		bot.SendMessage(string(logContents[index:]), channel)
+
+	case gitDiffCmd.FullCommand():
+		rawRepoText := *gitDiffRepo
+		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+
+		gitDiffCmd := exec.Command(
+			"git.exe",
+			"diff",
+		)
+		gitDiffCmd.Dir = os.ExpandEnv(path.Join("$GOPATH/src", repoParsed))
+
+		if exists, err := Exists(path.Join(gitDiffCmd.Dir, ".git")); !exists {
+			return "Not a git repo", err
+		}
+
+		stdoutStderr, err := gitDiffCmd.CombinedOutput()
+		if err != nil {
+			return "Error", err
+		}
+		bot.SendMessage(string(stdoutStderr), channel)
+
+	case gitCleanCmd.FullCommand():
+		rawRepoText := *gitCleanRepo
+		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+
+		gitCleanCmd := exec.Command(
+			"git.exe",
+			"clean",
+			"-f",
+		)
+		gitCleanCmd.Dir = os.ExpandEnv(path.Join("$GOPATH/src", repoParsed))
+
+		if exists, err := Exists(path.Join(gitCleanCmd.Dir, ".git")); !exists {
+			return "Not a git repo", err
+		}
+
+		stdoutStderr, err := gitCleanCmd.CombinedOutput()
+		if err != nil {
+			return "Error", err
+		}
+
+		bot.SendMessage(string(stdoutStderr), channel)
+
 	}
 	return cmd, nil
 }
@@ -182,4 +302,44 @@ func (d *winbot) Help(bot slackbot.Bot) string {
 		return fmt.Sprintf("Error getting help: %s", err)
 	}
 	return out
+}
+
+func Exists(name string) (bool, error) {
+	_, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return err != nil, err
+}
+
+func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string) {
+	d.testAuto = make(chan struct{})
+	for {
+		hour := time.Now().Hour()
+		hour = ((24 - hour) + 7)
+		next := time.Now().Add(time.Hour * time.Duration(hour))
+		if next.Weekday() == time.Saturday {
+			hour += 48
+		}
+		if next.Weekday() == time.Sunday {
+			hour += 24
+		}
+		next = time.Now().Add(time.Hour * time.Duration(hour))
+
+		msg := fmt.Sprintf("Next automatic build at %s", next.Format(time.RFC822))
+		bot.SendMessage(msg, channel)
+
+		args := []string{"build", "--auto"}
+
+		select {
+		case <-d.testAuto:
+		case <-time.After(time.Duration(hour) * time.Hour):
+			args = append(args, "--smoke")
+		}
+		message, err := d.Run(bot, channel, args)
+		if err != nil {
+			msg := fmt.Sprintf("AutoBuild ERROR -- %s: %s", message, err.Error())
+			bot.SendMessage(msg, channel)
+		}
+	}
 }

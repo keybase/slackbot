@@ -98,5 +98,6 @@ func main() {
 	bot.SetHelp(bot.HelpMessage() + "\n\n" + ext.Help(bot))
 
 	bot.SendMessage("I'm running.", os.Getenv("SLACK_CHANNEL"))
+
 	bot.Listen()
 }
