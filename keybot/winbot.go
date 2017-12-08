@@ -21,7 +21,8 @@ import (
 )
 
 type winbot struct {
-	testAuto chan struct{}
+	testAuto  chan struct{}
+	closeAuto chan struct{}
 }
 
 const numLogLines = 10
@@ -58,6 +59,8 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	testAutoBuild := app.Command("testauto", "Simulate an automated daily build").Hidden()
 	startAutoTimer := app.Command("startAutoTimer", "Start the auto build timer")
+	startAutoTimerInterval := startAutoTimer.Flag("interval", "Specify auto inerval in hours, 0 to disable").Default("24").Int()
+	startAutoTimerDelay := startAutoTimer.Flag("delay", "Delay in hours before first auto build").Default("0").Int()
 
 	restartCmd := app.Command("restart", "Exit the bot so the calling script can rebuild + relaunch")
 	dateCmd := app.Command("date", "Print the date")
@@ -74,10 +77,12 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	}
 
 	if cmd == startAutoTimer.FullCommand() {
-		if d.testAuto != nil {
-			return "Timer already running", nil
+		if d.closeAuto != nil {
+			d.testAuto <- struct{}{}
 		}
-		go d.winAutoBuild(bot, channel)
+		if *startAutoTimerInterval > 0 {
+			go d.winAutoBuild(bot, channel, *startAutoTimerInterval, *startAutoTimerDelay)
+		}
 		return "", nil
 	}
 
@@ -97,6 +102,15 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		}
 
 	case buildWindows.FullCommand():
+
+		buildProcessMutex.Lock()
+		lastBuildProcess := buildProcess
+		buildProcessMutex.Unlock()
+
+		if lastBuildProcess != nil {
+			return "Seems to be a build running already", nil
+		}
+
 		smokeTest := *buildWindowsSmoke
 		skipCI := *buildWindowsSkipCI
 		testBuild := *buildWindowsTest
@@ -150,6 +164,11 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			buildProcessMutex.Lock()
 			buildProcess = cmd.Process
 			buildProcessMutex.Unlock()
+			defer func() {
+				buildProcessMutex.Lock()
+				buildProcess = nil
+				buildProcessMutex.Unlock()
+			}()
 			err = cmd.Wait()
 
 			bucketName := os.Getenv("BUCKET_NAME")
@@ -283,19 +302,18 @@ func Exists(name string) (bool, error) {
 	return err != nil, err
 }
 
-func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string) {
+func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string, interval int, delay int) {
 	d.testAuto = make(chan struct{})
+	d.closeAuto = make(chan struct{})
 	for {
 		hour := time.Now().Hour()
-		hour = ((24 - hour) + 7)
+		hour = ((interval - hour) + 3) + delay
+		delay = 0
 		next := time.Now().Add(time.Hour * time.Duration(hour))
-		if next.Weekday() == time.Saturday {
-			hour += 48
+		for next.Weekday() == time.Saturday || next.Weekday() == time.Sunday {
+			hour = hour + interval
+			next = time.Now().Add(time.Hour * time.Duration(hour))
 		}
-		if next.Weekday() == time.Sunday {
-			hour += 24
-		}
-		next = time.Now().Add(time.Hour * time.Duration(hour))
 
 		msg := fmt.Sprintf("Next automatic build at %s", next.Format(time.RFC822))
 		bot.SendMessage(msg, channel)
@@ -304,6 +322,8 @@ func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string) {
 
 		select {
 		case <-d.testAuto:
+		case <-d.closeAuto:
+			return
 		case <-time.After(time.Duration(hour) * time.Hour):
 			args = append(args, "--smoke")
 		}
