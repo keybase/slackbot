@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/launchd"
@@ -52,12 +53,14 @@ func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd
 }
 
 func addBasicCommands(bot slackbot.Bot) {
-	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", bot.Config()))
 	bot.AddCommand("pause", slackbot.NewPauseCommand(bot.Config()))
 	bot.AddCommand("resume", slackbot.NewResumeCommand(bot.Config()))
 	bot.AddCommand("config", slackbot.NewShowConfigCommand(bot.Config()))
 	bot.AddCommand("toggle-dryrun", slackbot.NewToggleDryRunCommand(bot.Config()))
-	bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", bot.Label()}, false, "Restart the bot", bot.Config()))
+	if runtime.GOOS != "windows" {
+		bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", bot.Config()))
+		bot.AddCommand("restart", slackbot.NewExecCommand("/bin/launchctl", []string{"stop", bot.Label()}, false, "Restart the bot", bot.Config()))
+	}
 }
 
 type extension interface {

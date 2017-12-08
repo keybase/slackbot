@@ -39,8 +39,8 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	buildWindows := app.Command("build", "Start a windows build")
 	buildWindowsTest := buildWindows.Flag("test", "Whether build is for testing (skips CI and smoke)").Bool()
-	buildWindowsCientCommit := buildWindows.Flag("client-commit", "Build a specific client commit").String()
-	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
+	buildWindowsClientCommit := buildWindows.Flag("client-commit", "Build a specific client commit").Default("master").String()
+	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").Default("master").String()
 	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
 	buildWindowsAuto := buildWindows.Flag("automated", "Specify build was triggered automatically").Hidden().Bool()
@@ -58,6 +58,9 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	testAutoBuild := app.Command("testauto", "Simulate an automated daily build").Hidden()
 	startAutoTimer := app.Command("startAutoTimer", "Start the auto build timer")
+
+	restartCmd := app.Command("restart", "Exit the bot so the calling script can rebuild + relaunch")
+	dateCmd := app.Command("date", "Print the date")
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -119,47 +122,10 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		bot.SendMessage(msg, channel)
 
 		os.Remove(logFileName)
-		logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			return "Unable to open logfile", err
-		}
 
-		gitCmd := exec.Command(
-			"git.exe",
-			"checkout",
-			"master",
-		)
-		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
-		stdoutStderr, err := gitCmd.CombinedOutput()
-		logf.Write(stdoutStderr)
+		msg, err := doClientCheckout(logFileName, *buildWindowsClientCommit)
 		if err != nil {
-			logf.Close()
-			return string(stdoutStderr), err
-		}
-
-		gitCmd = exec.Command(
-			"git.exe",
-			"pull",
-		)
-		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
-		stdoutStderr, err = gitCmd.CombinedOutput()
-		logf.Write(stdoutStderr)
-		if err != nil {
-			logf.Close()
-			return string(stdoutStderr), err
-		}
-
-		gitCmd = exec.Command(
-			"git.exe",
-			"checkout",
-			*buildWindowsCientCommit,
-		)
-		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
-		stdoutStderr, err = gitCmd.CombinedOutput()
-		logf.Write(stdoutStderr)
-		logf.Close()
-		if err != nil {
-			return string(stdoutStderr), err
+			return msg, err
 		}
 
 		cmd := exec.Command(
@@ -169,7 +135,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			logFileName,
 			"2>&1")
 		cmd.Env = append(os.Environ(),
-			"ClientRevision="+*buildWindowsCientCommit,
+			"ClientRevision="+*buildWindowsClientCommit,
 			"KbfsRevision="+*buildWindowsKbfsCommit,
 			"SKIP_CI="+boolToEnvString(skipCI),
 			"UpdateChannel="+updateChannel,
@@ -292,6 +258,11 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 		bot.SendMessage(string(stdoutStderr), channel)
 
+	case restartCmd.FullCommand():
+		os.Exit(0)
+
+	case dateCmd.FullCommand():
+		bot.SendMessage(time.Now().Format(time.RFC822), channel)
 	}
 	return cmd, nil
 }
@@ -342,4 +313,62 @@ func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string) {
 			bot.SendMessage(msg, channel)
 		}
 	}
+}
+
+func doClientCheckout(logFileName string, clientCommit string) (string, error) {
+	logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0644)
+	defer logf.Close()
+	if err != nil {
+		return "Unable to open logfile", err
+	}
+
+	gitCmd := exec.Command(
+		"git.exe",
+		"checkout",
+		"master",
+	)
+	gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+	stdoutStderr, err := gitCmd.CombinedOutput()
+	logf.Write(stdoutStderr)
+	if err != nil {
+		return string(stdoutStderr), err
+	}
+
+	gitCmd = exec.Command(
+		"git.exe",
+		"pull",
+	)
+	gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+	stdoutStderr, err = gitCmd.CombinedOutput()
+	logf.Write(stdoutStderr)
+	if err != nil {
+		return string(stdoutStderr), err
+	}
+
+	gitCmd = exec.Command(
+		"git.exe",
+		"checkout",
+		clientCommit,
+	)
+	gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+	stdoutStderr, err = gitCmd.CombinedOutput()
+	logf.Write(stdoutStderr)
+
+	if err != nil {
+		return string(stdoutStderr), err
+	}
+
+	if clientCommit != "master" {
+		gitCmd = exec.Command(
+			"git.exe",
+			"pull",
+		)
+		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+		stdoutStderr, err = gitCmd.CombinedOutput()
+		logf.Write(stdoutStderr)
+		if err != nil {
+			return string(stdoutStderr), err
+		}
+	}
+	return "", nil
 }
