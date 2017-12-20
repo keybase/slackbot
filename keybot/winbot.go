@@ -22,7 +22,10 @@ import (
 
 type winbot struct {
 	testAuto chan struct{}
+<<<<<<< HEAD
 	stopAuto chan struct{}
+=======
+>>>>>>> master
 }
 
 const numLogLines = 10
@@ -44,7 +47,11 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
+<<<<<<< HEAD
 	buildWindowsAuto := buildWindows.Flag("auto", "Specify build was triggered automatically").Hidden().Bool()
+=======
+	buildWindowsAuto := buildWindows.Flag("automated", "Specify build was triggered automatically").Hidden().Bool()
+>>>>>>> master
 
 	cancel := app.Command("cancel", "Cancel current")
 
@@ -59,11 +66,14 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	testAutoBuild := app.Command("testauto", "Simulate an automated daily build").Hidden()
 	startAutoTimer := app.Command("startAutoTimer", "Start the auto build timer")
+<<<<<<< HEAD
 	startAutoTimerInterval := startAutoTimer.Flag("interval", "Number of hours between auto builds, 0  to stop").Default("24").Int()
 	startAutoTimerStartHour := startAutoTimer.Flag("startHour", "Number of hours after midnight to build, local time").Default("7").Int()
 	startAutoTimerDelay := startAutoTimer.Flag("delay", "Number of hours to wait before starting auto timer").Default("0").Int()
 
 	restartCmd := app.Command("restart", "Quit and let calling script invoke bot again")
+=======
+>>>>>>> master
 
 	cmd, usage, cmdErr := cli.Parse(app, args, stringBuffer)
 	if usage != "" || cmdErr != nil {
@@ -77,12 +87,19 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	}
 
 	if cmd == startAutoTimer.FullCommand() {
+<<<<<<< HEAD
 		if d.stopAuto != nil {
 			d.stopAuto <- struct{}{}
 		}
 		if *startAutoTimerInterval > 0 {
 			go d.winAutoBuild(bot, channel, *startAutoTimerInterval, *startAutoTimerDelay, *startAutoTimerStartHour)
 		}
+=======
+		if d.testAuto != nil {
+			return "Timer already running", nil
+		}
+		go d.winAutoBuild(bot, channel)
+>>>>>>> master
 		return "", nil
 	}
 
@@ -300,8 +317,11 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 		bot.SendMessage(string(stdoutStderr), channel)
 
+<<<<<<< HEAD
 	case restartCmd.FullCommand():
 		os.Exit(0)
+=======
+>>>>>>> master
 	}
 	return cmd, nil
 }
@@ -322,6 +342,7 @@ func Exists(name string) (bool, error) {
 	return err != nil, err
 }
 
+<<<<<<< HEAD
 func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string, interval int, delay int, startHour int) {
 	d.testAuto = make(chan struct{})
 	d.stopAuto = make(chan struct{})
@@ -337,18 +358,40 @@ func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string, interval int, de
 			hour += interval
 			next = time.Now().Add(time.Hour * time.Duration(hour))
 		}
+=======
+func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string) {
+	d.testAuto = make(chan struct{})
+	for {
+		hour := time.Now().Hour()
+		hour = ((24 - hour) + 7)
+		next := time.Now().Add(time.Hour * time.Duration(hour))
+		if next.Weekday() == time.Saturday {
+			hour += 48
+		}
+		if next.Weekday() == time.Sunday {
+			hour += 24
+		}
+		next = time.Now().Add(time.Hour * time.Duration(hour))
+>>>>>>> master
 
 		msg := fmt.Sprintf("Next automatic build at %s", next.Format(time.RFC822))
 		bot.SendMessage(msg, channel)
 
+<<<<<<< HEAD
 		args := []string{"build", "--auto"}
+=======
+		args := []string{"build", "--automated"}
+>>>>>>> master
 
 		select {
 		case <-d.testAuto:
 		case <-time.After(time.Duration(hour) * time.Hour):
 			args = append(args, "--smoke")
+<<<<<<< HEAD
 		case <-d.stopAuto:
 			return
+=======
+>>>>>>> master
 		}
 		message, err := d.Run(bot, channel, args)
 		if err != nil {
