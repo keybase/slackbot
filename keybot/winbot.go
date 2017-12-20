@@ -44,7 +44,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
-	buildWindowsAuto := buildWindows.Flag("auto", "Specify build was triggered automatically").Hidden().Bool()
+	buildWindowsAuto := buildWindows.Flag("automated", "Specify build was triggered automatically").Hidden().Bool()
 
 	cancel := app.Command("cancel", "Cancel current")
 
@@ -94,7 +94,6 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	case cancel.FullCommand():
 		buildProcessMutex.Lock()
 		defer buildProcessMutex.Unlock()
-		if buildProcess == nil {
 			return "No build running", nil
 		}
 		if err := buildProcess.Kill(); err != nil {
@@ -341,7 +340,7 @@ func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string, interval int, de
 		msg := fmt.Sprintf("Next automatic build at %s", next.Format(time.RFC822))
 		bot.SendMessage(msg, channel)
 
-		args := []string{"build", "--auto"}
+		args := []string{"build", "--automated"}
 
 		select {
 		case <-d.testAuto:
