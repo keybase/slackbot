@@ -94,6 +94,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	case cancel.FullCommand():
 		buildProcessMutex.Lock()
 		defer buildProcessMutex.Unlock()
+		if buildProcess == nil {
 			return "No build running", nil
 		}
 		if err := buildProcess.Kill(); err != nil {
