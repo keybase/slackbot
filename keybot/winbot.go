@@ -157,17 +157,31 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			return string(stdoutStderr), err
 		}
 
-		gitCmd = exec.Command(
-			"git.exe",
-			"checkout",
-			*buildWindowsCientCommit,
-		)
-		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
-		stdoutStderr, err = gitCmd.CombinedOutput()
-		logf.Write(stdoutStderr)
-		logf.Close()
-		if err != nil {
-			return string(stdoutStderr), err
+		if buildWindowsCientCommit != nil && *buildWindowsCientCommit != "" && *buildWindowsCientCommit != "master" {
+			gitCmd = exec.Command(
+				"git.exe",
+				"checkout",
+				*buildWindowsCientCommit,
+			)
+			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+			stdoutStderr, err = gitCmd.CombinedOutput()
+			logf.Write(stdoutStderr)
+			logf.Close()
+			if err != nil {
+				return string(stdoutStderr), err
+			}
+
+			gitCmd = exec.Command(
+				"git.exe",
+				"pull",
+			)
+			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+			stdoutStderr, err = gitCmd.CombinedOutput()
+			logf.Write(stdoutStderr)
+			if err != nil {
+				logf.Close()
+				return string(stdoutStderr), err
+			}
 		}
 
 		cmd := exec.Command(
