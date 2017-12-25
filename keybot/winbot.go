@@ -166,8 +166,9 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
 			logf.Write(stdoutStderr)
-			logf.Close()
+
 			if err != nil {
+				logf.Close()
 				return string(stdoutStderr), err
 			}
 
@@ -183,6 +184,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 				return string(stdoutStderr), err
 			}
 		}
+		logf.Close()
 
 		cmd := exec.Command(
 			"cmd", "/c",
