@@ -18,10 +18,10 @@
 			"revisionTime": "2015-10-22T17:55:26+11:00"
 		},
 		{
-			"checksumSHA1": "kEuS6hbYWOde2eHiqPdsitxzfDg=",
+			"checksumSHA1": "tbjywCmVPr+twP4mc0RyFFMiYMk=",
 			"path": "github.com/nlopes/slack",
-			"revision": "72d15a0fc0b773a59c00f78b9e7d97eeb8c4281f",
-			"revisionTime": "2017-04-26T19:14:31Z"
+			"revision": "107290b5bbaf3e634833346bb4ff389b1c782bc7",
+			"revisionTime": "2017-12-31T22:58:23Z"
 		},
 		{
 			"path": "golang.org/x/net/websocket",

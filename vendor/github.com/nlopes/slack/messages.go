@@ -3,6 +3,7 @@ package slack
 // OutgoingMessage is used for the realtime API, and seems incomplete.
 type OutgoingMessage struct {
 	ID              int    `json:"id"`
+	// channel ID
 	Channel         string `json:"channel,omitempty"`
 	Text            string `json:"text,omitempty"`
 	Type            string `json:"type,omitempty"`
@@ -58,6 +59,11 @@ type Msg struct {
 	// channel_archive, group_archive
 	Members []string `json:"members,omitempty"`
 
+	// channels.replies, groups.replies, im.replies, mpim.replies
+	ReplyCount   int     `json:"reply_count,omitempty"`
+	Replies      []Reply `json:"replies,omitempty"`
+	ParentUserId string  `json:"parent_user_id,omitempty"`
+
 	// file_share, file_comment, file_mention
 	File *File `json:"file,omitempty"`
 
@@ -90,6 +96,12 @@ type Edited struct {
 	Timestamp string `json:"ts,omitempty"`
 }
 
+// Reply contains information about a reply for a thread
+type Reply struct {
+	User      string `json:"user,omitempty"`
+	Timestamp string `json:"ts,omitempty"`
+}
+
 // Event contains the event type
 type Event struct {
 	Type string `json:"type,omitempty"`
@@ -110,12 +122,12 @@ type Pong struct {
 // NewOutgoingMessage prepares an OutgoingMessage that the user can
 // use to send a message. Use this function to properly set the
 // messageID.
-func (rtm *RTM) NewOutgoingMessage(text string, channel string) *OutgoingMessage {
+func (rtm *RTM) NewOutgoingMessage(text string, channelID string) *OutgoingMessage {
 	id := rtm.idGen.Next()
 	return &OutgoingMessage{
 		ID:      id,
 		Type:    "message",
-		Channel: channel,
+		Channel: channelID,
 		Text:    text,
 	}
 }
@@ -123,11 +135,11 @@ func (rtm *RTM) NewOutgoingMessage(text string, channel string) *OutgoingMessage
 // NewTypingMessage prepares an OutgoingMessage that the user can
 // use to send as a typing indicator. Use this function to properly set the
 // messageID.
-func (rtm *RTM) NewTypingMessage(channel string) *OutgoingMessage {
+func (rtm *RTM) NewTypingMessage(channelID string) *OutgoingMessage {
 	id := rtm.idGen.Next()
 	return &OutgoingMessage{
 		ID:      id,
 		Type:    "typing",
-		Channel: channel,
+		Channel: channelID,
 	}
 }

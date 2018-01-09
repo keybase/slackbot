@@ -2,8 +2,8 @@ package slack
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,9 +13,23 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
+// HTTPRequester defines the minimal interface needed for an http.Client to be implemented.
+//
+// Use it in conjunction with the SetHTTPClient function to allow for other capabilities
+// like a tracing http.Client
+type HTTPRequester interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+var customHTTPClient HTTPRequester
+
+// HTTPClient sets a custom http.Client
+// deprecated: in favor of SetHTTPClient()
 var HTTPClient = &http.Client{}
 
 type WebResponse struct {
@@ -29,40 +43,32 @@ func (s WebError) Error() string {
 	return string(s)
 }
 
-func fileUploadReq(path, fpath, fieldname string, values url.Values) (*http.Request, error) {
-	fullpath, err := filepath.Abs(fpath)
-	if err != nil {
-		return nil, err
-	}
-	file, err := os.Open(fullpath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+type RateLimitedError struct {
+	RetryAfter time.Duration
+}
 
+func (e *RateLimitedError) Error() string {
+	return fmt.Sprintf("Slack rate limit exceeded, retry after %s", e.RetryAfter)
+}
+
+func fileUploadReq(ctx context.Context, path, fieldname, filename string, values url.Values, r io.Reader) (*http.Request, error) {
 	body := &bytes.Buffer{}
 	wr := multipart.NewWriter(body)
 
-	ioWriter, err := wr.CreateFormFile(fieldname, filepath.Base(fullpath))
+	ioWriter, err := wr.CreateFormFile(fieldname, filename)
 	if err != nil {
 		wr.Close()
 		return nil, err
 	}
-	bytes, err := io.Copy(ioWriter, file)
+	_, err = io.Copy(ioWriter, r)
 	if err != nil {
 		wr.Close()
 		return nil, err
 	}
 	// Close the multipart writer or the footer won't be written
 	wr.Close()
-	stat, err := file.Stat()
-	if err != nil {
-		return nil, err
-	}
-	if bytes != stat.Size() {
-		return nil, errors.New("could not read the whole file")
-	}
 	req, err := http.NewRequest("POST", path, body)
+	req = req.WithContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -82,24 +88,44 @@ func parseResponseBody(body io.ReadCloser, intf *interface{}, debug bool) error 
 		logger.Printf("parseResponseBody: %s\n", string(response))
 	}
 
-	err = json.Unmarshal(response, &intf)
+	return json.Unmarshal(response, &intf)
+}
+
+func postLocalWithMultipartResponse(ctx context.Context, path, fpath, fieldname string, values url.Values, intf interface{}, debug bool) error {
+	fullpath, err := filepath.Abs(fpath)
 	if err != nil {
 		return err
 	}
-
-	return nil
+	file, err := os.Open(fullpath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return postWithMultipartResponse(ctx, path, filepath.Base(fpath), fieldname, values, file, intf, debug)
 }
 
-func postWithMultipartResponse(path, filepath, fieldname string, values url.Values, intf interface{}, debug bool) error {
-	req, err := fileUploadReq(SLACK_API+path, filepath, fieldname, values)
-	resp, err := HTTPClient.Do(req)
+func postWithMultipartResponse(ctx context.Context, path, name, fieldname string, values url.Values, r io.Reader, intf interface{}, debug bool) error {
+	req, err := fileUploadReq(ctx, SLACK_API+path, fieldname, name, values, r)
+	if err != nil {
+		return err
+	}
+	req = req.WithContext(ctx)
+	resp, err := getHTTPClient().Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusTooManyRequests {
+		retry, err := strconv.ParseInt(resp.Header.Get("Retry-After"), 10, 64)
+		if err != nil {
+			return err
+		}
+		return &RateLimitedError{time.Duration(retry) * time.Second}
+	}
+
 	// Slack seems to send an HTML body along with 5xx error codes. Don't parse it.
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		logResponse(resp, debug)
 		return fmt.Errorf("Slack server error: %s.", resp.Status)
 	}
@@ -107,15 +133,31 @@ func postWithMultipartResponse(path, filepath, fieldname string, values url.Valu
 	return parseResponseBody(resp.Body, &intf, debug)
 }
 
-func postForm(endpoint string, values url.Values, intf interface{}, debug bool) error {
-	resp, err := HTTPClient.PostForm(endpoint, values)
+func postForm(ctx context.Context, endpoint string, values url.Values, intf interface{}, debug bool) error {
+	reqBody := strings.NewReader(values.Encode())
+	req, err := http.NewRequest("POST", endpoint, reqBody)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	req = req.WithContext(ctx)
+	resp, err := getHTTPClient().Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusTooManyRequests {
+		retry, err := strconv.ParseInt(resp.Header.Get("Retry-After"), 10, 64)
+		if err != nil {
+			return err
+		}
+		return &RateLimitedError{time.Duration(retry) * time.Second}
+	}
+
 	// Slack seems to send an HTML body along with 5xx error codes. Don't parse it.
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		logResponse(resp, debug)
 		return fmt.Errorf("Slack server error: %s.", resp.Status)
 	}
@@ -123,13 +165,13 @@ func postForm(endpoint string, values url.Values, intf interface{}, debug bool) 
 	return parseResponseBody(resp.Body, &intf, debug)
 }
 
-func post(path string, values url.Values, intf interface{}, debug bool) error {
-	return postForm(SLACK_API+path, values, intf, debug)
+func post(ctx context.Context, path string, values url.Values, intf interface{}, debug bool) error {
+	return postForm(ctx, SLACK_API+path, values, intf, debug)
 }
 
-func parseAdminResponse(method string, teamName string, values url.Values, intf interface{}, debug bool) error {
+func parseAdminResponse(ctx context.Context, method string, teamName string, values url.Values, intf interface{}, debug bool) error {
 	endpoint := fmt.Sprintf(SLACK_WEB_API_FORMAT, teamName, method, time.Now().Unix())
-	return postForm(endpoint, values, intf, debug)
+	return postForm(ctx, endpoint, values, intf, debug)
 }
 
 func logResponse(resp *http.Response, debug bool) error {
@@ -143,4 +185,19 @@ func logResponse(resp *http.Response, debug bool) error {
 	}
 
 	return nil
+}
+
+func getHTTPClient() HTTPRequester {
+	if customHTTPClient != nil {
+		return customHTTPClient
+	}
+
+	return HTTPClient
+}
+
+// SetHTTPClient allows you to specify a custom http.Client
+// Use this instead of the package level HTTPClient variable if you want to use a custom client like the
+// Stackdriver Trace HTTPClient https://godoc.org/cloud.google.com/go/trace#HTTPClient
+func SetHTTPClient(client HTTPRequester) {
+	customHTTPClient = client
 }
