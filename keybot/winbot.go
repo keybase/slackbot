@@ -42,6 +42,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildWindowsTest := buildWindows.Flag("test", "Whether build is for testing (skips CI and smoke)").Bool()
 	buildWindowsCientCommit := buildWindows.Flag("client-commit", "Build a specific client commit").String()
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
+	buildWindowsUpdaterCommit := buildWindows.Flag("kbfs-commit", "Build a specific updater commit").String()
 	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
 	buildWindowsAuto := buildWindows.Flag("automated", "Specify build was triggered automatically").Hidden().Bool()
@@ -195,6 +196,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		cmd.Env = append(os.Environ(),
 			"ClientRevision="+*buildWindowsCientCommit,
 			"KbfsRevision="+*buildWindowsKbfsCommit,
+			"UpdaterRevision="+*buildWindowsUpdaterCommit,
 			"SKIP_CI="+boolToEnvString(skipCI),
 			"UpdateChannel="+updateChannel,
 			"SlackBot=1",
