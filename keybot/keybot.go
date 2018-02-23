@@ -33,6 +33,8 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildAndroid := build.Command("android", "Start an android build")
 	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildAndroidAutomated := buildAndroid.Flag("automated", "Whether this is a timed build").Bool()
+	buildAndroidCientCommit := buildAndroid.Flag("client-commit", "Build a specific client commit hash").String()
+	buildAndroidKbfsCommit := buildAndroid.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 	buildIOS := build.Command("ios", "Start an ios build")
 	buildIOSSkipCI := buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildIOSAutomated := buildIOS.Flag("automated", "Whether this is a timed build").Bool()
@@ -86,6 +88,8 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "ANDROID_HOME", Value: "/usr/local/opt/android-sdk"},
+				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
+				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildAndroidKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(!automated)},
 			},
