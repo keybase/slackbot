@@ -59,8 +59,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	gitDiffCmd := app.Command("gdiff", "Show the git diff")
 	gitDiffRepo := gitDiffCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
-	gitCleanCmd := app.Command("gclean", "Clean the repo")
-	gitCleanRepo := gitCleanCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
+	gitCleanCmd := app.Command("gclean", "Clean the repos go/go-ios/go-android")
 
 	upgrade := app.Command("upgrade", "Upgrade package")
 	upgradePackageName := upgrade.Arg("name", "Package name (yarn, go, fastlane, etc)").Required().String()
@@ -159,16 +158,11 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		return runScript(bot, channel, env, script)
 
 	case gitCleanCmd.FullCommand():
-		rawRepoText := *gitCleanRepo
-		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
-
 		script := launchd.Script{
-			Label:      "keybase.gitdiff",
+			Label:      "keybase.gitclean",
 			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "REPO", Value: repoParsed},
-				launchd.EnvVar{Key: "PREFIX_GOPATH", Value: boolToEnvString(true)},
 				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./git_clean.sh"},
 			},
 		}

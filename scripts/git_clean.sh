@@ -1,38 +1,22 @@
 #! /usr/bin/env bash
 
-# This script answers
-#   1) Does repo X exist?
-#   2) What's the diff?
-
+# This script cleans the go path, go-ios path, go-android path
 set -e -u -o pipefail
 
-addGOPATHPrefix="${PREFIX_GOPATH:-}"
-repo="${REPO:-}"
-
-if [ -z "$repo" ] ; then
-  echo "git_clean.sh needs a repo argument."
-  exit 1
-fi
-
-if [ -n "$addGOPATHPrefix" ] ; then
-  repo="$GOPATH/src/$repo"
-fi
-
-if [ ! -d "$repo" ] ; then
-  echo "Repo directory '$repo' does not exist."
-  exit 1
-fi
-
-cd "$repo"
-
-if [ ! -d ".git" ] ; then
-  # This intentionally doesn't support bare repos. Some callers are going to
-  # want to mess with the working copy.
-  echo "Directory '$repo' is not a git repo."
-  exit 1
-fi
-
-echo "git checkout ."
-echo $(git checkout .)
-echo "git clean -f"
+cd "$GOPATH/src/github.com/keybase/client"
+echo $(git fetch)
 echo $(git clean -f)
+echo $(git checkout master)
+echo $(git pull)
+
+cd "$GOPATH/../go-ios/src/github.com/keybase/client"
+echo $(git fetch)
+echo $(git clean -f)
+echo $(git checkout master)
+echo $(git pull)
+
+cd "$GOPATH/../go-android/src/github.com/keybase/client"
+echo $(git fetch)
+echo $(git clean -f)
+echo $(git checkout master)
+echo $(git pull)
