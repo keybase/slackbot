@@ -27,28 +27,29 @@ type Config interface {
 }
 
 type config struct {
-	dryRun bool
-	paused bool
+	// These must be public for json serialization.
+	DryRunField bool
+	PausedField bool
 }
 
 // Paused if paused
 func (c config) Paused() bool {
-	return c.paused
+	return c.PausedField
 }
 
 // DryRun if dry run enabled
 func (c config) DryRun() bool {
-	return c.dryRun
+	return c.DryRunField
 }
 
 // SetPaused changes paused
 func (c *config) SetPaused(paused bool) {
-	c.paused = paused
+	c.PausedField = paused
 }
 
 // SetDryRun changes dry run
 func (c *config) SetDryRun(dryRun bool) {
-	c.dryRun = dryRun
+	c.DryRunField = dryRun
 }
 
 func getConfigPath() (string, error) {
@@ -64,8 +65,8 @@ func getConfigPath() (string, error) {
 // NewConfig returns default config
 func NewConfig(dryRun, paused bool) Config {
 	return &config{
-		dryRun: dryRun,
-		paused: paused,
+		DryRunField: dryRun,
+		PausedField: paused,
 	}
 }
 
@@ -77,8 +78,8 @@ func ReadConfigOrDefault() Config {
 
 func readConfigOrDefault() config {
 	defaultConfig := config{
-		dryRun: true,
-		paused: false,
+		DryRunField: true,
+		PausedField: false,
 	}
 
 	path, err := getConfigPath()
