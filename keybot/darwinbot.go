@@ -26,9 +26,10 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 
 	buildDarwin := build.Command("darwin", "Start a darwin build")
 	buildDarwinTest := buildDarwin.Flag("test", "Whether build is for testing").Bool()
-	buildDarwinCientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit").String()
+	buildDarwinClientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit").String()
 	buildDarwinKbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 	buildDarwinSkipCI := buildDarwin.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildDarwinSmoke := buildDarwin.Flag("smoke", "Whether to make a pair of builds for smoketesting when on a branch").Bool()
 
 	cancel := app.Command("cancel", "Cancel")
 	cancelLabel := cancel.Arg("label", "Launchd job label").Required().String()
@@ -59,11 +60,10 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 		smokeTest := true
 		skipCI := *buildDarwinSkipCI
 		testBuild := *buildDarwinTest
-		// Don't smoke, wait for CI or promote test if custom build
-		if *buildDarwinCientCommit != "" || *buildDarwinKbfsCommit != "" {
-			smokeTest = false
-			skipCI = true
-			testBuild = true
+		// If it's a custom build, make it a test build unless --smoke is passed.
+		if *buildDarwinClientCommit != "" || *buildDarwinKbfsCommit != "" {
+			smokeTest = *buildDarwinSmoke
+			testBuild = !*buildDarwinSmoke
 		}
 		script := launchd.Script{
 			Label:      "keybase.build.darwin",
@@ -73,7 +73,7 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
 				launchd.EnvVar{Key: "TEST", Value: boolToEnvString(testBuild)},
-				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinCientCommit},
+				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinClientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
 				// TODO: Rename to SKIP_CI in packaging scripts
 				launchd.EnvVar{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
