@@ -60,7 +60,7 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 		smokeTest := true
 		skipCI := *buildDarwinSkipCI
 		testBuild := *buildDarwinTest
-		// Don't smoke, wait for CI or promote test if custom build
+		// If it's a custom build, make it a test build unless --smoke is passed.
 		if *buildDarwinClientCommit != "" || *buildDarwinKbfsCommit != "" {
 			smokeTest = *buildDarwinSmoke
 			skipCI = *buildDarwinSkipCI
