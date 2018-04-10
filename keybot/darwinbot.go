@@ -63,7 +63,6 @@ func (d *darwinbot) Run(bot slackbot.Bot, channel string, args []string) (string
 		// If it's a custom build, make it a test build unless --smoke is passed.
 		if *buildDarwinClientCommit != "" || *buildDarwinKbfsCommit != "" {
 			smokeTest = *buildDarwinSmoke
-			skipCI = *buildDarwinSkipCI
 			testBuild = !*buildDarwinSmoke
 		}
 		script := launchd.Script{
