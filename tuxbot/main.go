@@ -22,7 +22,7 @@ func main() {
 	bot.AddCommand("toggle-dryrun", slackbot.NewToggleDryRunCommand(bot.Config()))
 
 	// Extension
-	ext := &tuxbot{}
+	ext := &tuxbot{bot: bot}
 	runFn := func(channel string, args []string) (string, error) {
 		return ext.Run(bot, channel, args)
 	}

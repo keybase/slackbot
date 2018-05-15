@@ -17,11 +17,12 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-func linuxBuildFunc(channel string, args []string) (string, error) {
+func (t *tuxbot) linuxBuildFunc(channel string, args []string) (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", err
 	}
+	t.bot.SendMessage("building linux!!!", channel)
 	prereleaseScriptPath := filepath.Join(currentUser.HomeDir, "slackbot/systemd/prerelease.sh")
 	prereleaseCmd := exec.Command(prereleaseScriptPath)
 	prereleaseCmd.Stdout = os.Stdout
@@ -41,7 +42,9 @@ func linuxBuildFunc(channel string, args []string) (string, error) {
 	return "SUCCESS", nil
 }
 
-type tuxbot struct{}
+type tuxbot struct {
+	bot slackbot.Bot
+}
 
 func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("tuxbot", "Command parser for tuxbot")
@@ -66,7 +69,7 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			return "I'm paused so I can't do that, but I would have run `prerelease.sh`", nil
 		}
 
-		return linuxBuildFunc(channel, args)
+		return t.linuxBuildFunc(channel, args)
 	}
 
 	return cmd, nil
