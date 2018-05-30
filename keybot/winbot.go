@@ -142,6 +142,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		stdoutStderr, err := gitCmd.CombinedOutput()
 		logf.Write(stdoutStderr)
 		if err != nil {
+			logf.WriteString(gitCmd.Dir)
 			logf.Close()
 			return string(stdoutStderr), err
 		}
@@ -154,6 +155,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		stdoutStderr, err = gitCmd.CombinedOutput()
 		logf.Write(stdoutStderr)
 		if err != nil {
+			logf.WriteString(gitCmd.Dir)
 			logf.Close()
 			return string(stdoutStderr), err
 		}
@@ -169,20 +171,39 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			logf.Write(stdoutStderr)
 
 			if err != nil {
+				logf.WriteString(fmt.Sprintf("error doing git pull in %s\n", gitCmd.Dir))
 				logf.Close()
 				return string(stdoutStderr), err
 			}
 
+			// Test if we're on a branch. If so, do git pull once more.
 			gitCmd = exec.Command(
 				"git.exe",
-				"pull",
+				"rev-parse",
+				"--abbrev-ref",
+				"HEAD",
 			)
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
-			logf.Write(stdoutStderr)
 			if err != nil {
+				logf.WriteString(fmt.Sprintf("error going git rev-parse\n", gitCmd.Dir))
 				logf.Close()
 				return string(stdoutStderr), err
+			}
+			commit := strings.TrimSpace(string(stdoutStderr[:]))
+			if commit != "HEAD" {
+				gitCmd = exec.Command(
+					"git.exe",
+					"pull",
+				)
+				gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+				stdoutStderr, err = gitCmd.CombinedOutput()
+				logf.Write(stdoutStderr)
+				if err != nil {
+					logf.WriteString(fmt.Sprintf("error doing git pull on %s in %s\n", commit, gitCmd.Dir))
+					logf.Close()
+					return string(stdoutStderr), err
+				}
 			}
 		}
 		logf.Close()
