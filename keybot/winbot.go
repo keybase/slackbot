@@ -107,6 +107,15 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		skipCI := *buildWindowsSkipCI
 		testBuild := *buildWindowsTest
 		var autoBuild string
+
+		if bot.Config().DryRun() {
+			return fmt.Sprintf("I would have done a build"), nil
+		}
+
+		if bot.Config().Paused() {
+			return fmt.Sprintf("I'm paused so I can't do that, but I would have done a build"), nil
+		}
+
 		if *buildWindowsAuto {
 			autoBuild = "Automatic Build: "
 		}
