@@ -36,6 +36,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	buildAndroidCientCommit := buildAndroid.Flag("client-commit", "Build a specific client commit hash").String()
 	buildAndroidKbfsCommit := buildAndroid.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 	buildIOS := build.Command("ios", "Start an ios build")
+	buildIOSClean := buildIOS.Flag("clean", "Whether to clean first").Bool()
 	buildIOSSkipCI := buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildIOSAutomated := buildIOS.Flag("automated", "Whether this is a timed build").Bool()
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
@@ -60,6 +61,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	gitDiffRepo := gitDiffCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
 	gitCleanCmd := app.Command("gclean", "Clean the repos go/go-ios/go-android")
+	nodeModuleCleanCmd := app.Command("nodeModuleClean", "Clean the ios/android node_modules")
 
 	upgrade := app.Command("upgrade", "Upgrade package")
 	upgradePackageName := upgrade.Arg("name", "Package name (yarn, go, fastlane, etc)").Required().String()
@@ -105,6 +107,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
+				launchd.EnvVar{Key: "CLEAN", Value: *buildIOSClean},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildIOSKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(!automated)},
@@ -167,6 +170,18 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			},
 		}
 		return runScript(bot, channel, env, script)
+
+	case nodeModuleCleanCmd.FullCommand():
+		script := launchd.Script{
+			Label:      "keybase.nodeModuleClean",
+			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
+			BucketName: "prerelease.keybase.io",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./node_module_clean.sh"},
+			},
+		}
+		return runScript(bot, channel, env, script)
+
 
 	case releaseBroken.FullCommand():
 		script := launchd.Script{
