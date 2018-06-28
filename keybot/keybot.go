@@ -100,6 +100,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	case buildIOS.FullCommand():
 		skipCI := *buildIOSSkipCI
+		iosClean := *buildIOSClean
 		automated := *buildIOSAutomated
 		script := launchd.Script{
 			Label:      "keybase.build.ios",
@@ -107,7 +108,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
-				launchd.EnvVar{Key: "CLEAN", Value: *buildIOSClean},
+				launchd.EnvVar{Key: "CLEAN", Value: boolToEnvString(iosClean)},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildIOSKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(!automated)},
