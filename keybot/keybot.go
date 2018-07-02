@@ -92,7 +92,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildAndroidKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
-				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(!automated)},
+				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
@@ -111,7 +111,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 				launchd.EnvVar{Key: "CLEAN", Value: boolToEnvString(iosClean)},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildIOSKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
-				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(!automated)},
+				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
