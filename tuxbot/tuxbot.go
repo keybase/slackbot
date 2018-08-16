@@ -17,7 +17,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-func (t *tuxbot) linuxBuildFunc(channel string, args []string) (string, error) {
+func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool) (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", err
@@ -27,6 +27,9 @@ func (t *tuxbot) linuxBuildFunc(channel string, args []string) (string, error) {
 	prereleaseCmd := exec.Command(prereleaseScriptPath)
 	prereleaseCmd.Stdout = os.Stdout
 	prereleaseCmd.Stderr = os.Stderr
+	if skipCI {
+		prereleaseCmd.Env = append(os.Environ(), "NOWAIT=1")
+	}
 	err = prereleaseCmd.Run()
 	if err != nil {
 		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.keybot.service").CombinedOutput()
@@ -54,6 +57,7 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 	build := app.Command("build", "Build things")
 	buildLinux := build.Command("linux", "Start a linux build")
+	buildLinuxSkipCI := buildLinux.Flag("skip-ci", "Whether to skip CI").Bool()
 
 	cmd, usage, err := cli.Parse(app, args, stringBuffer)
 	if usage != "" || err != nil {
@@ -63,13 +67,16 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	switch cmd {
 	case buildLinux.FullCommand():
 		if bot.Config().DryRun() {
+			if *buildLinuxSkipCI {
+				return "Dry Run: Doing that would run `prerelease.sh` with NOWAIT=1 set", nil
+			}
 			return "Dry Run: Doing that would run `prerelease.sh`", nil
 		}
 		if bot.Config().Paused() {
 			return "I'm paused so I can't do that, but I would have run `prerelease.sh`", nil
 		}
 
-		return t.linuxBuildFunc(channel, args)
+		return t.linuxBuildFunc(channel, args, *buildLinuxSkipCI)
 	}
 
 	return cmd, nil
