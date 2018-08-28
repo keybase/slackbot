@@ -31,6 +31,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	cancelLabel := cancel.Arg("label", "Launchd job label").String()
 
 	buildAndroid := build.Command("android", "Start an android build")
+	buildAndroidNewNDK := buildAndroid.Flag("new-ndk", "Use modern ndk").Bool()
 	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildAndroidAutomated := buildAndroid.Flag("automated", "Whether this is a timed build").Bool()
 	buildAndroidCientCommit := buildAndroid.Flag("client-commit", "Build a specific client commit hash").String()
@@ -83,12 +84,18 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	case buildAndroid.FullCommand():
 		skipCI := *buildAndroidSkipCI
 		automated := *buildAndroidAutomated
+		NDKPath := "/usr/local/opt/android-sdk/ndk-bundle-r10e"
+		if (*buildAndroidNewNDK) {
+			NDKPath = "/usr/local/opt/android-sdk/ndk-bundle"
+		}
 		script := launchd.Script{
 			Label:      "keybase.build.android",
 			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "ANDROID_HOME", Value: "/usr/local/opt/android-sdk"},
+				launchd.EnvVar{Key: "ANDROID_NDK_HOME", Value: NDKPath},
+				launchd.EnvVar{Key: "ANDROID_NDK", Value: NDKPath},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildAndroidKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
