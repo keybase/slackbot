@@ -84,7 +84,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	case buildAndroid.FullCommand():
 		skipCI := *buildAndroidSkipCI
 		automated := *buildAndroidAutomated
-		NDKPath := "/usr/local/opt/android-sdk/ndk-bundle-r10e"
+		NDKPath := "/usr/local/opt/android-sdk/ndk-bundle-r15c"
 		if (*buildAndroidNewNDK) {
 			NDKPath = "/usr/local/opt/android-sdk/ndk-bundle"
 		}
