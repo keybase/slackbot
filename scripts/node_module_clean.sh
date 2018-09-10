@@ -7,3 +7,4 @@ rm -rf "$GOPATH/../go-ios/src/github.com/keybase/client/shared/node_modules"
 rm -rf "$GOPATH/../go-android/src/github.com/keybase/client/shared/node_modules"
 cd "$GOPATH/../go-android/src/github.com/keybase/client/shared"
 yarn rn-packager-wipe-cache
+yarn cache clean
