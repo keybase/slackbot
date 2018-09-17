@@ -86,7 +86,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		automated := *buildAndroidAutomated
 		NDKPath  := "/usr/local/opt/android-sdk/ndk-bundle"
 		if (*buildAndroidOldNDK) {
-			NDKPath := "/usr/local/opt/android-sdk/ndk-bundle-r15c"
+			NDKPath = "/usr/local/opt/android-sdk/ndk-bundle-r15c"
 		}
 		script := launchd.Script{
 			Label:      "keybase.build.android",
