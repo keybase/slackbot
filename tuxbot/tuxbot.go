@@ -30,9 +30,11 @@ func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool, nigh
 	prereleaseCmd.Env = os.Environ()
 	if skipCI {
 		prereleaseCmd.Env = append(prereleaseCmd.Env, "NOWAIT=1")
+		t.bot.SendMessage("--- with NOWAIT=1")
 	}
 	if nightly {
 		prereleaseCmd.Env = append(prereleaseCmd.Env, "KEYBASE_NIGHTLY=1")
+		t.bot.SendMessage("--- with KEYBASE_NIGHTLY=1")
 	}
 	err = prereleaseCmd.Run()
 	if err != nil {
