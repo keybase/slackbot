@@ -17,7 +17,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool) (string, error) {
+func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool, nightly bool) (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", err
@@ -27,8 +27,14 @@ func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool) (str
 	prereleaseCmd := exec.Command(prereleaseScriptPath)
 	prereleaseCmd.Stdout = os.Stdout
 	prereleaseCmd.Stderr = os.Stderr
+	prereleaseCmd.Env = os.Environ()
 	if skipCI {
-		prereleaseCmd.Env = append(os.Environ(), "NOWAIT=1")
+		prereleaseCmd.Env = append(prereleaseCmd.Env, "NOWAIT=1")
+		t.bot.SendMessage("--- with NOWAIT=1", channel)
+	}
+	if nightly {
+		prereleaseCmd.Env = append(prereleaseCmd.Env, "KEYBASE_NIGHTLY=1")
+		t.bot.SendMessage("--- with KEYBASE_NIGHTLY=1", channel)
 	}
 	err = prereleaseCmd.Run()
 	if err != nil {
@@ -58,6 +64,7 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	build := app.Command("build", "Build things")
 	buildLinux := build.Command("linux", "Start a linux build")
 	buildLinuxSkipCI := buildLinux.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildLinuxNightly := buildLinux.Flag("nightly", "Trigger a nightly build instead of main channel").Bool()
 
 	cmd, usage, err := cli.Parse(app, args, stringBuffer)
 	if usage != "" || err != nil {
@@ -76,7 +83,7 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			return "I'm paused so I can't do that, but I would have run `prerelease.sh`", nil
 		}
 
-		return t.linuxBuildFunc(channel, args, *buildLinuxSkipCI)
+		return t.linuxBuildFunc(channel, args, *buildLinuxSkipCI, *buildLinuxNightly)
 	}
 
 	return cmd, nil

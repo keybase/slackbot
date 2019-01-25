@@ -3,4 +3,4 @@ Description=send "!tuxbot build linux" to the Slack #bot channel
 
 [Service]
 EnvironmentFile=/home/keybasebuild/keybot.env
-ExecStart=/home/keybasebuild/slackbot/systemd/send.sh '!tuxbot build linux'
+ExecStart=/home/keybasebuild/slackbot/systemd/send.sh '!tuxbot build linux --skip-ci --nightly'
