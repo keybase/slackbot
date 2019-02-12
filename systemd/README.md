@@ -26,3 +26,5 @@ https://github.com/keybase/client: packaging/linux/README.md
   - `systemctl --user enable --now keybase.buildplease.timer`
 - Take the bot out of dry-run mode by messaging `!tuxbot toggle-dryrun`
   in the #bot channel.
+
+For stathat logging, add a `STATHAT_EZKEY` env variable to the envfile used by the unit.

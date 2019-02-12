@@ -6,6 +6,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/user"
@@ -47,6 +49,17 @@ func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool, nigh
 		}
 		_, _ = api.UploadFile(snippetFile) // ignore errors here for now
 		return "FAILURE", err
+	}
+	ezkey := os.Getenv("STATHAT_EZKEY")
+	if ezkey != "" {
+		vals := url.Values{
+			"ezkey": {ezkey},
+			"stat":  {"tuxbot - nightly - success"},
+			"value": {"1"},
+		}
+		http.PostForm("http://api.stathat.com/ez", vals)
+	} else {
+		fmt.Println("failed to post stat; no ezkey")
 	}
 	return "SUCCESS", nil
 }
