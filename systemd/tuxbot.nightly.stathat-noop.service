@@ -1,0 +1,6 @@
+[Unit]
+Description=send stathat success unconditionally
+
+[Service]
+EnvironmentFile=/home/keybasebuild/keybot.env
+ExecStart=/home/keybasebuild/slackbot/systemd/nightly-stathat-success.sh
