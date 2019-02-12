@@ -104,7 +104,7 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	return cmd, nil
 }
 
-func postStathat(key string, value string) error {
+func postStathat(key string, count string) error {
 	ezkey := os.Getenv("STATHAT_EZKEY")
 	if ezkey == "" {
 		return fmt.Errorf("no stathat key")
@@ -112,7 +112,7 @@ func postStathat(key string, value string) error {
 	vals := url.Values{
 		"ezkey": {ezkey},
 		"stat":  {key},
-		"value": {value},
+		"count": {count},
 	}
 	_, err := http.PostForm("https://api.stathat.com/ez", vals)
 	return err
