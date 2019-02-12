@@ -57,7 +57,10 @@ func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool, nigh
 			"stat":  {"tuxbot - nightly - success"},
 			"value": {"1"},
 		}
-		http.PostForm("http://api.stathat.com/ez", vals)
+		_, err := http.PostForm("http://api.stathat.com/ez", vals)
+		if err != nil {
+			return "STATHAT FAILURE", err
+		}
 	} else {
 		fmt.Println("failed to post stat; no ezkey")
 	}
