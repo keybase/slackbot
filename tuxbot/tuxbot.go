@@ -87,14 +87,15 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 
 		ret, err := t.linuxBuildFunc(channel, args, *buildLinuxSkipCI, *buildLinuxNightly)
 
+		var stathatErr error
 		if err == nil {
-			if err := postStathat("tuxbot - nightly - success", "1"); err != nil {
-				return "stathat err", err
-			}
+			stathatErr = postStathat("tuxbot - nightly - success", "1")
 		} else {
-			if err := postStathat("tuxbot - nightly - failure", "1"); err != nil {
-				return "stathat err", err
-			}
+			stathatErr = postStathat("tuxbot - nightly - failure", "1")
+		}
+		if stathatErr != nil {
+			return fmt.Sprintf("stathat error. original message: %s", ret),
+				fmt.Errorf("stathat error: %s. original error: %s", stathatErr, err)
 		}
 
 		return ret, err
