@@ -114,7 +114,7 @@ func postStathat(key string, value string) error {
 		"stat":  {key},
 		"value": {value},
 	}
-	_, err := http.PostForm("http://api.stathat.com/ez", vals)
+	_, err := http.PostForm("https://api.stathat.com/ez", vals)
 	return err
 }
 
