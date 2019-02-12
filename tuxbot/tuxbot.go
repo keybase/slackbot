@@ -115,10 +115,7 @@ func postStathat(key string, value string) error {
 		"value": {value},
 	}
 	_, err := http.PostForm("http://api.stathat.com/ez", vals)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (t *tuxbot) Help(bot slackbot.Bot) string {
