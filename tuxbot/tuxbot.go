@@ -6,6 +6,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/user"
@@ -83,10 +85,37 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			return "I'm paused so I can't do that, but I would have run `prerelease.sh`", nil
 		}
 
-		return t.linuxBuildFunc(channel, args, *buildLinuxSkipCI, *buildLinuxNightly)
+		ret, err := t.linuxBuildFunc(channel, args, *buildLinuxSkipCI, *buildLinuxNightly)
+
+		var stathatErr error
+		if err == nil {
+			stathatErr = postStathat("tuxbot - nightly - success", "1")
+		} else {
+			stathatErr = postStathat("tuxbot - nightly - failure", "1")
+		}
+		if stathatErr != nil {
+			return fmt.Sprintf("stathat error. original message: %s", ret),
+				fmt.Errorf("stathat error: %s. original error: %s", stathatErr, err)
+		}
+
+		return ret, err
 	}
 
 	return cmd, nil
+}
+
+func postStathat(key string, count string) error {
+	ezkey := os.Getenv("STATHAT_EZKEY")
+	if ezkey == "" {
+		return fmt.Errorf("no stathat key")
+	}
+	vals := url.Values{
+		"ezkey": {ezkey},
+		"stat":  {key},
+		"count": {count},
+	}
+	_, err := http.PostForm("https://api.stathat.com/ez", vals)
+	return err
 }
 
 func (t *tuxbot) Help(bot slackbot.Bot) string {
