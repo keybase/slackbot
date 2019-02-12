@@ -50,20 +50,6 @@ func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool, nigh
 		_, _ = api.UploadFile(snippetFile) // ignore errors here for now
 		return "FAILURE", err
 	}
-	ezkey := os.Getenv("STATHAT_EZKEY")
-	if ezkey != "" {
-		vals := url.Values{
-			"ezkey": {ezkey},
-			"stat":  {"tuxbot - nightly - success"},
-			"value": {"1"},
-		}
-		_, err := http.PostForm("http://api.stathat.com/ez", vals)
-		if err != nil {
-			return "STATHAT FAILURE", err
-		}
-	} else {
-		fmt.Println("failed to post stat; no ezkey")
-	}
 	return "SUCCESS", nil
 }
 
@@ -99,10 +85,39 @@ func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			return "I'm paused so I can't do that, but I would have run `prerelease.sh`", nil
 		}
 
-		return t.linuxBuildFunc(channel, args, *buildLinuxSkipCI, *buildLinuxNightly)
+		ret, err := t.linuxBuildFunc(channel, args, *buildLinuxSkipCI, *buildLinuxNightly)
+
+		if err == nil {
+			if err := postStathat("tuxbot - nightly - success", "1"); err != nil {
+				return "stathat err", err
+			}
+		} else {
+			if err := postStathat("tuxbot - nightly - failure", "1"); err != nil {
+				return "stathat err", err
+			}
+		}
+
+		return ret, err
 	}
 
 	return cmd, nil
+}
+
+func postStathat(key string, value string) error {
+	ezkey := os.Getenv("STATHAT_EZKEY")
+	if ezkey == "" {
+		return fmt.Errorf("no stathat key")
+	}
+	vals := url.Values{
+		"ezkey": {ezkey},
+		"stat":  {key},
+		"value": {value},
+	}
+	_, err := http.PostForm("http://api.stathat.com/ez", vals)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (t *tuxbot) Help(bot slackbot.Bot) string {
