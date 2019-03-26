@@ -39,7 +39,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	app.Writer(stringBuffer)
 
 	buildWindows := app.Command("build", "Start a windows build")
-	buildWindowsTest := buildWindows.Flag("test", "Whether build is for testing (skips CI and smoke)").Bool()
+	buildWindowsTest := buildWindows.Flag("test", "Test build, skips admin/test channel").Bool()
 	buildWindowsCientCommit := buildWindows.Flag("client-commit", "Build a specific client commit").String()
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 	buildWindowsUpdaterCommit := buildWindows.Flag("updater-commit", "Build a specific updater commit").String()
@@ -105,7 +105,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	case buildWindows.FullCommand():
 		smokeTest := *buildWindowsSmoke
 		skipCI := *buildWindowsSkipCI
-		testBuild := *buildWindowsTest
+		skipTestChannel := *buildWindowsTest
 		var autoBuild string
 
 		if bot.Config().DryRun() {
@@ -120,12 +120,13 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			autoBuild = "Automatic Build: "
 		}
 
-		updateChannel := "None"
-		if testBuild {
+		// Test channel tells the scripts this is an admin build
+		updateChannel := "Test"
+		if skipTestChannel {
 			if smokeTest {
 				return "Test and Smoke are exclusive options", nil
 			}
-			updateChannel = "Test"
+			updateChannel = "None"
 		} else if smokeTest {
 			updateChannel = "Smoke"
 			if !skipCI {
@@ -227,12 +228,8 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			"ClientRevision="+*buildWindowsCientCommit,
 			"KbfsRevision="+*buildWindowsKbfsCommit,
 			"UpdaterRevision="+*buildWindowsUpdaterCommit,
-			"SKIP_CI="+boolToEnvString(skipCI),
 			"UpdateChannel="+updateChannel,
 			"SlackBot=1",
-			"SMOKE_TEST="+boolToEnvString(smokeTest),
-			"TEST="+boolToEnvString(testBuild),
-			"AUTOMATED_BULD="+autoBuild,
 		)
 
 		go func() {
