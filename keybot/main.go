@@ -74,22 +74,31 @@ func main() {
 	var label string
 	var ext extension
 	var backend slackbot.BotBackend
+	var channel string
 	switch name {
 	case "keybot":
 		ext = &keybot{}
 		label = "keybase.keybot"
+		channel = os.Getenv("SLACK_CHANNEL")
 		if backend, err = slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv()); err != nil {
 			log.Fatal(err)
 		}
 	case "darwinbot":
 		ext = &darwinbot{}
 		label = "keybase.darwinbot"
-		if backend, err = slackbot.NewKeybaseChatBotBackend(os.Getenv("KEYBASE_CHAT_CONVID"), nil); err != nil {
+		channel = os.Getenv("KEYBASE_CHAT_CONVID")
+		var loc *string
+		envloc := os.Getenv("KEYBASE_LOCATION")
+		if len(envloc) > 0 {
+			loc = &envloc
+		}
+		if backend, err = slackbot.NewKeybaseChatBotBackend(channel, loc); err != nil {
 			log.Fatal(err)
 		}
 	case "winbot":
 		ext = &winbot{}
 		label = "keybase.winbot"
+		channel = os.Getenv("SLACK_CHANNEL")
 		if backend, err = slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv()); err != nil {
 			log.Fatal(err)
 		}
@@ -107,7 +116,7 @@ func main() {
 	bot.SetDefault(slackbot.NewFuncCommand(runFn, "Extension", bot.Config()))
 	bot.SetHelp(bot.HelpMessage() + "\n\n" + ext.Help(bot))
 
-	bot.SendMessage("I'm running.", os.Getenv("SLACK_CHANNEL"))
+	bot.SendMessage("I'm running.", channel)
 
 	bot.Listen()
 }

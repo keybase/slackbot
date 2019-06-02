@@ -33,6 +33,11 @@ func (b *KeybaseChatBotBackend) SendMessage(text string, convID string) {
 		log.Printf("SendMessage: refusing to send on non-configured convID: %s != %s\n", convID, b.convID)
 		return
 	}
+	if len(text) == 0 {
+		log.Printf("SendMessage: skipping blank message")
+		return
+	}
+	log.Printf("sending message: convID: %s text: %s", convID, text)
 	if err := b.kbc.SendMessageByConvID(convID, text); err != nil {
 		log.Printf("SendMessage: failed to send: %s\n", err)
 	}
