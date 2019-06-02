@@ -18,6 +18,12 @@
 			"revisionTime": "2015-10-22T17:55:26+11:00"
 		},
 		{
+			"checksumSHA1": "S0Sce8zzqN5m6G9GbJajfZUrkLU=",
+			"path": "github.com/keybase/go-keybase-chat-bot/kbchat",
+			"revision": "d9129cbc7593cbd1e5de66a7d0a2d3f366dde480",
+			"revisionTime": "2019-02-01T21:07:59Z"
+		},
+		{
 			"checksumSHA1": "tbjywCmVPr+twP4mc0RyFFMiYMk=",
 			"path": "github.com/nlopes/slack",
 			"revision": "107290b5bbaf3e634833346bb4ff389b1c782bc7",
