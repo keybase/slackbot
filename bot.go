@@ -220,7 +220,9 @@ Loop:
 			args := parseInput(ev.Text)
 			if len(args) > 0 && args[0] == commandPrefix {
 				cmd := args[1:]
-				runner.RunCommand(cmd, ev.Channel)
+				if err := runner.RunCommand(cmd, ev.Channel); err != nil {
+					log.Printf("failed to run command: %s\n", err)
+				}
 			}
 
 		case *slack.PresenceChangeEvent:
