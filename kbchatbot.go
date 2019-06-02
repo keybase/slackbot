@@ -12,16 +12,12 @@ type KeybaseChatBotBackend struct {
 	kbc    *kbchat.API
 }
 
-func NewKeybaseChatBotBackend(convID string, keybaseLoc *string) (BotBackend, error) {
+func NewKeybaseChatBotBackend(convID string, opts kbchat.RunOptions) (BotBackend, error) {
 	var err error
-	loc := "keybase"
-	if keybaseLoc != nil {
-		loc = *keybaseLoc
-	}
 	bot := &KeybaseChatBotBackend{
 		convID: convID,
 	}
-	if bot.kbc, err = kbchat.Start(kbchat.RunOptions{KeybaseLocation: loc}); err != nil {
+	if bot.kbc, err = kbchat.Start(opts); err != nil {
 		return nil, err
 	}
 	return bot, nil

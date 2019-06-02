@@ -9,6 +9,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/keybase/go-keybase-chat-bot/kbchat"
+
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/launchd"
 )
@@ -84,15 +86,21 @@ func main() {
 			log.Fatal(err)
 		}
 	case "darwinbot":
+		var opts kbchat.RunOptions
 		ext = &darwinbot{}
 		label = "keybase.darwinbot"
 		channel = os.Getenv("KEYBASE_CHAT_CONVID")
-		var loc *string
-		envloc := os.Getenv("KEYBASE_LOCATION")
-		if len(envloc) > 0 {
-			loc = &envloc
+		opts.KeybaseLocation = os.Getenv("KEYBASE_LOCATION")
+		opts.HomeDir = os.Getenv("KEYBASE_HOME")
+		oneshotUsername := os.Getenv("KEYBASE_ONESHOT_USERNAME")
+		oneshotPaperkey := os.Getenv("KEYBASE_ONESHOT_PAPERKEY")
+		if len(oneshotPaperkey) > 0 && len(oneshotUsername) > 0 {
+			opts.Oneshot = &kbchat.OneshotOptions{
+				Username: oneshotUsername,
+				PaperKey: oneshotPaperkey,
+			}
 		}
-		if backend, err = slackbot.NewKeybaseChatBotBackend(channel, loc); err != nil {
+		if backend, err = slackbot.NewKeybaseChatBotBackend(channel, opts); err != nil {
 			log.Fatal(err)
 		}
 	case "winbot":
