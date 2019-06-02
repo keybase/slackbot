@@ -27,7 +27,7 @@ func boolToEnvString(b bool) string {
 	return "0"
 }
 
-func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd.Script) (string, error) {
+func runScript(bot *slackbot.Bot, channel string, env launchd.Env, script launchd.Script) (string, error) {
 	if bot.Config().DryRun() {
 		return fmt.Sprintf("I would have run a launchd job (%s)\nPath: %#v\nEnvVars: %#v", script.Label, script.Path, script.EnvVars), nil
 	}
@@ -52,7 +52,7 @@ func runScript(bot slackbot.Bot, channel string, env launchd.Env, script launchd
 	return launchd.NewStartCommand(path, script.Label).Run("", nil)
 }
 
-func addBasicCommands(bot slackbot.Bot) {
+func addBasicCommands(bot *slackbot.Bot) {
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", bot.Config()))
 	bot.AddCommand("pause", slackbot.NewPauseCommand(bot.Config()))
 	bot.AddCommand("resume", slackbot.NewResumeCommand(bot.Config()))
@@ -64,33 +64,40 @@ func addBasicCommands(bot slackbot.Bot) {
 }
 
 type extension interface {
-	Run(b slackbot.Bot, channel string, args []string) (string, error)
-	Help(bot slackbot.Bot) string
+	Run(b *slackbot.Bot, channel string, args []string) (string, error)
+	Help(bot *slackbot.Bot) string
 }
 
 func main() {
 	name := os.Getenv("BOT_NAME")
+	var err error
 	var label string
 	var ext extension
+	var backend slackbot.BotBackend
 	switch name {
 	case "keybot":
 		ext = &keybot{}
 		label = "keybase.keybot"
+		if backend, err = slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv()); err != nil {
+			log.Fatal(err)
+		}
 	case "darwinbot":
 		ext = &darwinbot{}
 		label = "keybase.darwinbot"
+		if backend, err = slackbot.NewKeybaseChatBotBackend(os.Getenv("KEYBASE_CHAT_CONVID"), nil); err != nil {
+			log.Fatal(err)
+		}
 	case "winbot":
 		ext = &winbot{}
 		label = "keybase.winbot"
+		if backend, err = slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv()); err != nil {
+			log.Fatal(err)
+		}
 	default:
 		log.Fatal("Invalid BOT_NAME")
 	}
 
-	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv(), name, label, slackbot.ReadConfigOrDefault())
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	bot := slackbot.NewBot(slackbot.ReadConfigOrDefault(), name, label, backend)
 	addBasicCommands(bot)
 
 	// Extension

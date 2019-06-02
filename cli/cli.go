@@ -42,7 +42,7 @@ func Parse(app *kingpin.Application, args []string, stringBuffer *bytes.Buffer) 
 	}
 
 	if stringBuffer.Len() > 0 {
-		return "", slackbot.SlackBlockQuote(stringBuffer.String()), nil
+		return "", slackbot.BlockQuote(stringBuffer.String()), nil
 	}
 
 	return cmd, "", err

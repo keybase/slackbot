@@ -19,7 +19,7 @@ import (
 
 type keybot struct{}
 
-func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
+func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("keybot", "Job command parser for keybot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -84,8 +84,8 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	case buildAndroid.FullCommand():
 		skipCI := *buildAndroidSkipCI
 		automated := *buildAndroidAutomated
-		NDKPath  := "/usr/local/opt/android-sdk/ndk-bundle"
-		if (*buildAndroidOldNDK) {
+		NDKPath := "/usr/local/opt/android-sdk/ndk-bundle"
+		if *buildAndroidOldNDK {
 			NDKPath = "/usr/local/opt/android-sdk/ndk-bundle-r15c"
 		}
 		script := launchd.Script{
@@ -190,7 +190,6 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 		}
 		return runScript(bot, channel, env, script)
 
-
 	case releaseBroken.FullCommand():
 		script := launchd.Script{
 			Label:      "keybase.release.broken",
@@ -231,7 +230,7 @@ func (k *keybot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	return cmd, nil
 }
 
-func (k *keybot) Help(bot slackbot.Bot) string {
+func (k *keybot) Help(bot *slackbot.Bot) string {
 	out, err := k.Run(bot, "", nil)
 	if err != nil {
 		return fmt.Sprintf("Error getting help: %s", err)
