@@ -196,7 +196,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
 			if err != nil {
-				logf.WriteString(fmt.Sprintf("error going git rev-parse\n", gitCmd.Dir))
+				logf.WriteString(fmt.Sprintf("error going git rev-parse dir: %s\n", gitCmd.Dir))
 				logf.Close()
 				return string(stdoutStderr), err
 			}

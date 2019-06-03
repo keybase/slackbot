@@ -174,7 +174,8 @@ func NewSlackBotBackend(token string) (BotBackend, error) {
 
 // NewTestBot returns a bot for testing
 func NewTestBot() (*Bot, error) {
-	return nil, nil
+	backend := &SlackBotBackend{}
+	return NewBot(NewConfig(true, false), "testbot", "", backend), nil
 }
 
 // SendMessage sends a message to a channel
