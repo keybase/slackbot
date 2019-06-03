@@ -28,8 +28,10 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 	buildDarwinTest := buildDarwin.Flag("test", "Whether build is for testing").Bool()
 	buildDarwinClientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit").String()
 	buildDarwinKbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit").String()
+	buildDarwinNoPull := buildDarwin.Flag("skip-pull", "Don't pull before building the app").Bool()
 	buildDarwinSkipCI := buildDarwin.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildDarwinSmoke := buildDarwin.Flag("smoke", "Whether to make a pair of builds for smoketesting when on a branch").Bool()
+	buildDarwinNoS3 := buildDarwin.Flag("skip-s3", "Don't push to S3 after building the app").Bool()
 
 	cancel := app.Command("cancel", "Cancel")
 	cancelLabel := cancel.Arg("label", "Launchd job label").Required().String()
@@ -77,6 +79,8 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
 				// TODO: Rename to SKIP_CI in packaging scripts
 				launchd.EnvVar{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
+				launchd.EnvVar{Key: "NOPULL", Value: boolToEnvString(*buildDarwinNoPull)},
+				launchd.EnvVar{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
 			},
 		}
 		// msg := fmt.Sprintf("I'll run the build as job `%s` (skip-ci=%s smoke=%s test=%s).", script.Label, boolToString(skipCI), boolToString(smokeTest), boolToString(testBuild))

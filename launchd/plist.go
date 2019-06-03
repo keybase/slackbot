@@ -16,16 +16,19 @@ import (
 
 // Env is environment for launchd
 type Env struct {
-	Path         string
-	Home         string
-	GoPath       string
-	GoPathForBot string
-	GithubToken  string
-	SlackToken   string
-	SlackChannel string
-	AWSAccessKey string
-	AWSSecretKey string
-	KeybaseToken string
+	Path              string
+	Home              string
+	GoPath            string
+	GoPathForBot      string
+	GithubToken       string
+	SlackToken        string
+	SlackChannel      string
+	AWSAccessKey      string
+	AWSSecretKey      string
+	KeybaseToken      string
+	KeybaseChatConvID string
+	KeybaseLocation   string
+	KeybaseHome       string
 }
 
 // Script is what to run
@@ -72,6 +75,14 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <string>{{ .Env.AWSSecretKey }}</string>
         <key>KEYBASE_TOKEN</key>
         <string>{{ .Env.KeybaseToken }}</string>
+        <key>KEYBASE_CHAT_CONVID</key>
+        <string>{{ .Env.KeybaseChatConvID }}</string>
+        <key>KEYBASE_LOCATION</key>
+        <string>{{ .Env.KeybaseLocation }}</string>
+        <key>KEYBASE_HOME</key>
+		<string>{{ .Env.KeybaseHome }}</string>
+		<key>KEYBASE_RUN_MODE</key>
+        <string>prod</string>
         <key>PATH</key>
         <string>{{ .Env.Path }}</string>
         <key>LOG_PATH</key>
@@ -105,16 +116,19 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 // NewEnv creates environment
 func NewEnv(home string, path string) Env {
 	return Env{
-		Path:         path,
-		Home:         home,
-		GoPath:       os.Getenv("GOPATH"),
-		GoPathForBot: os.Getenv("GOPATH"),
-		GithubToken:  os.Getenv("GITHUB_TOKEN"),
-		SlackToken:   os.Getenv("SLACK_TOKEN"),
-		SlackChannel: os.Getenv("SLACK_CHANNEL"),
-		AWSAccessKey: os.Getenv("AWS_ACCESS_KEY"),
-		AWSSecretKey: os.Getenv("AWS_SECRET_KEY"),
-		KeybaseToken: os.Getenv("KEYBASE_TOKEN"),
+		Path:              path,
+		Home:              home,
+		GoPath:            os.Getenv("GOPATH"),
+		GoPathForBot:      os.Getenv("GOPATH"),
+		GithubToken:       os.Getenv("GITHUB_TOKEN"),
+		SlackToken:        os.Getenv("SLACK_TOKEN"),
+		SlackChannel:      os.Getenv("SLACK_CHANNEL"),
+		AWSAccessKey:      os.Getenv("AWS_ACCESS_KEY"),
+		AWSSecretKey:      os.Getenv("AWS_SECRET_KEY"),
+		KeybaseToken:      os.Getenv("KEYBASE_TOKEN"),
+		KeybaseChatConvID: os.Getenv("KEYBASE_CHAT_CONVID"),
+		KeybaseHome:       os.Getenv("KEYBASE_HOME"),
+		KeybaseLocation:   os.Getenv("KEYBASE_LOCATION"),
 	}
 }
 
