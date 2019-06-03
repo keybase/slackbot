@@ -31,7 +31,6 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	cancelLabel := cancel.Arg("label", "Launchd job label").String()
 
 	buildAndroid := build.Command("android", "Start an android build")
-	buildAndroidOldNDK := buildAndroid.Flag("old-ndk", "Use old ndk").Bool()
 	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildAndroidAutomated := buildAndroid.Flag("automated", "Whether this is a timed build").Bool()
 	buildAndroidCientCommit := buildAndroid.Flag("client-commit", "Build a specific client commit hash").String()
@@ -85,9 +84,6 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		skipCI := *buildAndroidSkipCI
 		automated := *buildAndroidAutomated
 		NDKPath := "/usr/local/opt/android-sdk/ndk-bundle"
-		if *buildAndroidOldNDK {
-			NDKPath = "/usr/local/opt/android-sdk/ndk-bundle-r15c"
-		}
 		script := launchd.Script{
 			Label:      "keybase.build.android",
 			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
