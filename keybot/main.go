@@ -76,40 +76,64 @@ func main() {
 	var label string
 	var ext extension
 	var backend slackbot.BotBackend
+	var hybrids []slackbot.HybridBackendMember
 	var channel string
+
+	// Set up Slack
+	slackChannel := os.Getenv("SLACK_CHANNEL")
+	slackBackend, err := slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv())
+	if err != nil {
+		log.Printf("failed to initialize Slack backend: %s", err)
+	} else {
+		hybrids = append(hybrids, slackbot.HybridBackendMember{
+			Backend: slackBackend,
+			Channel: slackChannel,
+		})
+	}
+
+	// Set up Keybase
+	var opts kbchat.RunOptions
+	keybaseChannel := os.Getenv("KEYBASE_CHAT_CONVID")
+	opts.KeybaseLocation = os.Getenv("KEYBASE_LOCATION")
+	opts.HomeDir = os.Getenv("KEYBASE_HOME")
+	oneshotUsername := os.Getenv("KEYBASE_ONESHOT_USERNAME")
+	oneshotPaperkey := os.Getenv("KEYBASE_ONESHOT_PAPERKEY")
+	if len(oneshotPaperkey) > 0 && len(oneshotUsername) > 0 {
+		opts.Oneshot = &kbchat.OneshotOptions{
+			Username: oneshotUsername,
+			PaperKey: oneshotPaperkey,
+		}
+	}
+	keybaseBackend, err := slackbot.NewKeybaseChatBotBackend(keybaseChannel, opts)
+	if err != nil {
+		log.Printf("failed to initialize Keybase backend: %s", err)
+	} else {
+		hybrids = append(hybrids, slackbot.HybridBackendMember{
+			Backend: keybaseBackend,
+			Channel: keybaseChannel,
+		})
+	}
+
+	// Set up hybrid backend
+	hybridChannel := ""
+	hybridBackend := slackbot.NewHybridBackend(hybrids...)
+
 	switch name {
 	case "keybot":
 		ext = &keybot{}
 		label = "keybase.keybot"
-		channel = os.Getenv("SLACK_CHANNEL")
-		if backend, err = slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv()); err != nil {
-			log.Fatal(err)
-		}
+		backend = slackBackend
+		channel = slackChannel
 	case "darwinbot":
-		var opts kbchat.RunOptions
 		ext = &darwinbot{}
 		label = "keybase.darwinbot"
-		channel = os.Getenv("KEYBASE_CHAT_CONVID")
-		opts.KeybaseLocation = os.Getenv("KEYBASE_LOCATION")
-		opts.HomeDir = os.Getenv("KEYBASE_HOME")
-		oneshotUsername := os.Getenv("KEYBASE_ONESHOT_USERNAME")
-		oneshotPaperkey := os.Getenv("KEYBASE_ONESHOT_PAPERKEY")
-		if len(oneshotPaperkey) > 0 && len(oneshotUsername) > 0 {
-			opts.Oneshot = &kbchat.OneshotOptions{
-				Username: oneshotUsername,
-				PaperKey: oneshotPaperkey,
-			}
-		}
-		if backend, err = slackbot.NewKeybaseChatBotBackend(channel, opts); err != nil {
-			log.Fatal(err)
-		}
+		backend = hybridBackend
+		channel = hybridChannel
 	case "winbot":
 		ext = &winbot{}
 		label = "keybase.winbot"
-		channel = os.Getenv("SLACK_CHANNEL")
-		if backend, err = slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv()); err != nil {
-			log.Fatal(err)
-		}
+		channel = slackChannel
+		backend = slackBackend
 	default:
 		log.Fatal("Invalid BOT_NAME")
 	}
