@@ -104,7 +104,7 @@ func main() {
 			PaperKey: oneshotPaperkey,
 		}
 	}
-	keybaseBackend, err := slackbot.NewKeybaseChatBotBackend(keybaseChannel, opts)
+	keybaseBackend, err := slackbot.NewKeybaseChatBotBackend(name, keybaseChannel, opts)
 	if err != nil {
 		log.Printf("failed to initialize Keybase backend: %s", err)
 	} else {

@@ -8,14 +8,16 @@ import (
 )
 
 type KeybaseChatBotBackend struct {
+	name   string
 	convID string
 	kbc    *kbchat.API
 }
 
-func NewKeybaseChatBotBackend(convID string, opts kbchat.RunOptions) (BotBackend, error) {
+func NewKeybaseChatBotBackend(name string, convID string, opts kbchat.RunOptions) (BotBackend, error) {
 	var err error
 	bot := &KeybaseChatBotBackend{
 		convID: convID,
+		name:   name,
 	}
 	if bot.kbc, err = kbchat.Start(opts); err != nil {
 		return nil, err
@@ -44,8 +46,7 @@ func (b *KeybaseChatBotBackend) Listen(runner BotCommandRunner) {
 	if err != nil {
 		panic(fmt.Sprintf("failed to set up listen: %s", err))
 	}
-	username := b.kbc.GetUsername()
-	commandPrefix := "!" + username
+	commandPrefix := "!" + b.name
 	for {
 		msg, err := sub.Read()
 		if err != nil {
