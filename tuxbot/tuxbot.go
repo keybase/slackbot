@@ -54,10 +54,10 @@ func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool, nigh
 }
 
 type tuxbot struct {
-	bot slackbot.Bot
+	bot *slackbot.Bot
 }
 
-func (t *tuxbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
+func (t *tuxbot) Run(bot *slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("tuxbot", "Command parser for tuxbot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -118,7 +118,7 @@ func postStathat(key string, count string) error {
 	return err
 }
 
-func (t *tuxbot) Help(bot slackbot.Bot) string {
+func (t *tuxbot) Help(bot *slackbot.Bot) string {
 	out, err := t.Run(bot, "", nil)
 	if err != nil {
 		return fmt.Sprintf("Error getting help: %s", err)

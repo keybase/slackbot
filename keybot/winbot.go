@@ -32,7 +32,7 @@ const numLogLines = 10
 var buildProcessMutex sync.Mutex
 var buildProcess *os.Process
 
-func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, error) {
+func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("winbot", "Job command parser for winbot")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -196,7 +196,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
 			if err != nil {
-				logf.WriteString(fmt.Sprintf("error going git rev-parse\n", gitCmd.Dir))
+				logf.WriteString(fmt.Sprintf("error going git rev-parse dir: %s\n", gitCmd.Dir))
 				logf.Close()
 				return string(stdoutStderr), err
 			}
@@ -351,7 +351,7 @@ func (d *winbot) Run(bot slackbot.Bot, channel string, args []string) (string, e
 	return cmd, nil
 }
 
-func (d *winbot) Help(bot slackbot.Bot) string {
+func (d *winbot) Help(bot *slackbot.Bot) string {
 	out, err := d.Run(bot, "", nil)
 	if err != nil {
 		return fmt.Sprintf("Error getting help: %s", err)
@@ -367,7 +367,7 @@ func Exists(name string) (bool, error) {
 	return err != nil, err
 }
 
-func (d *winbot) winAutoBuild(bot slackbot.Bot, channel string, interval int, delay int, startHour int) {
+func (d *winbot) winAutoBuild(bot *slackbot.Bot, channel string, interval int, delay int, startHour int) {
 	d.testAuto = make(chan struct{})
 	d.stopAuto = make(chan struct{})
 	for {

@@ -13,10 +13,11 @@ type runner struct{}
 
 func main() {
 	config := slackbot.NewConfig(false, false)
-	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv(), "examplebot", "", config)
+	backend, err := slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv())
 	if err != nil {
 		log.Fatal(err)
 	}
+	bot := slackbot.NewBot(config, "examplebot", "", backend)
 
 	// Command that runs and shows date
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", config))

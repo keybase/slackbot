@@ -10,10 +10,11 @@ import (
 )
 
 func main() {
-	bot, err := slackbot.NewBot(slackbot.GetTokenFromEnv(), "tuxbot", "", slackbot.ReadConfigOrDefault())
+	backend, err := slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv())
 	if err != nil {
 		log.Fatal(err)
 	}
+	bot := slackbot.NewBot(slackbot.ReadConfigOrDefault(), "tuxbot", "", backend)
 
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", bot.Config()))
 	bot.AddCommand("pause", slackbot.NewPauseCommand(bot.Config()))
