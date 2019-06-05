@@ -46,10 +46,10 @@ func (b *HybridBackend) Listen(runner BotCommandRunner) {
 	var wg sync.WaitGroup
 	for _, backend := range b.backends {
 		wg.Add(1)
-		go func() {
-			backend.Backend.Listen(newHybridRunner(runner, backend.Channel))
+		go func(b HybridBackendMember) {
+			b.Backend.Listen(newHybridRunner(runner, b.Channel))
 			wg.Done()
-		}()
+		}(backend)
 	}
 	wg.Wait()
 }
