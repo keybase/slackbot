@@ -122,8 +122,8 @@ func main() {
 	case "keybot":
 		ext = &keybot{}
 		label = "keybase.keybot"
-		backend = slackBackend
-		channel = slackChannel
+		backend = hybridBackend
+		channel = hybridChannel
 	case "darwinbot":
 		ext = &darwinbot{}
 		label = "keybase.darwinbot"
