@@ -132,8 +132,8 @@ func main() {
 	case "winbot":
 		ext = &winbot{}
 		label = "keybase.winbot"
-		channel = slackChannel
-		backend = slackBackend
+		channel = hybridChannel
+		backend = hybridBackend
 	default:
 		log.Fatal("Invalid BOT_NAME")
 	}
