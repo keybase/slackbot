@@ -30,17 +30,20 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	cancel := app.Command("cancel", "Cancel")
 	cancelLabel := cancel.Arg("label", "Launchd job label").String()
 
+	buildMobile := build.Command("ios", "Start an ios build")
+	buildMobileSkipCI := buildMobile.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildMobileAutomated := buildMobile.Flag("automated", "Whether this is a timed build").Bool()
+	buildMobileCientCommit := buildMobile.Flag("client-commit", "Build a specific client commit hash").String()
+
 	buildAndroid := build.Command("android", "Start an android build")
 	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildAndroidAutomated := buildAndroid.Flag("automated", "Whether this is a timed build").Bool()
 	buildAndroidCientCommit := buildAndroid.Flag("client-commit", "Build a specific client commit hash").String()
-	buildAndroidKbfsCommit := buildAndroid.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 	buildIOS := build.Command("ios", "Start an ios build")
 	buildIOSClean := buildIOS.Flag("clean", "Whether to clean first").Bool()
 	buildIOSSkipCI := buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildIOSAutomated := buildIOS.Flag("automated", "Whether this is a timed build").Bool()
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
-	buildIOSKbfsCommit := buildIOS.Flag("kbfs-commit", "Build a specific kbfs commit hash").String()
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
@@ -80,6 +83,28 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			return "Label required for cancel", errors.New("Label required for cancel")
 		}
 		return launchd.Stop(*cancelLabel)
+
+	case buildMobile.FullCommand():
+		skipCI := *buildMobileSkipCI
+		automated := *buildMobileAutomated
+		script := launchd.Script{
+			Label:      "keybase.build.android",
+			Path:       "github.com/keybase/client/packaging/ios/build_and_publish.sh",
+			BucketName: "prerelease.keybase.io",
+			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildMobileCientCommit},
+				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
+			},
+		}
+		env.GoPath = env.PathFromHome("go-android")
+		if res, err := runScript(bot, channel, env, script); err != nil {
+			return res, err
+		}
+		script.Label = "keybase.build.ios"
+		env.GoPath = env.PathFromHome("go-ios")
+		return runScript(bot, channel, env, script)
+
 	case buildAndroid.FullCommand():
 		skipCI := *buildAndroidSkipCI
 		automated := *buildAndroidAutomated
@@ -93,7 +118,6 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				launchd.EnvVar{Key: "ANDROID_NDK_HOME", Value: NDKPath},
 				launchd.EnvVar{Key: "ANDROID_NDK", Value: NDKPath},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
-				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildAndroidKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
@@ -112,7 +136,6 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
 				launchd.EnvVar{Key: "CLEAN", Value: boolToEnvString(iosClean)},
-				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildIOSKbfsCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
