@@ -88,8 +88,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		skipCI := *buildMobileSkipCI
 		automated := *buildMobileAutomated
 		script := launchd.Script{
-			Label:      "keybase.build.android",
-			Path:       "github.com/keybase/client/packaging/ios/build_and_publish.sh",
+			Label:      "keybase.build.mobile",
+			Path:       "github.com/keybase/client/packaging/build_mobile.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildMobileCientCommit},
@@ -97,11 +97,6 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
-		env.GoPath = env.PathFromHome("go-android")
-		if res, err := runScript(bot, channel, env, script); err != nil {
-			return res, err
-		}
-		script.Label = "keybase.build.ios"
 		env.GoPath = env.PathFromHome("go-ios")
 		return runScript(bot, channel, env, script)
 
