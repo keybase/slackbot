@@ -30,7 +30,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	cancel := app.Command("cancel", "Cancel")
 	cancelLabel := cancel.Arg("label", "Launchd job label").String()
 
-	buildMobile := build.Command("ios", "Start an ios build")
+	buildMobile := build.Command("ios", "Start an iOS and Android build")
 	buildMobileSkipCI := buildMobile.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildMobileAutomated := buildMobile.Flag("automated", "Whether this is a timed build").Bool()
 	buildMobileCientCommit := buildMobile.Flag("client-commit", "Build a specific client commit hash").String()
