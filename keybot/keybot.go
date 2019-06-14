@@ -77,6 +77,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	home := os.Getenv("HOME")
 	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin"
 	env := launchd.NewEnv(home, path)
+	NDKPath := "/usr/local/opt/android-sdk/ndk-bundle"
+	androidHome := "/usr/local/opt/android-sdk"
 	switch cmd {
 	case cancel.FullCommand():
 		if *cancelLabel == "" {
@@ -92,6 +94,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Path:       "github.com/keybase/client/packaging/build_mobile.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
+				launchd.EnvVar{Key: "ANDROID_HOME", Value: androidHome},
+				launchd.EnvVar{Key: "ANDROID_NDK_HOME", Value: NDKPath},
+				launchd.EnvVar{Key: "ANDROID_NDK", Value: NDKPath},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildMobileCientCommit},
 				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
@@ -103,13 +108,12 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	case buildAndroid.FullCommand():
 		skipCI := *buildAndroidSkipCI
 		automated := *buildAndroidAutomated
-		NDKPath := "/usr/local/opt/android-sdk/ndk-bundle"
 		script := launchd.Script{
 			Label:      "keybase.build.android",
 			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "ANDROID_HOME", Value: "/usr/local/opt/android-sdk"},
+				launchd.EnvVar{Key: "ANDROID_HOME", Value: androidHome},
 				launchd.EnvVar{Key: "ANDROID_NDK_HOME", Value: NDKPath},
 				launchd.EnvVar{Key: "ANDROID_NDK", Value: NDKPath},
 				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
