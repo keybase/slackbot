@@ -47,7 +47,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
+	releaseToPromotePlatform := releasePromote.Arg("platform", "Platform to promote a release for").String()
 	releaseToPromote := releasePromote.Arg("release-to-promote", "Promote a specific release to public immediately").String()
+
 	releaseBroken := release.Command("broken", "Mark a release as broken")
 	releaseBrokenVersion := releaseBroken.Arg("version", "Mark a release as broken").Required().String()
 
@@ -147,7 +149,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Label:      "keybase.release.promote",
 			Path:       "github.com/keybase/slackbot/scripts/release.promote.sh",
 			BucketName: "prerelease.keybase.io",
-			Platform:   "darwin",
+			Platform:   *releaseToPromotePlatform,
 			EnvVars: []launchd.EnvVar{
 				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
 			},

@@ -39,7 +39,7 @@ func TestPromoteRelease(t *testing.T) {
 		t.Fatal(err)
 	}
 	ext := &keybot{}
-	out, err := ext.Run(bot, "", []string{"release", "promote", "1.2.3"})
+	out, err := ext.Run(bot, "", []string{"release", "promote", "darwin", "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
