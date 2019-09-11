@@ -39,11 +39,19 @@ func TestPromoteRelease(t *testing.T) {
 		t.Fatal(err)
 	}
 	ext := &keybot{}
-	out, err := ext.Run(bot, "", []string{"release", "promote", "1.2.3"})
+	out, err := ext.Run(bot, "", []string{"release", "promote", "darwin", "1.2.3"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out != "I would have run a launchd job (keybase.release.promote)\nPath: \"github.com/keybase/slackbot/scripts/release.promote.sh\"\nEnvVars: []launchd.EnvVar{launchd.EnvVar{Key:\"RELEASE_TO_PROMOTE\", Value:\"1.2.3\"}}" {
+	if out != "I would have run a launchd job (keybase.release.promote)\nPath: \"github.com/keybase/slackbot/scripts/release.promote.sh\"\nEnvVars: []launchd.EnvVar{launchd.EnvVar{Key:\"RELEASE_TO_PROMOTE\", Value:\"1.2.3\"}, launchd.EnvVar{Key:\"DRY_RUN\", Value:\"false\"}}" {
+		t.Errorf("Unexpected output: %s", out)
+	}
+
+	out, err = ext.Run(bot, "", []string{"release", "promote", "darwin", "1.2.3", "--dry-run"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != "I would have run a launchd job (keybase.release.promote)\nPath: \"github.com/keybase/slackbot/scripts/release.promote.sh\"\nEnvVars: []launchd.EnvVar{launchd.EnvVar{Key:\"RELEASE_TO_PROMOTE\", Value:\"1.2.3\"}, launchd.EnvVar{Key:\"DRY_RUN\", Value:\"true\"}}" {
 		t.Errorf("Unexpected output: %s", out)
 	}
 }
