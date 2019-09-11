@@ -9,8 +9,13 @@ echo "Loading release tool"
 "$dir/goinstall.sh" "github.com/keybase/release"
 release_bin="$GOPATH/bin/release"
 
+dryrun=""
+if [ $DRY_RUN == 'true' ]; then
+  dryrun="--dry-run"
+fi
+
 if [ -n "$RELEASE_TO_PROMOTE" ]; then
-  "$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$BUCKET_NAME" --platform="$PLATFORM"
+  "$release_bin" promote-a-release --release="$RELEASE_TO_PROMOTE" --bucket-name="$BUCKET_NAME" --platform="$PLATFORM" $dryrun
   "$dir/send.sh" "Promoted $PLATFORM release $RELEASE_TO_PROMOTE ($BUCKET_NAME)"
 else
   "$release_bin" promote-releases --bucket-name="$BUCKET_NAME" --platform="$PLATFORM"
