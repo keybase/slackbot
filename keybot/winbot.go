@@ -134,7 +134,8 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			}
 		}
 
-		msg := fmt.Sprintf(autoBuild+"I'm starting the job `windows build`. To cancel run `!%s cancel`", bot.Name())
+		msg := fmt.Sprintf(autoBuild+"I'm starting the job `windows build`. To cancel run `!%s cancel`. ", bot.Name())
+		msg = fmt.Sprintf(msg+"updateChannel is %s, smokeTest is %v", updateChannel, smokeTest)
 		bot.SendMessage(msg, channel)
 
 		os.Remove(logFileName)
@@ -171,6 +172,9 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		}
 
 		if buildWindowsCientCommit != nil && *buildWindowsCientCommit != "" && *buildWindowsCientCommit != "master" {
+			msg := fmt.Sprintf(autoBuild+"I'm trying to use commit %s", *buildWindowsCientCommit)
+			bot.SendMessage(msg, channel)
+
 			gitCmd = exec.Command(
 				"git.exe",
 				"checkout",
@@ -216,7 +220,20 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				}
 			}
 		}
-		logf.Close()
+
+		gitCmd = exec.Command(
+			"git.exe",
+			"rev-parse",
+			"HEAD",
+		)
+		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
+		stdoutStderr, err = gitCmd.CombinedOutput()
+		if err != nil {
+			logf.WriteString(fmt.Sprintf("error getting current commit for logs: %s", gitCmd.Dir))
+			logf.Close()
+			return string(stdoutStderr), err
+		}
+		logf.WriteString(fmt.Sprintf("HEAD is currently at %s\n", string(stdoutStderr)))
 
 		cmd := exec.Command(
 			"cmd", "/c",
@@ -231,6 +248,8 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			"UpdateChannel="+updateChannel,
 			"SlackBot=1",
 		)
+		logf.WriteString(fmt.Sprintf("cmd: %+v\n", cmd))
+		logf.Close()
 
 		go func() {
 			err := cmd.Start()
@@ -246,7 +265,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			sendLogCmd := exec.Command(
 				path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/release/release.exe"),
 				"save-log",
-				"--maxsize=2000000",
+				"--maxsize=5000000",
 				"--bucket-name="+bucketName,
 				"--path="+logFileName,
 			)
