@@ -25,6 +25,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	stringBuffer := new(bytes.Buffer)
 	app.Writer(stringBuffer)
 
+	appSkipPull := app.Flag("skip-pull", "Don't pull before executing a command").Bool()
+
 	build := app.Command("build", "Build things")
 
 	cancel := app.Command("cancel", "Cancel")
@@ -82,6 +84,10 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	env := launchd.NewEnv(home, path)
 	NDKPath := "/usr/local/opt/android-sdk/ndk-bundle"
 	androidHome := "/usr/local/opt/android-sdk"
+
+	baseEnvVars := []launchd.EnvVar{
+		launchd.EnvVar{Key: "NOPULL", Value: boolToEnvString(*appSkipPull)},
+	}
 	switch cmd {
 	case cancel.FullCommand():
 		if *cancelLabel == "" {
@@ -182,11 +188,11 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Label:      "keybase.gitdiff",
 			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
 			BucketName: "prerelease.keybase.io",
-			EnvVars: []launchd.EnvVar{
+			EnvVars: append(baseEnvVars,
 				launchd.EnvVar{Key: "REPO", Value: repoParsed},
 				launchd.EnvVar{Key: "PREFIX_GOPATH", Value: boolToEnvString(true)},
 				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./git_diff.sh"},
-			},
+			),
 		}
 		return runScript(bot, channel, env, script)
 
@@ -195,9 +201,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Label:      "keybase.gitclean",
 			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
 			BucketName: "prerelease.keybase.io",
-			EnvVars: []launchd.EnvVar{
+			EnvVars: append(baseEnvVars,
 				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./git_clean.sh"},
-			},
+			),
 		}
 		return runScript(bot, channel, env, script)
 
@@ -206,9 +212,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Label:      "keybase.nodeModuleClean",
 			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
 			BucketName: "prerelease.keybase.io",
-			EnvVars: []launchd.EnvVar{
+			EnvVars: append(baseEnvVars,
 				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./node_module_clean.sh"},
-			},
+			),
 		}
 		return runScript(bot, channel, env, script)
 
