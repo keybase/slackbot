@@ -3,7 +3,7 @@ module github.com/keybase/slackbot
 go 1.17
 
 require (
-	github.com/keybase/go-keybase-chat-bot v0.0.0-20211119193246-0a6a7b508a0e
+	github.com/keybase/go-keybase-chat-bot v0.0.0-20211122210555-23a5230dc088
 	github.com/nlopes/slack v0.1.1-0.20180101221843-107290b5bbaf
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )

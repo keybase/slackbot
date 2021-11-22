@@ -6,8 +6,8 @@ github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ3
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/keybase/go-keybase-chat-bot v0.0.0-20211119193246-0a6a7b508a0e h1:n43sSHnYoe6qJkqp+o7gZT+JMZd38jQ+kOhME/Nq4S8=
-github.com/keybase/go-keybase-chat-bot v0.0.0-20211119193246-0a6a7b508a0e/go.mod h1:0tIbyC7O87PimRbeghiJW5JAsmdKwNmAoNWFczKDZUA=
+github.com/keybase/go-keybase-chat-bot v0.0.0-20211122210555-23a5230dc088 h1:RN48cN6j91Hw761zMFgHUQjahNIE7w2zhEzaRi9zkzc=
+github.com/keybase/go-keybase-chat-bot v0.0.0-20211122210555-23a5230dc088/go.mod h1:0tIbyC7O87PimRbeghiJW5JAsmdKwNmAoNWFczKDZUA=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
