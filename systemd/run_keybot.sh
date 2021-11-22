@@ -12,6 +12,7 @@ if ! [ -e "$GOPATH" ] ; then
   ln -s "$(git rev-parse --show-toplevel)" gopath/src/github.com/keybase/slackbot
 fi
 
+go install github.com/keybase/slackbot
 go install github.com/keybase/slackbot/tuxbot
 
 # Wait for the network.
