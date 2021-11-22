@@ -10,14 +10,14 @@ import (
 
 type KeybaseChatBotBackend struct {
 	name   string
-	convID string
+	convID chat1.ConvIDStr
 	kbc    *kbchat.API
 }
 
 func NewKeybaseChatBotBackend(name string, convID string, opts kbchat.RunOptions) (BotBackend, error) {
 	var err error
 	bot := &KeybaseChatBotBackend{
-		convID: convID,
+		convID: chat1.ConvIDStr(convID),
 		name:   name,
 	}
 	if bot.kbc, err = kbchat.Start(opts); err != nil {
@@ -27,7 +27,7 @@ func NewKeybaseChatBotBackend(name string, convID string, opts kbchat.RunOptions
 }
 
 func (b *KeybaseChatBotBackend) SendMessage(text string, convID string) {
-	if convID != b.convID {
+	if chat1.ConvIDStr(convID) != b.convID {
 		// bail out if not on configured conv ID
 		log.Printf("SendMessage: refusing to send on non-configured convID: %s != %s\n", convID, b.convID)
 		return
@@ -58,9 +58,11 @@ func (b *KeybaseChatBotBackend) Listen(runner BotCommandRunner) {
 			continue
 		}
 		args := parseInput(msg.Message.Content.Text.Body)
-		if len(args) > 0 && args[0] == commandPrefix && b.convID == string(msg.Message.ConvID) {
+		if len(args) > 0 && args[0] == commandPrefix && b.convID == msg.Message.ConvID {
 			cmd := args[1:]
-			runner.RunCommand(cmd, b.convID)
+			if err := runner.RunCommand(cmd, string(b.convID)); err != nil {
+				log.Printf("unable to run command: %s", err)
+			}
 		}
 	}
 }

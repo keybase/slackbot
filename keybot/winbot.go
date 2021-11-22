@@ -109,11 +109,11 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		var autoBuild string
 
 		if bot.Config().DryRun() {
-			return fmt.Sprintf("I would have done a build"), nil
+			return "I would have done a build", nil
 		}
 
 		if bot.Config().Paused() {
-			return fmt.Sprintf("I'm paused so I can't do that, but I would have done a build"), nil
+			return "I'm paused so I can't do that, but I would have done a build", nil
 		}
 
 		if *buildWindowsAuto {
@@ -151,9 +151,9 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		)
 		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 		stdoutStderr, err := gitCmd.CombinedOutput()
-		logf.Write(stdoutStderr)
+		_, _ = logf.Write(stdoutStderr)
 		if err != nil {
-			logf.WriteString(gitCmd.Dir)
+			_, _ = logf.WriteString(gitCmd.Dir)
 			logf.Close()
 			return string(stdoutStderr), err
 		}
@@ -164,9 +164,9 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		)
 		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 		stdoutStderr, err = gitCmd.CombinedOutput()
-		logf.Write(stdoutStderr)
+		_, _ = logf.Write(stdoutStderr)
 		if err != nil {
-			logf.WriteString(gitCmd.Dir)
+			_, _ = logf.WriteString(gitCmd.Dir)
 			logf.Close()
 			return string(stdoutStderr), err
 		}
@@ -182,10 +182,10 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			)
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
-			logf.Write(stdoutStderr)
+			_, _ = logf.Write(stdoutStderr)
 
 			if err != nil {
-				logf.WriteString(fmt.Sprintf("error doing git pull in %s\n", gitCmd.Dir))
+				_, _ = logf.WriteString(fmt.Sprintf("error doing git pull in %s\n", gitCmd.Dir))
 				logf.Close()
 				return string(stdoutStderr), err
 			}
@@ -200,7 +200,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
 			if err != nil {
-				logf.WriteString(fmt.Sprintf("error going git rev-parse dir: %s\n", gitCmd.Dir))
+				_, _ = logf.WriteString(fmt.Sprintf("error going git rev-parse dir: %s\n", gitCmd.Dir))
 				logf.Close()
 				return string(stdoutStderr), err
 			}
@@ -212,9 +212,9 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				)
 				gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 				stdoutStderr, err = gitCmd.CombinedOutput()
-				logf.Write(stdoutStderr)
+				_, _ = logf.Write(stdoutStderr)
 				if err != nil {
-					logf.WriteString(fmt.Sprintf("error doing git pull on %s in %s\n", commit, gitCmd.Dir))
+					_, _ = logf.WriteString(fmt.Sprintf("error doing git pull on %s in %s\n", commit, gitCmd.Dir))
 					logf.Close()
 					return string(stdoutStderr), err
 				}
@@ -229,11 +229,11 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 		stdoutStderr, err = gitCmd.CombinedOutput()
 		if err != nil {
-			logf.WriteString(fmt.Sprintf("error getting current commit for logs: %s", gitCmd.Dir))
+			_, _ = logf.WriteString(fmt.Sprintf("error getting current commit for logs: %s", gitCmd.Dir))
 			logf.Close()
 			return string(stdoutStderr), err
 		}
-		logf.WriteString(fmt.Sprintf("HEAD is currently at %s\n", string(stdoutStderr)))
+		_, _ = logf.WriteString(fmt.Sprintf("HEAD is currently at %s\n", string(stdoutStderr)))
 
 		cmd := exec.Command(
 			"cmd", "/c",
@@ -248,11 +248,14 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			"UpdateChannel="+updateChannel,
 			"SlackBot=1",
 		)
-		logf.WriteString(fmt.Sprintf("cmd: %+v\n", cmd))
+		_, _ = logf.WriteString(fmt.Sprintf("cmd: %+v\n", cmd))
 		logf.Close()
 
 		go func() {
 			err := cmd.Start()
+			if err != nil {
+				bot.SendMessage(fmt.Sprintf("unable to start: %s", err), channel)
+			}
 			buildProcessMutex.Lock()
 			buildProcess = cmd.Process
 			buildProcessMutex.Unlock()

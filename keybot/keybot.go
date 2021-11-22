@@ -97,12 +97,12 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Path:       "github.com/keybase/client/packaging/build_mobile.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "ANDROID_HOME", Value: androidHome},
-				launchd.EnvVar{Key: "ANDROID_NDK_HOME", Value: NDKPath},
-				launchd.EnvVar{Key: "ANDROID_NDK", Value: NDKPath},
-				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildMobileCientCommit},
-				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
-				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
+				{Key: "ANDROID_HOME", Value: androidHome},
+				{Key: "ANDROID_NDK_HOME", Value: NDKPath},
+				{Key: "ANDROID_NDK", Value: NDKPath},
+				{Key: "CLIENT_COMMIT", Value: *buildMobileCientCommit},
+				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios")
@@ -116,12 +116,12 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Path:       "github.com/keybase/client/packaging/android/build_and_publish.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "ANDROID_HOME", Value: androidHome},
-				launchd.EnvVar{Key: "ANDROID_NDK_HOME", Value: NDKPath},
-				launchd.EnvVar{Key: "ANDROID_NDK", Value: NDKPath},
-				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
-				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
-				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
+				{Key: "ANDROID_HOME", Value: androidHome},
+				{Key: "ANDROID_NDK_HOME", Value: NDKPath},
+				{Key: "ANDROID_NDK", Value: NDKPath},
+				{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
+				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
@@ -136,10 +136,10 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Path:       "github.com/keybase/client/packaging/ios/build_and_publish.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
-				launchd.EnvVar{Key: "CLEAN", Value: boolToEnvString(iosClean)},
-				launchd.EnvVar{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
-				launchd.EnvVar{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
+				{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
+				{Key: "CLEAN", Value: boolToEnvString(iosClean)},
+				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
@@ -152,8 +152,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			BucketName: "prerelease.keybase.io",
 			Platform:   *releaseToPromotePlatform,
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
-				launchd.EnvVar{Key: "DRY_RUN", Value: boolToString(*releaseToPromoteDryRun)},
+				{Key: "RELEASE_TO_PROMOTE", Value: *releaseToPromote},
+				{Key: "DRY_RUN", Value: boolToString(*releaseToPromoteDryRun)},
 			},
 		}
 		return runScript(bot, channel, env, script)
@@ -168,8 +168,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Path:       "github.com/keybase/slackbot/scripts/dumplog.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
-				launchd.EnvVar{Key: "NOLOG", Value: boolToEnvString(true)},
+				{Key: "READ_PATH", Value: readPath},
+				{Key: "NOLOG", Value: boolToEnvString(true)},
 			},
 		}
 		return runScript(bot, channel, env, script)
@@ -183,9 +183,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "REPO", Value: repoParsed},
-				launchd.EnvVar{Key: "PREFIX_GOPATH", Value: boolToEnvString(true)},
-				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./git_diff.sh"},
+				{Key: "REPO", Value: repoParsed},
+				{Key: "PREFIX_GOPATH", Value: boolToEnvString(true)},
+				{Key: "SCRIPT_TO_RUN", Value: "./git_diff.sh"},
 			},
 		}
 		return runScript(bot, channel, env, script)
@@ -196,7 +196,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./git_clean.sh"},
+				{Key: "SCRIPT_TO_RUN", Value: "./git_clean.sh"},
 			},
 		}
 		return runScript(bot, channel, env, script)
@@ -207,7 +207,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "SCRIPT_TO_RUN", Value: "./node_module_clean.sh"},
+				{Key: "SCRIPT_TO_RUN", Value: "./node_module_clean.sh"},
 			},
 		}
 		return runScript(bot, channel, env, script)
@@ -219,7 +219,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "BROKEN_RELEASE", Value: *releaseBrokenVersion},
+				{Key: "BROKEN_RELEASE", Value: *releaseBrokenVersion},
 			},
 		}
 		return runScript(bot, channel, env, script)
@@ -231,9 +231,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			BucketName: "prerelease.keybase.io",
 			Platform:   *smoketestPlatform,
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "SMOKETEST_BUILD_A", Value: *smoketestBuildA},
-				launchd.EnvVar{Key: "SMOKETEST_MAX_TESTERS", Value: strconv.Itoa(*smoketestMaxTesters)},
-				launchd.EnvVar{Key: "SMOKETEST_ENABLE", Value: boolToString(*smoketestEnable)},
+				{Key: "SMOKETEST_BUILD_A", Value: *smoketestBuildA},
+				{Key: "SMOKETEST_MAX_TESTERS", Value: strconv.Itoa(*smoketestMaxTesters)},
+				{Key: "SMOKETEST_ENABLE", Value: boolToString(*smoketestEnable)},
 			},
 		}
 		return runScript(bot, channel, env, script)
@@ -243,7 +243,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			Label: "keybase.update",
 			Path:  "github.com/keybase/slackbot/scripts/upgrade.sh",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "NAME", Value: *upgradePackageName},
+				{Key: "NAME", Value: *upgradePackageName},
 			},
 		}
 		return runScript(bot, channel, env, script)

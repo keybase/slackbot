@@ -1,6 +1,11 @@
 language: go
 go:
-  - 1.9.1
+  - 1.17.3
 os:
   - linux
   - osx
+script:
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.43.0
+  - golangci-lint run
+  - go vet ./...
+  - go test ./...

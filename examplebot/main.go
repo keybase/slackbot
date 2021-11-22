@@ -9,8 +9,6 @@ import (
 	"github.com/keybase/slackbot"
 )
 
-type runner struct{}
-
 func main() {
 	config := slackbot.NewConfig(false, false)
 	backend, err := slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv())

@@ -74,15 +74,15 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 			BucketName: "prerelease.keybase.io",
 			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
-				launchd.EnvVar{Key: "TEST", Value: boolToEnvString(testBuild)},
-				launchd.EnvVar{Key: "CLIENT_COMMIT", Value: *buildDarwinClientCommit},
-				launchd.EnvVar{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
+				{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
+				{Key: "TEST", Value: boolToEnvString(testBuild)},
+				{Key: "CLIENT_COMMIT", Value: *buildDarwinClientCommit},
+				{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
 				// TODO: Rename to SKIP_CI in packaging scripts
-				launchd.EnvVar{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
-				launchd.EnvVar{Key: "NOPULL", Value: boolToEnvString(*buildDarwinNoPull)},
-				launchd.EnvVar{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
-				launchd.EnvVar{Key: "NONOTARIZE", Value: boolToEnvString(*buildDarwinNoNotarize)},
+				{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
+				{Key: "NOPULL", Value: boolToEnvString(*buildDarwinNoPull)},
+				{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
+				{Key: "NONOTARIZE", Value: boolToEnvString(*buildDarwinNoNotarize)},
 			},
 		}
 		// msg := fmt.Sprintf("I'll run the build as job `%s` (skip-ci=%s smoke=%s test=%s).", script.Label, boolToString(skipCI), boolToString(smokeTest), boolToString(testBuild))
@@ -99,8 +99,8 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 			Path:       "github.com/keybase/slackbot/scripts/dumplog.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "READ_PATH", Value: readPath},
-				launchd.EnvVar{Key: "NOLOG", Value: boolToEnvString(true)},
+				{Key: "READ_PATH", Value: readPath},
+				{Key: "NOLOG", Value: boolToEnvString(true)},
 			},
 		}
 		return runScript(bot, channel, env, script)
@@ -109,7 +109,7 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 			Label: "keybase.upgrade",
 			Path:  "github.com/keybase/slackbot/scripts/upgrade.sh",
 			EnvVars: []launchd.EnvVar{
-				launchd.EnvVar{Key: "NAME", Value: *upgradePackageName},
+				{Key: "NAME", Value: *upgradePackageName},
 			},
 		}
 		return runScript(bot, channel, env, script)

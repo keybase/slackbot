@@ -72,7 +72,7 @@ func (b *Bot) HelpMessage() string {
 	fmt.Fprintln(w, "Command\tDescription")
 	for _, trigger := range b.triggers() {
 		command := b.commands[trigger]
-		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", trigger, command.Description()))
+		fmt.Fprintf(w, "%s\t%s\n", trigger, command.Description())
 	}
 	_ = w.Flush()
 	return BlockQuote(buf.String())
