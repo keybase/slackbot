@@ -14,6 +14,7 @@ if [ -n "$convid" ]; then
   $location --home $home chat api -m "{\"method\":\"send\", \"params\": {\"options\": { \"conversation_id\": \"$convid\" , \"message\": { \"body\": \"$@\" }}}}"
 fi
 
+go install "github.com/keybase/slackbot"
 go install "github.com/keybase/slackbot/send"
 send_bin="$GOPATH/bin/send"
 
