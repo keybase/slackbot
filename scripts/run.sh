@@ -5,6 +5,7 @@ set -e -u -o pipefail # Fail on error
 dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd "$dir"
 
+client_dir="$dir/../../client"
 logpath=${LOG_PATH:-}
 label=${LABEL:-}
 nolog=${NOLOG:-""} # Don't show log at end of job
@@ -12,7 +13,7 @@ bucket_name=${BUCKET_NAME:-"prerelease.keybase.io"}
 : ${SCRIPT_PATH:?"Need to set SCRIPT_PATH to run script"}
 
 echo "Loading release tool"
-"$dir/goinstall.sh" "github.com/keybase/release"
+(cd "$client_dir/go/buildtools"; go install "github.com/keybase/release")
 release_bin="$GOPATH/bin/release"
 
 err_report() {
