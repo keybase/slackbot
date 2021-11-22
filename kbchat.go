@@ -60,7 +60,9 @@ func (b *KeybaseChatBotBackend) Listen(runner BotCommandRunner) {
 		args := parseInput(msg.Message.Content.Text.Body)
 		if len(args) > 0 && args[0] == commandPrefix && b.convID == msg.Message.ConvID {
 			cmd := args[1:]
-			runner.RunCommand(cmd, string(b.convID))
+			if err := runner.RunCommand(cmd, string(b.convID)); err != nil {
+				log.Printf("unable to run command: %s", err)
+			}
 		}
 	}
 }

@@ -42,7 +42,7 @@ func (c execCommand) Run(_ string, _ []string) (string, error) {
 	}
 
 	out, err := exec.Command(c.exec, c.args...).CombinedOutput()
-	outAsString := fmt.Sprintf("%s", out)
+	outAsString := string(out)
 	return outAsString, err
 }
 
