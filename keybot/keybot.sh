@@ -6,6 +6,5 @@ dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd $dir
 
 git pull --ff-only
-go install github.com/keybase/slackbot
 go install github.com/keybase/slackbot/keybot
 "$GOPATH/bin/keybot"
