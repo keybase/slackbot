@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/keybase/go-keybase-chat-bot/kbchat"
+	"github.com/keybase/go-keybase-chat-bot/kbchat/types/chat1"
 )
 
 type KeybaseChatBotBackend struct {
@@ -36,7 +37,7 @@ func (b *KeybaseChatBotBackend) SendMessage(text string, convID string) {
 		return
 	}
 	log.Printf("sending message: convID: %s text: %s", convID, text)
-	if err := b.kbc.SendMessageByConvID(convID, text); err != nil {
+	if _, err := b.kbc.SendMessageByConvID(chat1.ConvIDStr(convID), text); err != nil {
 		log.Printf("SendMessage: failed to send: %s\n", err)
 	}
 }
@@ -53,11 +54,11 @@ func (b *KeybaseChatBotBackend) Listen(runner BotCommandRunner) {
 			log.Printf("Listen: failed to read message: %s", err)
 			continue
 		}
-		if msg.Message.Content.Type != "text" {
+		if msg.Message.Content.TypeName != "text" {
 			continue
 		}
 		args := parseInput(msg.Message.Content.Text.Body)
-		if len(args) > 0 && args[0] == commandPrefix && b.convID == msg.Message.ConversationID {
+		if len(args) > 0 && args[0] == commandPrefix && b.convID == string(msg.Message.ConvID) {
 			cmd := args[1:]
 			runner.RunCommand(cmd, b.convID)
 		}
