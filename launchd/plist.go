@@ -80,9 +80,15 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <key>KEYBASE_LOCATION</key>
         <string>{{ .Env.KeybaseLocation }}</string>
         <key>KEYBASE_HOME</key>
-		<string>{{ .Env.KeybaseHome }}</string>
-		<key>KEYBASE_RUN_MODE</key>
+        <string>{{ .Env.KeybaseHome }}</string>
+        <key>KEYBASE_RUN_MODE</key>
         <string>prod</string>
+        <key>LANG</key>
+        <string>en_US.UTF-8</string>
+        <key>LANGUAGE</key>
+        <string>en_US.UTF-8</string>
+        <key>LC_ALL</key>
+        <string>en_US.UTF-8</string>
         <key>PATH</key>
         <string>{{ .Env.Path }}</string>
         <key>LOG_PATH</key>
