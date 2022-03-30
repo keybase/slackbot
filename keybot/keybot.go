@@ -80,8 +80,10 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	home := os.Getenv("HOME")
 	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin"
 	env := launchd.NewEnv(home, path)
-	NDKPath := "/usr/local/opt/android-sdk/ndk-bundle"
 	androidHome := "/usr/local/opt/android-sdk"
+	ndkVer := "23.1.7779620"
+	NDKPath := "/usr/local/opt/android-sdk/ndk/" + ndkVer
+
 	switch cmd {
 	case cancel.FullCommand():
 		if *cancelLabel == "" {
@@ -98,7 +100,10 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
 				{Key: "ANDROID_HOME", Value: androidHome},
+				{Key: "ANDROID_SDK", Value: androidHome},
+				{Key: "ANDROID_SDK_ROOT", Value: androidHome},
 				{Key: "ANDROID_NDK_HOME", Value: NDKPath},
+				{Key: "NDK_HOME", Value: NDKPath},
 				{Key: "ANDROID_NDK", Value: NDKPath},
 				{Key: "CLIENT_COMMIT", Value: *buildMobileCientCommit},
 				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
