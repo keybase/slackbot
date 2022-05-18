@@ -45,6 +45,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	buildWindowsUpdaterCommit := buildWindows.Flag("updater-commit", "Build a specific updater commit").String()
 	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
+	buildWindowsDevCert := buildWindows.Flag("dev-cert", "Build using devel code signing cert").Bool()
 	buildWindowsAuto := buildWindows.Flag("automated", "Specify build was triggered automatically").Hidden().Bool()
 
 	cancel := app.Command("cancel", "Cancel current")
@@ -106,6 +107,10 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		smokeTest := *buildWindowsSmoke
 		skipCI := *buildWindowsSkipCI
 		skipTestChannel := *buildWindowsTest
+		devCert := 0
+		if *buildWindowsDevCert {
+			devCert = 1
+		}
 		var autoBuild string
 
 		if bot.Config().DryRun() {
@@ -135,7 +140,8 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		}
 
 		msg := fmt.Sprintf(autoBuild+"I'm starting the job `windows build`. To cancel run `!%s cancel`. ", bot.Name())
-		msg = fmt.Sprintf(msg+"updateChannel is %s, smokeTest is %v", updateChannel, smokeTest)
+		msg = fmt.Sprintf(msg+"updateChannel is %s, smokeTest is %v, devCert is %v, logFileName %s",
+			updateChannel, smokeTest, devCert, logFileName)
 		bot.SendMessage(msg, channel)
 
 		os.Remove(logFileName)
@@ -246,6 +252,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			"KbfsRevision="+*buildWindowsKbfsCommit,
 			"UpdaterRevision="+*buildWindowsUpdaterCommit,
 			"UpdateChannel="+updateChannel,
+			fmt.Sprintf("DevCert=%d", devCert),
 			"SlackBot=1",
 		)
 		_, _ = logf.WriteString(fmt.Sprintf("cmd: %+v\n", cmd))
