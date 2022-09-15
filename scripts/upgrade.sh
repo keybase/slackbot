@@ -13,6 +13,8 @@ if [ "$name" = "go" ]; then
   brew upgrade go
 elif [ "$name" = "yarn" ]; then
   brew upgrade yarn
+elif [ "$name" = "cocoapods" ]; then
+  brew upgrade cocoapods 
 elif [ "$name" = "fastlane" ]; then
   which ruby
   ruby --version
