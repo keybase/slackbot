@@ -1,8 +1,7 @@
 ## Slackbot
 
-[![Build Status](https://travis-ci.org/keybase/slackbot.svg?branch=master)](https://travis-ci.org/keybase/slackbot)
+[![Build Status](https://github.com/keybase/slackbot/actions/workflows/ci.yml/badge.svg)](https://github.com/keybase/slackbot/actions)
 [![GoDoc](https://godoc.org/github.com/keybase/slackbot?status.svg)](https://godoc.org/github.com/keybase/slackbot)
-
 
 ```
 export SLACK_TOKEN=...
