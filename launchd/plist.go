@@ -6,7 +6,6 @@ package launchd
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -183,7 +182,7 @@ func (e Env) WritePlist(script Script) (string, error) {
 	}
 	path := fmt.Sprintf("%s/%s.plist", plistDir, script.Label)
 	log.Printf("Writing %s", path)
-	if err := ioutil.WriteFile(path, data, 0755); err != nil {
+	if err := os.WriteFile(path, data, 0755); err != nil {
 		return "", err
 	}
 	return path, nil

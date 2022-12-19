@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -322,7 +321,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		}()
 		return "", nil
 	case dumplogCmd.FullCommand():
-		logContents, err := ioutil.ReadFile(logFileName)
+		logContents, err := os.ReadFile(logFileName)
 		if err != nil {
 			return "Error reading " + logFileName, err
 		}
