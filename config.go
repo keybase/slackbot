@@ -5,8 +5,8 @@ package slackbot
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -88,7 +88,7 @@ func readConfigOrDefault() config {
 		return defaultConfig
 	}
 
-	fileBytes, err := ioutil.ReadFile(path)
+	fileBytes, err := os.ReadFile(path)
 
 	if err != nil {
 		return defaultConfig
@@ -115,7 +115,7 @@ func (c config) Save() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(path, b, 0644)
+	err = os.WriteFile(path, b, 0644)
 	if err != nil {
 		return err
 	}
