@@ -73,12 +73,11 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 			smokeTest = *buildDarwinSmoke
 			testBuild = !*buildDarwinSmoke
 		}
-		platform := "darwin"
 		script := launchd.Script{
 			Label:      "keybase.build.darwin",
-			Path:       "github.com/keybase/client/packaging/prerelease/pull_build.sh",
+			Path:       "github.com/keybase/client/packaging/build_darwin.sh",
 			BucketName: "prerelease.keybase.io",
-			Platform:   platform,
+			Platform:   "darwin",
 			EnvVars: []launchd.EnvVar{
 				{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
 				{Key: "TEST", Value: boolToEnvString(testBuild)},
