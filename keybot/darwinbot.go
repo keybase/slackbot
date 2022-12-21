@@ -26,7 +26,7 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 	build := app.Command("build", "Build things")
 
 	buildDarwin := build.Command("darwin", "Start a darwin build")
-	buildDarwinArm64 := buildDarwin.Flag("arm64", "Whether build is for arm64").Bool()
+	buildDarwinSkipArm64 := buildDarwin.Flag("skip-arm64", "Skip the arm64 build").Bool()
 	buildDarwinTest := buildDarwin.Flag("test", "Whether build is for testing").Bool()
 	buildDarwinClientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit").String()
 	buildDarwinKbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit").String()
@@ -76,32 +76,42 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 		}
 		platform := "darwin"
 		arch := "amd64"
-		if *buildDarwinArm64 {
-			platform = "darwin-arm64"
-			arch = "arm64"
+
+		envVars := []launchd.EnvVar{
+			{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
+			{Key: "TEST", Value: boolToEnvString(testBuild)},
+			{Key: "CLIENT_COMMIT", Value: *buildDarwinClientCommit},
+			{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
+			// TODO: Rename to SKIP_CI in packaging scripts
+			{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
+			{Key: "NOPULL", Value: boolToEnvString(*buildDarwinNoPull)},
+			{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
+			{Key: "NONOTARIZE", Value: boolToEnvString(*buildDarwinNoNotarize)},
 		}
 		script := launchd.Script{
 			Label:      "keybase.build.darwin",
 			Path:       "github.com/keybase/client/packaging/prerelease/pull_build.sh",
 			BucketName: "prerelease.keybase.io",
 			Platform:   platform,
-			EnvVars: []launchd.EnvVar{
-				{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
-				{Key: "TEST", Value: boolToEnvString(testBuild)},
-				{Key: "CLIENT_COMMIT", Value: *buildDarwinClientCommit},
-				{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
-				{Key: "ARCH", Value: arch},
-				// TODO: Rename to SKIP_CI in packaging scripts
-				{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
-				{Key: "NOPULL", Value: boolToEnvString(*buildDarwinNoPull)},
-				{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
-				{Key: "NONOTARIZE", Value: boolToEnvString(*buildDarwinNoNotarize)},
-			},
+			EnvVars:    append(envVars, launchd.EnvVar{Key: "ARCH", Value: arch}),
 		}
-		// msg := fmt.Sprintf("I'll run the build as job `%s` (skip-ci=%s smoke=%s test=%s).", script.Label, boolToString(skipCI), boolToString(smokeTest), boolToString(testBuild))
-		// bot.SendMessage(msg, channel)
+		out, err := runScript(bot, channel, env, script)
+		if err != nil {
+			return "", err
+		}
+		if *buildDarwinSkipArm64 {
+			return out, nil
+		}
 
-		return runScript(bot, channel, env, script)
+		// By default, additionally package an arm64 build
+		arch = "arm64"
+		script.Platform = "darwin-arm64"
+		script.EnvVars = append(envVars, launchd.EnvVar{Key: "ARCH", Value: arch})
+		out2, err := runScript(bot, channel, env, script)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%s\n%s", out, out2), nil
 	case dumplogCmd.FullCommand():
 		readPath, err := env.LogPathForLaunchdLabel(*dumplogCommandLabel)
 		if err != nil {
