@@ -45,7 +45,6 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 	gitDiffRepo := gitDiffCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
 	gitCleanCmd := app.Command("gclean", "Clean the repo")
-	gitCleanRepo := gitCleanCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
 	upgrade := app.Command("upgrade", "Upgrade package")
 	upgradePackageName := upgrade.Arg("name", "Package name (yarn, go, fastlane, etc)").Required().String()
@@ -133,7 +132,6 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 			},
 		}
 		return runScript(bot, channel, env, script)
-
 	case gitCleanCmd.FullCommand():
 		script := launchd.Script{
 			Label:      "keybase.gitclean",
