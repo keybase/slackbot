@@ -26,7 +26,6 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 	build := app.Command("build", "Build things")
 
 	buildDarwin := build.Command("darwin", "Start a darwin build")
-	buildDarwinSkipArm64 := buildDarwin.Flag("skip-arm64", "Skip the arm64 build").Bool()
 	buildDarwinTest := buildDarwin.Flag("test", "Whether build is for testing").Bool()
 	buildDarwinClientCommit := buildDarwin.Flag("client-commit", "Build a specific client commit").String()
 	buildDarwinKbfsCommit := buildDarwin.Flag("kbfs-commit", "Build a specific kbfs commit").String()
@@ -74,44 +73,24 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 			smokeTest = *buildDarwinSmoke
 			testBuild = !*buildDarwinSmoke
 		}
-		platform := "darwin"
-		arch := "amd64"
-
-		envVars := []launchd.EnvVar{
-			{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
-			{Key: "TEST", Value: boolToEnvString(testBuild)},
-			{Key: "CLIENT_COMMIT", Value: *buildDarwinClientCommit},
-			{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
-			// TODO: Rename to SKIP_CI in packaging scripts
-			{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
-			{Key: "NOPULL", Value: boolToEnvString(*buildDarwinNoPull)},
-			{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
-			{Key: "NONOTARIZE", Value: boolToEnvString(*buildDarwinNoNotarize)},
-		}
 		script := launchd.Script{
 			Label:      "keybase.build.darwin",
-			Path:       "github.com/keybase/client/packaging/prerelease/pull_build.sh",
+			Path:       "github.com/keybase/client/packaging/build_darwin.sh",
 			BucketName: "prerelease.keybase.io",
-			Platform:   platform,
-			EnvVars:    append(envVars, launchd.EnvVar{Key: "ARCH", Value: arch}),
+			Platform:   "darwin",
+			EnvVars: []launchd.EnvVar{
+				{Key: "SMOKE_TEST", Value: boolToEnvString(smokeTest)},
+				{Key: "TEST", Value: boolToEnvString(testBuild)},
+				{Key: "CLIENT_COMMIT", Value: *buildDarwinClientCommit},
+				{Key: "KBFS_COMMIT", Value: *buildDarwinKbfsCommit},
+				// TODO: Rename to SKIP_CI in packaging scripts
+				{Key: "NOWAIT", Value: boolToEnvString(skipCI)},
+				{Key: "NOPULL", Value: boolToEnvString(*buildDarwinNoPull)},
+				{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
+				{Key: "NONOTARIZE", Value: boolToEnvString(*buildDarwinNoNotarize)},
+			},
 		}
-		out, err := runScript(bot, channel, env, script)
-		if err != nil {
-			return "", err
-		}
-		if *buildDarwinSkipArm64 {
-			return out, nil
-		}
-
-		// By default, additionally package an arm64 build
-		arch = "arm64"
-		script.Platform = "darwin-arm64"
-		script.EnvVars = append(envVars, launchd.EnvVar{Key: "ARCH", Value: arch})
-		out2, err := runScript(bot, channel, env, script)
-		if err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("%s\n%s", out, out2), nil
+		return runScript(bot, channel, env, script)
 	case dumplogCmd.FullCommand():
 		readPath, err := env.LogPathForLaunchdLabel(*dumplogCommandLabel)
 		if err != nil {
