@@ -42,7 +42,6 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	buildWindowsCientCommit := buildWindows.Flag("client-commit", "Build a specific client commit").String()
 	buildWindowsKbfsCommit := buildWindows.Flag("kbfs-commit", "Build a specific kbfs commit").String()
 	buildWindowsUpdaterCommit := buildWindows.Flag("updater-commit", "Build a specific updater commit").String()
-	buildWindowsSkipCI := buildWindows.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildWindowsSmoke := buildWindows.Flag("smoke", "Build a smoke pair").Bool()
 	buildWindowsDevCert := buildWindows.Flag("dev-cert", "Build using devel code signing cert").Bool()
 	buildWindowsAuto := buildWindows.Flag("automated", "Specify build was triggered automatically").Hidden().Bool()
@@ -104,7 +103,6 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 
 	case buildWindows.FullCommand():
 		smokeTest := *buildWindowsSmoke
-		skipCI := *buildWindowsSkipCI
 		skipTestChannel := *buildWindowsTest
 		devCert := 0
 		if *buildWindowsDevCert {
@@ -133,9 +131,6 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			updateChannel = "None"
 		} else if smokeTest {
 			updateChannel = "Smoke"
-			if !skipCI {
-				updateChannel = "SmokeCI"
-			}
 		}
 
 		msg := fmt.Sprintf(autoBuild+"I'm starting the job `windows build`. To cancel run `!%s cancel`. ", bot.Name())
