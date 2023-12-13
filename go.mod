@@ -3,7 +3,7 @@ module github.com/keybase/slackbot
 go 1.19
 
 require (
-	github.com/keybase/go-keybase-chat-bot v0.0.0-20221214200033-f3cd3e1c607b
+	github.com/keybase/go-keybase-chat-bot v0.0.0-20231213202706-1bdf50c0adf4
 	github.com/nlopes/slack v0.1.1-0.20180101221843-107290b5bbaf
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
@@ -15,7 +15,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.8.0 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
 	golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
