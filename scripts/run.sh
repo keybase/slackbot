@@ -13,7 +13,7 @@ bucket_name=${BUCKET_NAME:-"prerelease.keybase.io"}
 : ${SCRIPT_PATH:?"Need to set SCRIPT_PATH to run script"}
 
 echo "Loading release tool"
-(cd "$client_dir/go/buildtools"; go install "github.com/keybase/release")
+(cd "$client_dir/go/buildtools"; go install "github.com/keybase/client/go/release")
 release_bin="$GOPATH/bin/release"
 
 err_report() {

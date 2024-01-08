@@ -272,7 +272,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				bucketName = "prerelease.keybase.io"
 			}
 			sendLogCmd := exec.Command(
-				path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/release/release.exe"),
+				path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/go/release/release.exe"),
 				"save-log",
 				"--maxsize=5000000",
 				"--bucket-name="+bucketName,

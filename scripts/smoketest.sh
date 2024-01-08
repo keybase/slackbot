@@ -7,7 +7,7 @@ cd "$dir"
 
 client_dir="$dir/../../client"
 echo "Loading release tool"
-(cd "$client_dir/go/buildtools"; go install "github.com/keybase/release")
+(cd "$client_dir/go/buildtools"; go install "github.com/keybase/client/go/release")
 release_bin="$GOPATH/bin/release"
 
 "$release_bin" set-build-in-testing --build-a="$SMOKETEST_BUILD_A" --platform="$PLATFORM" --enable="$SMOKETEST_ENABLE" --max-testers="$SMOKETEST_MAX_TESTERS"
