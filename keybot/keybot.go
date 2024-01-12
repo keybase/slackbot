@@ -31,17 +31,14 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	cancelLabel := cancel.Arg("label", "Launchd job label").String()
 
 	buildMobile := build.Command("mobile", "Start an iOS and Android build")
-	buildMobileSkipCI := buildMobile.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildMobileAutomated := buildMobile.Flag("automated", "Whether this is a timed build").Bool()
 	buildMobileCientCommit := buildMobile.Flag("client-commit", "Build a specific client commit hash").String()
 
 	buildAndroid := build.Command("android", "Start an android build")
-	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildAndroidAutomated := buildAndroid.Flag("automated", "Whether this is a timed build").Bool()
 	buildAndroidCientCommit := buildAndroid.Flag("client-commit", "Build a specific client commit hash").String()
 	buildIOS := build.Command("ios", "Start an ios build")
 	buildIOSClean := buildIOS.Flag("clean", "Whether to clean first").Bool()
-	buildIOSSkipCI := buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildIOSAutomated := buildIOS.Flag("automated", "Whether this is a timed build").Bool()
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
 
@@ -92,7 +89,6 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		return launchd.Stop(*cancelLabel)
 
 	case buildMobile.FullCommand():
-		skipCI := *buildMobileSkipCI
 		automated := *buildMobileAutomated
 		script := launchd.Script{
 			Label:      "keybase.build.mobile",
@@ -106,7 +102,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "NDK_HOME", Value: NDKPath},
 				{Key: "ANDROID_NDK", Value: NDKPath},
 				{Key: "CLIENT_COMMIT", Value: *buildMobileCientCommit},
-				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				{Key: "CHECK_CI", Value: boolToEnvString(false)},
 				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
@@ -114,7 +110,6 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		return runScript(bot, channel, env, script)
 
 	case buildAndroid.FullCommand():
-		skipCI := *buildAndroidSkipCI
 		automated := *buildAndroidAutomated
 		script := launchd.Script{
 			Label:      "keybase.build.android",
@@ -125,7 +120,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "ANDROID_NDK_HOME", Value: NDKPath},
 				{Key: "ANDROID_NDK", Value: NDKPath},
 				{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
-				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				{Key: "CHECK_CI", Value: boolToEnvString(false)},
 				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
@@ -133,7 +128,6 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		return runScript(bot, channel, env, script)
 
 	case buildIOS.FullCommand():
-		skipCI := *buildIOSSkipCI
 		iosClean := *buildIOSClean
 		automated := *buildIOSAutomated
 		script := launchd.Script{
@@ -143,7 +137,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			EnvVars: []launchd.EnvVar{
 				{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
 				{Key: "CLEAN", Value: boolToEnvString(iosClean)},
-				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
+				{Key: "CHECK_CI", Value: boolToEnvString(false)},
 				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
 		}
