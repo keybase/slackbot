@@ -31,17 +31,17 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	cancelLabel := cancel.Arg("label", "Launchd job label").String()
 
 	buildMobile := build.Command("mobile", "Start an iOS and Android build")
-	buildMobileSkipCI := buildMobile.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildMobileSkipCI := true // buildMobile.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildMobileAutomated := buildMobile.Flag("automated", "Whether this is a timed build").Bool()
 	buildMobileCientCommit := buildMobile.Flag("client-commit", "Build a specific client commit hash").String()
 
 	buildAndroid := build.Command("android", "Start an android build")
-	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildAndroidSkipCI := true // buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildAndroidAutomated := buildAndroid.Flag("automated", "Whether this is a timed build").Bool()
 	buildAndroidCientCommit := buildAndroid.Flag("client-commit", "Build a specific client commit hash").String()
 	buildIOS := build.Command("ios", "Start an ios build")
 	buildIOSClean := buildIOS.Flag("clean", "Whether to clean first").Bool()
-	buildIOSSkipCI := buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
+	buildIOSSkipCI := true // buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildIOSAutomated := buildIOS.Flag("automated", "Whether this is a timed build").Bool()
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
 
