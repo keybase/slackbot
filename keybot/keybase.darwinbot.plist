@@ -23,7 +23,7 @@
         <key>BOT_NAME</key>
         <string>darwinbot</string>
         <key>PATH</key>
-        <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin</string>
+        <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/opt/homebrew/bin</string>
     </dict>
     <key>ProgramArguments</key>
     <array>
