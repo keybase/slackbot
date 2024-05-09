@@ -58,7 +58,7 @@ func (d *darwinbot) Run(bot *slackbot.Bot, channel string, args []string) (strin
 	}
 
 	home := os.Getenv("HOME")
-	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin"
+	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/opt/homebrew/bin"
 	env := launchd.NewEnv(home, path)
 	switch cmd {
 	case cancel.FullCommand():

@@ -78,7 +78,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	}
 
 	home := os.Getenv("HOME")
-	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin"
+	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/opt/homebrew/bin"
 	env := launchd.NewEnv(home, path)
 	androidHome := "/usr/local/opt/android-sdk"
 	ndkVer := "23.1.7779620"
