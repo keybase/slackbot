@@ -81,8 +81,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	path := "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/opt/homebrew/bin"
 	env := launchd.NewEnv(home, path)
 	androidHome := "/usr/local/opt/android-sdk"
-	ndkVer := "23.1.7779620"
-	NDKPath := "/usr/local/opt/android-sdk/ndk/" + ndkVer
+	ndkVer := "27.0.11718014"
+	NDKPath := "/Users/build/Library/Android/sdk/ndk/" + ndkVer
 
 	switch cmd {
 	case cancel.FullCommand():
