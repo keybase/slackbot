@@ -124,11 +124,6 @@ func main() {
 		label = "keybase.keybot"
 		backend = hybridBackend
 		channel = hybridChannel
-	case "darwinbot":
-		ext = &darwinbot{}
-		label = "keybase.darwinbot"
-		backend = hybridBackend
-		channel = hybridChannel
 	case "winbot":
 		ext = &winbot{}
 		label = "keybase.winbot"
