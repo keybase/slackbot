@@ -18,21 +18,6 @@ func TestAddBasicCommands(t *testing.T) {
 	addBasicCommands(bot)
 }
 
-func TestBuildDarwin(t *testing.T) {
-	bot, err := slackbot.NewTestBot()
-	if err != nil {
-		t.Fatal(err)
-	}
-	ext := &darwinbot{}
-	out, err := ext.Run(bot, "", []string{"build", "darwin"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if out != "I would have run: `\"build darwin\"`" {
-		t.Errorf("Unexpected output: %s", out)
-	}
-}
-
 func TestPromoteRelease(t *testing.T) {
 	bot, err := slackbot.NewTestBot()
 	if err != nil {

@@ -19,7 +19,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-func (t *tuxbot) linuxBuildFunc(channel string, args []string, skipCI bool, nightly bool) (string, error) {
+func (t *tuxbot) linuxBuildFunc(channel string, _ []string, skipCI bool, nightly bool) (string, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return "", err
@@ -73,8 +73,7 @@ func (t *tuxbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		return usage, err
 	}
 
-	switch cmd {
-	case buildLinux.FullCommand():
+	if cmd == buildLinux.FullCommand() {
 		if bot.Config().DryRun() {
 			if *buildLinuxSkipCI {
 				return "Dry Run: Doing that would run `prerelease.sh` with NOWAIT=1 set", nil

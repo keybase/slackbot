@@ -32,7 +32,7 @@ func main() {
 	}
 
 	api := slack.New(slackbot.GetTokenFromEnv())
-	//api.SetDebug(true)
+	// api.SetDebug(true)
 
 	channelIDs, err := slackbot.LoadChannelIDs(*api)
 	if err != nil {

@@ -209,7 +209,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				logf.Close()
 				return string(stdoutStderr), err
 			}
-			commit := strings.TrimSpace(string(stdoutStderr[:]))
+			commit := strings.TrimSpace(string(stdoutStderr))
 			if commit != "HEAD" {
 				gitCmd = exec.Command(
 					"git.exe",
@@ -294,7 +294,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				scanner := bufio.NewScanner(f)
 				for scanner.Scan() {
 					lines[lineCount%numLogLines] = scanner.Text()
-					lineCount += 1
+					lineCount++
 				}
 				if err := scanner.Err(); err != nil {
 					bot.SendMessage(autoBuild+"Error scanning "+logFileName+": "+err.Error(), channel)
@@ -315,7 +315,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				msg := fmt.Sprintf("%s, log upload error %s", resultMsg, err2.Error())
 				bot.SendMessage(msg, channel)
 			} else {
-				msg := fmt.Sprintf("%s, view log at %s", resultMsg, string(urlBytes[:]))
+				msg := fmt.Sprintf("%s, view log at %s", resultMsg, string(urlBytes))
 				bot.SendMessage(msg, channel)
 			}
 		}()
@@ -374,7 +374,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		bot.SendMessage(string(stdoutStderr), channel)
 
 	case restartCmd.FullCommand():
-		os.Exit(0)
+		os.Exit(0) //nolint
 	}
 	return cmd, nil
 }
