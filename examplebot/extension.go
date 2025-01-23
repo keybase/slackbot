@@ -14,7 +14,7 @@ import (
 
 type extension struct{}
 
-func (e *extension) Run(bot *slackbot.Bot, channel string, args []string) (string, error) {
+func (e *extension) Run(bot *slackbot.Bot, _ string, args []string) (string, error) {
 	app := kingpin.New("examplebot", "Kingpin extension")
 	app.Terminate(nil)
 	stringBuffer := new(bytes.Buffer)
@@ -32,8 +32,7 @@ func (e *extension) Run(bot *slackbot.Bot, channel string, args []string) (strin
 		return fmt.Sprintf("I would have run: `%#v`", cmd), nil
 	}
 
-	switch cmd {
-	case testCmd.FullCommand():
+	if cmd == testCmd.FullCommand() {
 		return *testCmdEchoFlag, nil
 	}
 	return cmd, nil

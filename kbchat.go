@@ -37,7 +37,7 @@ func (b *KeybaseChatBotBackend) SendMessage(text string, convID string) {
 		return
 	}
 	log.Printf("sending message: convID: %s text: %s", convID, text)
-	if _, err := b.kbc.SendMessageByConvID(chat1.ConvIDStr(convID), text); err != nil {
+	if _, err := b.kbc.SendMessageByConvID(chat1.ConvIDStr(convID), "%s", text); err != nil {
 		log.Printf("SendMessage: failed to send: %s\n", err)
 	}
 }

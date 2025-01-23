@@ -7,7 +7,7 @@ import (
 )
 
 // SlackBotBackend is a Slack bot backend
-type SlackBotBackend struct {
+type SlackBotBackend struct { //nolint
 	api *slack.Client
 	rtm *slack.RTM
 
@@ -17,7 +17,7 @@ type SlackBotBackend struct {
 // NewSlackBotBackend constructs a bot backend from a Slack token
 func NewSlackBotBackend(token string) (BotBackend, error) {
 	api := slack.New(token)
-	//api.SetDebug(true)
+	// api.SetDebug(true)
 
 	channelIDs, err := LoadChannelIDs(*api)
 	if err != nil {
@@ -80,10 +80,10 @@ Loop:
 			}
 
 		case *slack.PresenceChangeEvent:
-			//log.Printf("Presence Change: %v\n", ev)
+			// log.Printf("Presence Change: %v\n", ev)
 
 		case *slack.LatencyReport:
-			//log.Printf("Current latency: %v\n", ev.Value)
+			// log.Printf("Current latency: %v\n", ev.Value)
 
 		case *slack.RTMError:
 			log.Printf("Error: %s\n", ev.Error())

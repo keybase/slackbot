@@ -16,7 +16,7 @@ func newHybridRunner(runner BotCommandRunner, channel string) *hybridRunner {
 	}
 }
 
-func (r *hybridRunner) RunCommand(args []string, channel string) error {
+func (r *hybridRunner) RunCommand(args []string, _ string) error {
 	return r.runner.RunCommand(args, r.channel)
 
 }
@@ -36,7 +36,7 @@ func NewHybridBackend(backends ...HybridBackendMember) *HybridBackend {
 	}
 }
 
-func (b *HybridBackend) SendMessage(text string, channel string) {
+func (b *HybridBackend) SendMessage(text string, _ string) {
 	for _, backend := range b.backends {
 		backend.Backend.SendMessage(text, backend.Channel)
 	}
