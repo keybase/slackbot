@@ -89,12 +89,12 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 
 	home := os.Getenv("HOME")
 	javaHome := "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
-	path := javaHome  + "/bin:" + "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/opt/homebrew/bin"
+	path := javaHome + "/bin:" + "/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/opt/homebrew/bin"
 	env := launchd.NewEnv(home, path)
 	androidHome := "/usr/local/opt/android-sdk"
 	ndkVer65x := "23.1.7779620"
 	// ndkVer66x := "26.1.10909125"
-	ndkVer := ndkVer65x 
+	ndkVer := ndkVer65x
 	NDKPath := "/Users/build/Library/Android/sdk/ndk/" + ndkVer
 
 	switch cmd {
