@@ -96,8 +96,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	path := goBin + ":" + javaBin + ":/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/opt/homebrew/bin"
 	env := launchd.NewEnv(home, path)
 	androidHome := "/usr/local/opt/android-sdk"
-	ndkVer65x := "23.1.7779620"
-	// ndkVer66x := "26.1.10909125"
+	// ndkVer65x := "23.1.7779620"
+	ndkVer66x := "26.1.10909125"
 	ndkVer := ndkVer65x
 	NDKPath := "/Users/build/Library/Android/sdk/ndk/" + ndkVer
 
