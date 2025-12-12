@@ -24,14 +24,17 @@ func NewStartCommand(plistPath string, label string) StartCommand {
 
 // Run runs the exec command
 func (c StartCommand) Run(_ string, _ []string) (string, error) {
+	//nolint:gosec,noctx // launchctl is a trusted system binary with safe arguments, no context available
 	if _, err := exec.Command("/bin/launchctl", "unload", c.plistPath).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("Error in launchctl unload: %s", err)
 	}
 
+	//nolint:gosec,noctx // launchctl is a trusted system binary with safe arguments, no context available
 	if _, err := exec.Command("/bin/launchctl", "load", c.plistPath).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("Error in launchctl load: %s", err)
 	}
 
+	//nolint:gosec,noctx // launchctl is a trusted system binary with safe arguments, no context available
 	if _, err := exec.Command("/bin/launchctl", "start", c.label).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("Error in launchctl start: %s", err)
 	}
@@ -41,6 +44,7 @@ func (c StartCommand) Run(_ string, _ []string) (string, error) {
 
 // Stop a launchd job
 func Stop(label string) (string, error) {
+	//nolint:noctx // launchctl is a trusted system binary, no context available
 	if _, err := exec.Command("/bin/launchctl", "stop", label).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("Error in launchctl stop: %s", err)
 	}

@@ -18,7 +18,6 @@ func newHybridRunner(runner BotCommandRunner, channel string) *hybridRunner {
 
 func (r *hybridRunner) RunCommand(args []string, _ string) error {
 	return r.runner.RunCommand(args, r.channel)
-
 }
 
 type HybridBackendMember struct {

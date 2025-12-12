@@ -1,8 +1,8 @@
 module github.com/keybase/slackbot
 
-go 1.21
+go 1.23
 
-toolchain go1.23.4
+toolchain go1.25.5
 
 require (
 	github.com/keybase/go-keybase-chat-bot v0.0.0-20250106203511-859265729a56

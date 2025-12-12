@@ -36,7 +36,9 @@ func Parse(app *kingpin.Application, args []string, stringBuffer *bytes.Buffer) 
 
 	if err != nil && stringBuffer.Len() == 0 {
 		log.Printf("Error in parsing command: %s. got %s", args, err)
-		_, _ = io.WriteString(stringBuffer, fmt.Sprintf("I don't know what you mean by `%s`.\nError: `%s`\nHere's my usage:\n\n", strings.Join(args, " "), err.Error()))
+		if _, writeErr := io.WriteString(stringBuffer, fmt.Sprintf("I don't know what you mean by `%s`.\nError: `%s`\nHere's my usage:\n\n", strings.Join(args, " "), err.Error())); writeErr != nil {
+			log.Printf("Error writing error message: %s", writeErr)
+		}
 		// Print out help page if there was an error parsing command
 		app.Usage([]string{})
 	}

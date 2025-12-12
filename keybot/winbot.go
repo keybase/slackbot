@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -28,8 +29,10 @@ const numLogLines = 10
 
 // Keep track of the current build process, protected with a mutex,
 // to support cancellation
-var buildProcessMutex sync.Mutex
-var buildProcess *os.Process
+var (
+	buildProcessMutex sync.Mutex
+	buildProcess      *os.Process
+)
 
 func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, error) {
 	app := kingpin.New("winbot", "Job command parser for winbot")
@@ -143,12 +146,14 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			updateChannel, smokeTest, devCert, logFileName)
 		bot.SendMessage(msg, channel)
 
-		os.Remove(logFileName)
-		logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0644)
+		_ = os.Remove(logFileName) // Ignore error if file doesn't exist
+		//nolint:gosec // Log file path is constructed from system temp dir
+		logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0o600)
 		if err != nil {
 			return "Unable to open logfile", err
 		}
 
+		//nolint:noctx // Long-running git operation, no request context available
 		gitCmd := exec.Command(
 			"git.exe",
 			"checkout",
@@ -156,23 +161,36 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		)
 		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 		stdoutStderr, err := gitCmd.CombinedOutput()
-		_, _ = logf.Write(stdoutStderr)
+		if _, writeErr := logf.Write(stdoutStderr); writeErr != nil {
+			log.Printf("Error writing to log: %s", writeErr)
+		}
 		if err != nil {
-			_, _ = logf.WriteString(gitCmd.Dir)
-			logf.Close()
+			if _, writeErr := logf.WriteString(gitCmd.Dir); writeErr != nil {
+				log.Printf("Error writing dir to log: %s", writeErr)
+			}
+			if closeErr := logf.Close(); closeErr != nil {
+				log.Printf("Error closing log: %s", closeErr)
+			}
 			return string(stdoutStderr), err
 		}
 
+		//nolint:noctx // Long-running git operation, no request context available
 		gitCmd = exec.Command(
 			"git.exe",
 			"pull",
 		)
 		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 		stdoutStderr, err = gitCmd.CombinedOutput()
-		_, _ = logf.Write(stdoutStderr)
+		if _, writeErr := logf.Write(stdoutStderr); writeErr != nil {
+			log.Printf("Error writing to log: %s", writeErr)
+		}
 		if err != nil {
-			_, _ = logf.WriteString(gitCmd.Dir)
-			logf.Close()
+			if _, writeErr := logf.WriteString(gitCmd.Dir); writeErr != nil {
+				log.Printf("Error writing dir to log: %s", writeErr)
+			}
+			if closeErr := logf.Close(); closeErr != nil {
+				log.Printf("Error closing log: %s", closeErr)
+			}
 			return string(stdoutStderr), err
 		}
 
@@ -180,6 +198,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			msg := fmt.Sprintf(autoBuild+"I'm trying to use commit %s", *buildWindowsCientCommit)
 			bot.SendMessage(msg, channel)
 
+			//nolint:gosec,noctx // Checking out user-specified commit, no request context available
 			gitCmd = exec.Command(
 				"git.exe",
 				"checkout",
@@ -187,15 +206,22 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			)
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
-			_, _ = logf.Write(stdoutStderr)
+			if _, writeErr := logf.Write(stdoutStderr); writeErr != nil {
+				log.Printf("Error writing to log: %s", writeErr)
+			}
 
 			if err != nil {
-				_, _ = logf.WriteString(fmt.Sprintf("error doing git pull in %s\n", gitCmd.Dir))
-				logf.Close()
+				if _, writeErr := fmt.Fprintf(logf, "error doing git pull in %s\n", gitCmd.Dir); writeErr != nil {
+					log.Printf("Error writing error to log: %s", writeErr)
+				}
+				if closeErr := logf.Close(); closeErr != nil {
+					log.Printf("Error closing log: %s", closeErr)
+				}
 				return string(stdoutStderr), err
 			}
 
 			// Test if we're on a branch. If so, do git pull once more.
+			//nolint:noctx // Long-running git operation, no request context available
 			gitCmd = exec.Command(
 				"git.exe",
 				"rev-parse",
@@ -205,27 +231,39 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
 			if err != nil {
-				_, _ = logf.WriteString(fmt.Sprintf("error going git rev-parse dir: %s\n", gitCmd.Dir))
-				logf.Close()
+				if _, writeErr := fmt.Fprintf(logf, "error going git rev-parse dir: %s\n", gitCmd.Dir); writeErr != nil {
+					log.Printf("Error writing error to log: %s", writeErr)
+				}
+				if closeErr := logf.Close(); closeErr != nil {
+					log.Printf("Error closing log: %s", closeErr)
+				}
 				return string(stdoutStderr), err
 			}
 			commit := strings.TrimSpace(string(stdoutStderr))
 			if commit != "HEAD" {
+				//nolint:noctx // Long-running git operation, no request context available
 				gitCmd = exec.Command(
 					"git.exe",
 					"pull",
 				)
 				gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 				stdoutStderr, err = gitCmd.CombinedOutput()
-				_, _ = logf.Write(stdoutStderr)
+				if _, writeErr := logf.Write(stdoutStderr); writeErr != nil {
+					log.Printf("Error writing to log: %s", writeErr)
+				}
 				if err != nil {
-					_, _ = logf.WriteString(fmt.Sprintf("error doing git pull on %s in %s\n", commit, gitCmd.Dir))
-					logf.Close()
+					if _, writeErr := fmt.Fprintf(logf, "error doing git pull on %s in %s\n", commit, gitCmd.Dir); writeErr != nil {
+						log.Printf("Error writing error to log: %s", writeErr)
+					}
+					if closeErr := logf.Close(); closeErr != nil {
+						log.Printf("Error closing log: %s", closeErr)
+					}
 					return string(stdoutStderr), err
 				}
 			}
 		}
 
+		//nolint:noctx // Long-running git operation, no request context available
 		gitCmd = exec.Command(
 			"git.exe",
 			"rev-parse",
@@ -234,12 +272,19 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 		stdoutStderr, err = gitCmd.CombinedOutput()
 		if err != nil {
-			_, _ = logf.WriteString(fmt.Sprintf("error getting current commit for logs: %s", gitCmd.Dir))
-			logf.Close()
+			if _, writeErr := fmt.Fprintf(logf, "error getting current commit for logs: %s", gitCmd.Dir); writeErr != nil {
+				log.Printf("Error writing error to log: %s", writeErr)
+			}
+			if closeErr := logf.Close(); closeErr != nil {
+				log.Printf("Error closing log: %s", closeErr)
+			}
 			return string(stdoutStderr), err
 		}
-		_, _ = logf.WriteString(fmt.Sprintf("HEAD is currently at %s\n", string(stdoutStderr)))
+		if _, writeErr := fmt.Fprintf(logf, "HEAD is currently at %s\n", string(stdoutStderr)); writeErr != nil {
+			log.Printf("Error writing to log: %s", writeErr)
+		}
 
+		//nolint:gosec,noctx // Build script execution from known location in GOPATH, no request context available
 		cmd := exec.Command(
 			"cmd", "/c",
 			path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/packaging/windows/dorelease.cmd"),
@@ -254,8 +299,12 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			fmt.Sprintf("DevCert=%d", devCert),
 			"SlackBot=1",
 		)
-		_, _ = logf.WriteString(fmt.Sprintf("cmd: %+v\n", cmd))
-		logf.Close()
+		if _, writeErr := fmt.Fprintf(logf, "cmd: %+v\n", cmd); writeErr != nil {
+			log.Printf("Error writing cmd to log: %s", writeErr)
+		}
+		if closeErr := logf.Close(); closeErr != nil {
+			log.Printf("Error closing log: %s", closeErr)
+		}
 
 		go func() {
 			err := cmd.Start()
@@ -271,6 +320,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			if bucketName == "" {
 				bucketName = "prerelease.keybase.io"
 			}
+			//nolint:gosec,noctx // Executing release tool from known location in GOPATH with safe arguments, no context available
 			sendLogCmd := exec.Command(
 				path.Join(os.Getenv("GOPATH"), "src/github.com/keybase/client/go/release/release.exe"),
 				"save-log",
@@ -286,6 +336,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				index := 0
 				lineCount := 0
 
+				//nolint:gosec // Log file path is constructed from system temp dir
 				f, err := os.Open(logFileName)
 				if err != nil {
 					bot.SendMessage(autoBuild+"Error reading "+logFileName+": "+err.Error(), channel)
@@ -321,6 +372,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		}()
 		return "", nil
 	case dumplogCmd.FullCommand():
+		//nolint:gosec // Log file path is constructed from system temp dir
 		logContents, err := os.ReadFile(logFileName)
 		if err != nil {
 			return "Error reading " + logFileName, err
@@ -335,6 +387,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		rawRepoText := *gitDiffRepo
 		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
 
+		//nolint:noctx // User-initiated git command, no request context available
 		gitDiffCmd := exec.Command(
 			"git.exe",
 			"diff",
@@ -355,6 +408,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		rawRepoText := *gitCleanRepo
 		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
 
+		//nolint:noctx // User-initiated git command, no request context available
 		gitCleanCmd := exec.Command(
 			"git.exe",
 			"clean",

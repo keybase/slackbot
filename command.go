@@ -41,6 +41,7 @@ func (c execCommand) Run(_ string, _ []string) (string, error) {
 		return fmt.Sprintf("I'm in dry run mode. I would have run `%s` with args: %s", c.exec, c.args), nil
 	}
 
+	//nolint:gosec,noctx // Command execution is the purpose of this bot, no context available
 	out, err := exec.Command(c.exec, c.args...).CombinedOutput()
 	outAsString := string(out)
 	return outAsString, err
