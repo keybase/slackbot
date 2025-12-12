@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -26,6 +27,7 @@ func (t *tuxbot) linuxBuildFunc(channel string, _ []string, skipCI bool, nightly
 	}
 	t.bot.SendMessage("building linux!!!", channel)
 	prereleaseScriptPath := filepath.Join(currentUser.HomeDir, "slackbot/systemd/prerelease.sh")
+	//nolint:gosec,noctx // Executing build script from known location in user's home directory, no context available
 	prereleaseCmd := exec.Command(prereleaseScriptPath)
 	prereleaseCmd.Stdout = os.Stdout
 	prereleaseCmd.Stderr = os.Stderr
@@ -40,14 +42,20 @@ func (t *tuxbot) linuxBuildFunc(channel string, _ []string, skipCI bool, nightly
 	}
 	err = prereleaseCmd.Run()
 	if err != nil {
-		journal, _ := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.keybot.service").CombinedOutput()
+		//nolint:noctx // Error logging command, no request context available
+		journal, journalErr := exec.Command("journalctl", "--since=today", "--user-unit", "keybase.keybot.service").CombinedOutput()
+		if journalErr != nil {
+			log.Printf("Error getting journal: %s", journalErr)
+		}
 		api := slack.New(slackbot.GetTokenFromEnv())
 		snippetFile := slack.FileUploadParameters{
 			Channels: []string{channel},
 			Title:    "failed build output",
 			Content:  string(journal),
 		}
-		_, _ = api.UploadFile(snippetFile) // ignore errors here for now
+		if _, uploadErr := api.UploadFile(snippetFile); uploadErr != nil {
+			log.Printf("Error uploading build output: %s", uploadErr)
+		}
 		return "FAILURE", err
 	}
 	return "SUCCESS", nil
@@ -113,7 +121,15 @@ func postStathat(key string, count string) error {
 		"stat":  {key},
 		"count": {count},
 	}
-	_, err := http.PostForm("https://api.stathat.com/ez", vals)
+	//nolint:noctx // Simple fire-and-forget stat reporting, no request context available
+	resp, err := http.PostForm("https://api.stathat.com/ez", vals)
+	if resp != nil {
+		defer func() {
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				log.Printf("Error closing response body: %s", closeErr)
+			}
+		}()
+	}
 	return err
 }
 

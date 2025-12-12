@@ -69,12 +69,21 @@ func (b *Bot) HelpMessage() string {
 	w := new(tabwriter.Writer)
 	buf := new(bytes.Buffer)
 	w.Init(buf, 8, 8, 8, ' ', 0)
-	fmt.Fprintln(w, "Command\tDescription")
+	if _, err := fmt.Fprintln(w, "Command\tDescription"); err != nil {
+		log.Printf("Error writing help header: %s", err)
+		return "Error generating help message"
+	}
 	for _, trigger := range b.triggers() {
 		command := b.commands[trigger]
-		fmt.Fprintf(w, "%s\t%s\n", trigger, command.Description())
+		if _, err := fmt.Fprintf(w, "%s\t%s\n", trigger, command.Description()); err != nil {
+			log.Printf("Error writing help command: %s", err)
+			return "Error generating help message"
+		}
 	}
-	_ = w.Flush()
+	if err := w.Flush(); err != nil {
+		log.Printf("Error flushing help writer: %s", err)
+		return "Error generating help message"
+	}
 	return BlockQuote(buf.String())
 }
 
