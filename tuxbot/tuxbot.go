@@ -124,7 +124,11 @@ func postStathat(key string, count string) error {
 	//nolint:noctx // Simple fire-and-forget stat reporting, no request context available
 	resp, err := http.PostForm("https://api.stathat.com/ez", vals)
 	if resp != nil {
-		defer func() { _ = resp.Body.Close() }()
+		defer func() {
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				log.Printf("Error closing response body: %s", closeErr)
+			}
+		}()
 	}
 	return err
 }

@@ -176,12 +176,12 @@ func (e Env) WritePlist(script Script) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	plistDir := e.Home + "/Library/LaunchAgents"
+	plistDir := filepath.Join(e.Home, "Library", "LaunchAgents")
 	//nolint:gosec // LaunchAgents directory must be world-readable for launchd
 	if err := os.MkdirAll(plistDir, 0o755); err != nil {
 		return "", err
 	}
-	path := fmt.Sprintf("%s/%s.plist", plistDir, script.Label)
+	path := filepath.Clean(filepath.Join(plistDir, script.Label+".plist"))
 	log.Printf("Writing %s", path)
 	//nolint:gosec // Plist files must be readable by launchd
 	if err := os.WriteFile(path, data, 0o755); err != nil {

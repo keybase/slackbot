@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -59,7 +60,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	gitCleanCmd := app.Command("gclean", "Clean the repo")
 	gitCleanRepo := gitCleanCmd.Arg("repo", "Repo path relative to $GOPATH/src").Required().String()
 
-	logFileName := path.Join(os.TempDir(), "keybase.build.windows.log")
+	logFileName := filepath.Clean(path.Join(os.TempDir(), "keybase.build.windows.log"))
 
 	testAutoBuild := app.Command("testauto", "Simulate an automated daily build").Hidden()
 	startAutoTimer := app.Command("startAutoTimer", "Start the auto build timer")
@@ -146,8 +147,9 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			updateChannel, smokeTest, devCert, logFileName)
 		bot.SendMessage(msg, channel)
 
-		_ = os.Remove(logFileName) // Ignore error if file doesn't exist
-		//nolint:gosec // Log file path is constructed from system temp dir
+		if err := os.Remove(logFileName); err != nil && !os.IsNotExist(err) {
+			return "Unable to remove old logfile", err
+		}
 		logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0o600)
 		if err != nil {
 			return "Unable to open logfile", err
@@ -336,7 +338,6 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				index := 0
 				lineCount := 0
 
-				//nolint:gosec // Log file path is constructed from system temp dir
 				f, err := os.Open(logFileName)
 				if err != nil {
 					bot.SendMessage(autoBuild+"Error reading "+logFileName+": "+err.Error(), channel)
@@ -372,7 +373,6 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		}()
 		return "", nil
 	case dumplogCmd.FullCommand():
-		//nolint:gosec // Log file path is constructed from system temp dir
 		logContents, err := os.ReadFile(logFileName)
 		if err != nil {
 			return "Error reading " + logFileName, err

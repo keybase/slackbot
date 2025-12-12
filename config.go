@@ -86,7 +86,7 @@ func readConfigOrDefault() config {
 		return defaultConfig
 	}
 
-	fileBytes, err := os.ReadFile(path) //nolint:gosec // Reading user's own config file
+	fileBytes, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return defaultConfig
 	}
@@ -112,7 +112,7 @@ func (c config) Save() error {
 		return err
 	}
 
-	err = os.WriteFile(path, b, 0o644) //nolint:gosec // Config file should be user-readable
+	err = os.WriteFile(filepath.Clean(path), b, 0o644) //nolint:gosec // Config file should be user-readable
 	if err != nil {
 		return err
 	}
