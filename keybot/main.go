@@ -96,6 +96,7 @@ func main() {
 	keybaseChannel := os.Getenv("KEYBASE_CHAT_CONVID")
 	opts.KeybaseLocation = os.Getenv("KEYBASE_LOCATION")
 	opts.HomeDir = os.Getenv("KEYBASE_HOME")
+	opts.DebugTag = name
 	oneshotUsername := os.Getenv("KEYBASE_ONESHOT_USERNAME")
 	oneshotPaperkey := os.Getenv("KEYBASE_ONESHOT_PAPERKEY")
 	if len(oneshotPaperkey) > 0 && len(oneshotUsername) > 0 {
