@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.25.5
 
 require (
-	github.com/keybase/go-keybase-chat-bot v0.0.0-20251212163122-450fd0812017
+	github.com/keybase/go-keybase-chat-bot v0.0.0-20260127182354-7367dd3315a3
 	github.com/nlopes/slack v0.1.1-0.20180101221843-107290b5bbaf
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
