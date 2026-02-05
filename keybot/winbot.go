@@ -148,7 +148,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		bot.SendMessage(msg, channel)
 
 		if err := os.Remove(logFileName); err != nil && !os.IsNotExist(err) {
-			return "Unable to remove old logfile", err
+			log.Printf("Error writing to log: %s", err)
 		}
 		logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0o600)
 		if err != nil {
