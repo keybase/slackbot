@@ -54,6 +54,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	buildDarwinSmoke := buildDarwin.Flag("smoke", "Whether to make a pair of builds for smoketesting when on a branch").Bool()
 	buildDarwinNoS3 := buildDarwin.Flag("skip-s3", "Don't push to S3 after building the app").Bool()
 	buildDarwinNoNotarize := buildDarwin.Flag("skip-notarize", "Don't notarize the app").Bool()
+	buildDarwinArch := buildDarwin.Flag("arch", "Build for a specific architecture (arm64, amd64)").String()
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
@@ -132,6 +133,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "NOPULL", Value: boolToEnvString(*buildDarwinNoPull)},
 				{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
 				{Key: "NONOTARIZE", Value: boolToEnvString(*buildDarwinNoNotarize)},
+				{Key: "ARCH", Value: *buildDarwinArch},
 			},
 		}
 		return runScript(bot, channel, env, script)
