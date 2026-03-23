@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/keybase/go-keybase-chat-bot/kbchat/types/chat1"
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -440,6 +441,19 @@ func (d *winbot) Help(bot *slackbot.Bot) string {
 		return fmt.Sprintf("Error getting help: %s", err)
 	}
 	return out
+}
+
+func (d *winbot) Advertisements(bot *slackbot.Bot) []chat1.UserBotCommandInput {
+	prefix := "!" + bot.Name()
+	return []chat1.UserBotCommandInput{
+		{Name: "build", Description: "Start a windows build", Usage: prefix + " build [--test] [--client-commit <sha>] [--kbfs-commit <sha>] [--updater-commit <sha>] [--skip-ci] [--smoke] [--dev-cert]"},
+		{Name: "cancel", Description: "Cancel the current windows build", Usage: prefix + " cancel"},
+		{Name: "dumplog", Description: "Show the last windows build log file", Usage: prefix + " dumplog"},
+		{Name: "gclean", Description: "Clean a repo under $GOPATH/src", Usage: prefix + " gclean <repo>"},
+		{Name: "gdiff", Description: "Show the git diff for a repo under $GOPATH/src", Usage: prefix + " gdiff <repo>"},
+		{Name: "restart", Description: "Quit and let the calling script restart the bot", Usage: prefix + " restart"},
+		{Name: "startAutoTimer", Description: "Start or stop the automatic build timer", Usage: prefix + " startAutoTimer [--interval <hours>] [--startHour <hour>] [--delay <hours>]"},
+	}
 }
 
 func Exists(name string) (bool, error) {

@@ -10,6 +10,7 @@ import (
 	"runtime"
 
 	"github.com/keybase/go-keybase-chat-bot/kbchat"
+	"github.com/keybase/go-keybase-chat-bot/kbchat/types/chat1"
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/launchd"
@@ -68,6 +69,7 @@ func addBasicCommands(bot *slackbot.Bot) {
 type extension interface {
 	Run(b *slackbot.Bot, channel string, args []string) (string, error)
 	Help(bot *slackbot.Bot) string
+	Advertisements(bot *slackbot.Bot) []chat1.UserBotCommandInput
 }
 
 func main() {
@@ -143,6 +145,7 @@ func main() {
 	}
 	bot.SetDefault(slackbot.NewFuncCommand(runFn, "Extension", bot.Config()))
 	bot.SetHelp(bot.HelpMessage() + "\n\n" + ext.Help(bot))
+	bot.AddAdvertisements(ext.Advertisements(bot)...)
 
 	bot.SendMessage("I'm running.", channel)
 
