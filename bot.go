@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/keybase/go-keybase-chat-bot/kbchat/types/chat1"
 )
 
 type BotCommandRunner interface {
@@ -30,6 +32,7 @@ type Bot struct {
 	label          string
 	config         Config
 	commands       map[string]Command
+	advertisements []chat1.UserBotCommandInput
 	defaultCommand Command
 }
 
@@ -138,12 +141,15 @@ func (b *Bot) run(args []string, command Command, channel string) {
 	}
 }
 
-func (b *Bot) sendHelpMessage(channel string) {
-	help := b.help
-	if help == "" {
-		help = b.HelpMessage()
+func (b *Bot) resolvedHelp() string {
+	if b.help != "" {
+		return b.help
 	}
-	b.backend.SendMessage(help, channel)
+	return b.HelpMessage()
+}
+
+func (b *Bot) sendHelpMessage(channel string) {
+	b.backend.SendMessage(b.resolvedHelp(), channel)
 }
 
 func (b *Bot) SendMessage(text string, channel string) {
@@ -151,6 +157,9 @@ func (b *Bot) SendMessage(text string, channel string) {
 }
 
 func (b *Bot) Listen() {
+	if err := b.advertiseCommands(); err != nil {
+		log.Printf("Error advertising commands: %s", err)
+	}
 	b.backend.Listen(b)
 }
 

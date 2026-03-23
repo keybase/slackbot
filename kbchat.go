@@ -42,6 +42,21 @@ func (b *KeybaseChatBotBackend) SendMessage(text string, convID string) {
 	}
 }
 
+func (b *KeybaseChatBotBackend) AdvertiseCommands(commands []chat1.UserBotCommandInput) error {
+	if b.convID == "" {
+		return nil
+	}
+	_, err := b.kbc.AdvertiseCommands(kbchat.Advertisement{
+		Alias: b.name,
+		Advertisements: []chat1.AdvertiseCommandAPIParam{{
+			Typ:      "conv",
+			Commands: commands,
+			ConvID:   b.convID,
+		}},
+	})
+	return err
+}
+
 func (b *KeybaseChatBotBackend) Listen(runner BotCommandRunner) {
 	sub, err := b.kbc.ListenForNewTextMessages()
 	if err != nil {
