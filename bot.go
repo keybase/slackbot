@@ -118,7 +118,7 @@ func (b *Bot) RunCommand(args []string, channel string) error {
 		}
 	}
 
-	if args[0] != "resume" && args[0] != "config" && b.Config().Paused() {
+	if args[0] != "resume" && args[0] != "config" && !HasIgnorePauseFlag(args) && b.Config().Paused() {
 		b.backend.SendMessage("I can't do that, I'm paused.", channel)
 		return nil
 	}
@@ -167,6 +167,17 @@ func (b *Bot) Listen() {
 func NewTestBot() (*Bot, error) {
 	backend := &SlackBotBackend{}
 	return NewBot(NewConfig(true, false), "testbot", "", backend), nil
+}
+
+// HasIgnorePauseFlag reports whether args contain the --ignore-pause flag,
+// which lets a single command run while the bot stays paused.
+func HasIgnorePauseFlag(args []string) bool {
+	for _, arg := range args {
+		if arg == "--ignore-pause" {
+			return true
+		}
+	}
+	return false
 }
 
 // BlockQuote returns the string block-quoted

@@ -5,10 +5,21 @@ package slackbot
 
 import (
 	"testing"
+	"time"
 
 	"github.com/keybase/go-keybase-chat-bot/kbchat/types/chat1"
 	"github.com/stretchr/testify/require"
 )
+
+type fakeBackend struct {
+	messages []string
+}
+
+func (b *fakeBackend) SendMessage(text string, _ string) {
+	b.messages = append(b.messages, text)
+}
+
+func (b *fakeBackend) Listen(BotCommandRunner) {}
 
 func TestHelp(t *testing.T) {
 	bot, err := NewTestBot()
@@ -20,6 +31,40 @@ func TestHelp(t *testing.T) {
 		t.Fatal("No help message")
 	}
 	t.Logf("Help:\n%s", msg)
+}
+
+func TestPausedBlocksCommand(t *testing.T) {
+	backend := &fakeBackend{}
+	bot := NewBot(NewConfig(false, true), "testbot", "", backend)
+	ran := false
+	bot.AddCommand("ping", NewFuncCommand(func(_ string, _ []string) (string, error) {
+		ran = true
+		return "pong", nil
+	}, "Ping", bot.Config()))
+
+	err := bot.RunCommand([]string{"ping"}, "chan")
+	require.NoError(t, err)
+	require.False(t, ran)
+	require.Equal(t, []string{"I can't do that, I'm paused."}, backend.messages)
+}
+
+func TestIgnorePauseRunsCommandWhilePaused(t *testing.T) {
+	backend := &fakeBackend{}
+	bot := NewBot(NewConfig(false, true), "testbot", "", backend)
+	ranCh := make(chan struct{})
+	bot.AddCommand("ping", NewFuncCommand(func(_ string, _ []string) (string, error) {
+		close(ranCh)
+		return "pong", nil
+	}, "Ping", bot.Config()))
+
+	err := bot.RunCommand([]string{"ping", "--ignore-pause"}, "chan")
+	require.NoError(t, err)
+	select {
+	case <-ranCh:
+	case <-time.After(5 * time.Second):
+		t.Fatal("command did not run with --ignore-pause")
+	}
+	require.True(t, bot.Config().Paused(), "bot should remain paused")
 }
 
 func TestParseInput(t *testing.T) {

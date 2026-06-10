@@ -26,6 +26,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	stringBuffer := new(bytes.Buffer)
 	app.Writer(stringBuffer)
 
+	ignorePause := app.Flag("ignore-pause", "Run this command even if the bot is paused").Bool()
+
 	build := app.Command("build", "Build things")
 
 	cancel := app.Command("cancel", "Cancel")
@@ -137,7 +139,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "ARCH", Value: *buildDarwinArch},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case buildMobile.FullCommand():
 		skipCI := *buildMobileSkipCI
@@ -159,7 +161,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios")
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case buildAndroid.FullCommand():
 		skipCI := *buildAndroidSkipCI
@@ -178,7 +180,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			},
 		}
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case buildIOS.FullCommand():
 		skipCI := *buildIOSSkipCI
@@ -196,7 +198,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case releasePromote.FullCommand():
 		script := launchd.Script{
@@ -209,7 +211,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "DRY_RUN", Value: boolToString(*releaseToPromoteDryRun)},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case dumplogCmd.FullCommand():
 		readPath, err := env.LogPathForLaunchdLabel(*dumplogCommandLabel)
@@ -225,7 +227,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "NOLOG", Value: boolToEnvString(true)},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case gitDiffCmd.FullCommand():
 		rawRepoText := *gitDiffRepo
@@ -241,7 +243,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "SCRIPT_TO_RUN", Value: "./git_diff.sh"},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case gitCleanCmd.FullCommand():
 		script := launchd.Script{
@@ -252,7 +254,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "SCRIPT_TO_RUN", Value: "./git_clean.sh"},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case nodeModuleCleanCmd.FullCommand():
 		script := launchd.Script{
@@ -263,7 +265,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "SCRIPT_TO_RUN", Value: "./node_module_clean.sh"},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case releaseBroken.FullCommand():
 		script := launchd.Script{
@@ -275,7 +277,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "BROKEN_RELEASE", Value: *releaseBrokenVersion},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case smoketest.FullCommand():
 		script := launchd.Script{
@@ -289,7 +291,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "SMOKETEST_ENABLE", Value: boolToString(*smoketestEnable)},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 
 	case upgrade.FullCommand():
 		script := launchd.Script{
@@ -299,7 +301,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "NAME", Value: *upgradePackageName},
 			},
 		}
-		return runScript(bot, channel, env, script)
+		return runScript(bot, channel, env, script, *ignorePause)
 	}
 
 	return cmd, nil
