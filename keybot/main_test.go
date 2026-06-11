@@ -41,6 +41,33 @@ func TestPromoteRelease(t *testing.T) {
 	}
 }
 
+func TestIgnorePauseFlagParses(t *testing.T) {
+	bot, err := slackbot.NewTestBot()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ext := &keybot{}
+	out, err := ext.Run(bot, "", []string{"build", "darwin", "--ignore-pause"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(out, "I would have run a launchd job (keybase.build.darwin)") {
+		t.Errorf("Unexpected output: %s", out)
+	}
+}
+
+func TestPausedBlocksRunScript(t *testing.T) {
+	bot := slackbot.NewBot(slackbot.NewConfig(false, true), "testbot", "", &slackbot.SlackBotBackend{})
+	ext := &keybot{}
+	out, err := ext.Run(bot, "", []string{"build", "darwin"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != "I'm paused so I can't do that, but I would have run a launchd job (keybase.build.darwin)" {
+		t.Errorf("Unexpected output: %s", out)
+	}
+}
+
 func TestInvalidUsage(t *testing.T) {
 	bot, err := slackbot.NewTestBot()
 	if err != nil {

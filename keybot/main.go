@@ -30,12 +30,12 @@ func boolToEnvString(b bool) string {
 	return "0"
 }
 
-func runScript(bot *slackbot.Bot, channel string, env launchd.Env, script launchd.Script) (string, error) {
+func runScript(bot *slackbot.Bot, channel string, env launchd.Env, script launchd.Script, ignorePause bool) (string, error) {
 	if bot.Config().DryRun() {
 		return fmt.Sprintf("I would have run a launchd job (%s)\nPath: %#v\nEnvVars: %#v", script.Label, script.Path, script.EnvVars), nil
 	}
 
-	if bot.Config().Paused() {
+	if bot.Config().Paused() && !ignorePause {
 		return fmt.Sprintf("I'm paused so I can't do that, but I would have run a launchd job (%s)", script.Label), nil
 	}
 
