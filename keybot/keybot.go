@@ -114,7 +114,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 
 	case buildDarwin.FullCommand():
 		smokeTest := true
-		skipCI := *buildDarwinSkipCI
+		// --skip-ci is always on; flag value is ignored.
+		_ = *buildDarwinSkipCI
+		skipCI := true
 		testBuild := *buildDarwinTest
 		// If it's a custom build, make it a test build unless --smoke is passed.
 		if *buildDarwinClientCommit != "" || *buildDarwinKbfsCommit != "" {
@@ -142,7 +144,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		return runScript(bot, channel, env, script, *ignorePause)
 
 	case buildMobile.FullCommand():
-		skipCI := *buildMobileSkipCI
+		// --skip-ci is always on; flag value is ignored.
+		_ = *buildMobileSkipCI
+		skipCI := true
 		automated := *buildMobileAutomated
 		script := launchd.Script{
 			Label:      "keybase.build.mobile",
@@ -164,7 +168,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		return runScript(bot, channel, env, script, *ignorePause)
 
 	case buildAndroid.FullCommand():
-		skipCI := *buildAndroidSkipCI
+		// --skip-ci is always on; flag value is ignored.
+		_ = *buildAndroidSkipCI
+		skipCI := true
 		automated := *buildAndroidAutomated
 		script := launchd.Script{
 			Label:      "keybase.build.android",
@@ -183,7 +189,9 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		return runScript(bot, channel, env, script, *ignorePause)
 
 	case buildIOS.FullCommand():
-		skipCI := *buildIOSSkipCI
+		// --skip-ci is always on; flag value is ignored.
+		_ = *buildIOSSkipCI
+		skipCI := true
 		iosClean := *buildIOSClean
 		automated := *buildIOSAutomated
 		script := launchd.Script{
