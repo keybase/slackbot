@@ -165,7 +165,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios")
-		return runScript(bot, channel, env, script, *ignorePause)
+		return runBuildScript(bot, channel, env, script, *ignorePause, automated, *buildMobileCientCommit)
 
 	case buildAndroid.FullCommand():
 		// --skip-ci is always on; flag value is ignored.
@@ -186,7 +186,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			},
 		}
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
-		return runScript(bot, channel, env, script, *ignorePause)
+		return runBuildScript(bot, channel, env, script, *ignorePause, automated, *buildAndroidCientCommit)
 
 	case buildIOS.FullCommand():
 		// --skip-ci is always on; flag value is ignored.
@@ -206,7 +206,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios") // Custom go path for iOS so we don't conflict
-		return runScript(bot, channel, env, script, *ignorePause)
+		return runBuildScript(bot, channel, env, script, *ignorePause, automated, *buildIOSCientCommit)
 
 	case releasePromote.FullCommand():
 		script := launchd.Script{
