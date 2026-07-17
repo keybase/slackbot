@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -22,11 +21,11 @@ const clientRepoURL = "https://github.com/keybase/client.git"
 // automated build for a job. run.sh writes it when the build script finishes
 // successfully.
 func lastBuildPath(label string) (string, error) {
-	currentUser, err := user.Current()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(currentUser.HomeDir, ".keybot.lastbuild."+label), nil
+	return filepath.Join(home, ".keybot.lastbuild."+label), nil
 }
 
 func readLastBuiltCommit(path string) string {
@@ -47,7 +46,7 @@ func currentClientCommit(clientCommit string) (string, error) {
 	//nolint:gosec,noctx // git is a trusted system binary with safe arguments, no context available
 	out, err := exec.Command("git", "ls-remote", clientRepoURL, "HEAD").Output()
 	if err != nil {
-		return "", fmt.Errorf("Error in git ls-remote: %s", err)
+		return "", fmt.Errorf("Error in git ls-remote: %w", err)
 	}
 	fields := strings.Fields(string(out))
 	if len(fields) == 0 {
@@ -82,9 +81,24 @@ func runBuildScript(bot *slackbot.Bot, channel string, env launchd.Env, script l
 		return fmt.Sprintf("I already did an automated build of `%s` for commit `%s`, so I'm skipping this one.", script.Label, commit), nil
 	}
 
+	// Pin the build to the resolved commit so the state file can't record a
+	// different commit than was built if remote HEAD moves before the build
+	// script fetches.
+	script.EnvVars = setEnvVar(script.EnvVars, "CLIENT_COMMIT", commit)
 	script.EnvVars = append(script.EnvVars,
 		launchd.EnvVar{Key: "AUTOMATED_BUILD_COMMIT", Value: commit},
 		launchd.EnvVar{Key: "AUTOMATED_BUILD_COMMIT_PATH", Value: statePath},
 	)
 	return runScript(bot, channel, env, script, ignorePause)
+}
+
+// setEnvVar replaces the value of key in envVars, appending it if not present.
+func setEnvVar(envVars []launchd.EnvVar, key string, value string) []launchd.EnvVar {
+	for i := range envVars {
+		if envVars[i].Key == key {
+			envVars[i].Value = value
+			return envVars
+		}
+	}
+	return append(envVars, launchd.EnvVar{Key: key, Value: value})
 }

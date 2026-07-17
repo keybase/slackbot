@@ -10,7 +10,36 @@ import (
 	"testing"
 
 	"github.com/keybase/slackbot"
+	"github.com/keybase/slackbot/launchd"
 )
+
+func TestLastBuildPath(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	path, err := lastBuildPath("keybase.build.ios")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := filepath.Join(home, ".keybot.lastbuild.keybase.build.ios")
+	if path != expected {
+		t.Errorf("Expected %q, got %q", expected, path)
+	}
+}
+
+func TestSetEnvVar(t *testing.T) {
+	envVars := []launchd.EnvVar{
+		{Key: "CLIENT_COMMIT", Value: ""},
+		{Key: "CHECK_CI", Value: "false"},
+	}
+	envVars = setEnvVar(envVars, "CLIENT_COMMIT", "abc123")
+	if len(envVars) != 2 || envVars[0].Value != "abc123" {
+		t.Errorf("Expected existing CLIENT_COMMIT replaced, got %+v", envVars)
+	}
+	envVars = setEnvVar(envVars, "NEW_KEY", "v")
+	if len(envVars) != 3 || envVars[2].Key != "NEW_KEY" || envVars[2].Value != "v" {
+		t.Errorf("Expected NEW_KEY appended, got %+v", envVars)
+	}
+}
 
 func TestReadLastBuiltCommit(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "lastbuild")
