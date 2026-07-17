@@ -25,6 +25,15 @@ trap 'err_report $LINENO' ERR
 
 "$SCRIPT_PATH"
 
+# Record the commit built by a successful automated build so the bot can skip
+# rebuilding it on the next timed run.
+record_commit=${AUTOMATED_BUILD_COMMIT:-""}
+record_commit_path=${AUTOMATED_BUILD_COMMIT_PATH:-""}
+if [ -n "$record_commit" ] && [ -n "$record_commit_path" ]; then
+  # Best effort: failing to record the commit shouldn't fail a successful build.
+  echo "$record_commit" > "$record_commit_path" || echo "Warning: couldn't write $record_commit_path"
+fi
+
 if [ "$nolog" = "" ]; then
   url=`$release_bin save-log --bucket-name=$bucket_name --path=$logpath --noerr`
   "$dir/send.sh" "Finished \`$label\`, view log at $url"
