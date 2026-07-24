@@ -14,10 +14,9 @@ import (
 	"os/user"
 	"path/filepath"
 
+	kingpin "github.com/alecthomas/kingpin/v2"
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
-	"github.com/nlopes/slack"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 func (t *tuxbot) linuxBuildFunc(channel string, _ []string, skipCI bool, nightly bool) (string, error) {
@@ -47,18 +46,30 @@ func (t *tuxbot) linuxBuildFunc(channel string, _ []string, skipCI bool, nightly
 		if journalErr != nil {
 			log.Printf("Error getting journal: %s", journalErr)
 		}
-		api := slack.New(slackbot.GetTokenFromEnv())
-		snippetFile := slack.FileUploadParameters{
-			Channels: []string{channel},
-			Title:    "failed build output",
-			Content:  string(journal),
-		}
-		if _, uploadErr := api.UploadFile(snippetFile); uploadErr != nil {
+		if uploadErr := t.sendFailedBuildOutput(journal, channel); uploadErr != nil {
 			log.Printf("Error uploading build output: %s", uploadErr)
 		}
 		return "FAILURE", err
 	}
 	return "SUCCESS", nil
+}
+
+func (t *tuxbot) sendFailedBuildOutput(journal []byte, channel string) error {
+	tempDir, err := os.MkdirTemp("", "tuxbot-failed-build-*")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if removeErr := os.RemoveAll(tempDir); removeErr != nil {
+			log.Printf("Error removing temporary build output: %s", removeErr)
+		}
+	}()
+
+	filename := filepath.Join(tempDir, "failed-build.log")
+	if err := os.WriteFile(filename, journal, 0o600); err != nil {
+		return err
+	}
+	return t.bot.SendAttachment(filename, "failed build output", channel)
 }
 
 type tuxbot struct {

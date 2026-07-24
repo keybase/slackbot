@@ -2,9 +2,10 @@
 
 set -e -u -o pipefail
 
-cd "$(dirname "$BASH_SOURCE")/../tuxbot"
+cd "$(dirname "${BASH_SOURCE[0]}")/../tuxbot"
 
-export GOPATH="$(pwd)/gopath"
+GOPATH="$(pwd)/gopath"
+export GOPATH
 
 if ! [ -e "$GOPATH" ] ; then
   # Build the local GOPATH.
@@ -15,7 +16,7 @@ fi
 go install github.com/keybase/slackbot/tuxbot
 
 # Wait for the network.
-while ! ping -c 3 slack.com ; do
+while ! ping -c 3 keybase.io ; do
   sleep 1
 done
 

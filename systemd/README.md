@@ -14,6 +14,9 @@ https://github.com/keybase/client: packaging/linux/README.md
   user, several steps below will fail.
 - Install all the credentials you need. We have a sepate "build-linux"
   repo for this with its own README-- ask Max where it is.
+- Set `KEYBASE_CHAT_CONVID` in `/home/keybasebuild/keybot.env` and configure
+  either a running Keybase client or the `KEYBASE_ONESHOT_USERNAME` and
+  `KEYBASE_ONESHOT_PAPERKEY` variables.
 - Clone three repos into /home/keybasebuild:
   - https://github.com/keybase/client
   - https://github.com/keybase/kbfs
@@ -25,6 +28,6 @@ https://github.com/keybase/client: packaging/linux/README.md
   - `systemctl --user enable --now keybase.keybot.service`
   - `systemctl --user enable --now keybase.buildplease.timer`
 - Take the bot out of dry-run mode by messaging `!tuxbot toggle-dryrun`
-  in the #bot channel.
+  in the configured Keybase Chat conversation.
 
 For stathat logging, add a `STATHAT_EZKEY` env variable to the envfile used by the unit.

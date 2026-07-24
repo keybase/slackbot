@@ -20,8 +20,6 @@ type Env struct {
 	GoPath            string
 	GoPathForBot      string
 	GithubToken       string
-	SlackToken        string
-	SlackChannel      string
 	AWSAccessKey      string
 	AWSSecretKey      string
 	KeybaseToken      string
@@ -64,10 +62,6 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
         <string>{{ .Env.GoPath }}</string>
         <key>GITHUB_TOKEN</key>
         <string>{{ .Env.GithubToken }}</string>
-        <key>SLACK_TOKEN</key>
-        <string>{{ .Env.SlackToken }}</string>
-        <key>SLACK_CHANNEL</key>
-        <string>{{ .Env.SlackChannel }}</string>
         <key>AWS_ACCESS_KEY</key>
         <string>{{ .Env.AWSAccessKey }}</string>
         <key>AWS_SECRET_KEY</key>
@@ -126,8 +120,6 @@ func NewEnv(home string, path string) Env {
 		GoPath:            os.Getenv("GOPATH"),
 		GoPathForBot:      os.Getenv("GOPATH"),
 		GithubToken:       os.Getenv("GITHUB_TOKEN"),
-		SlackToken:        os.Getenv("SLACK_TOKEN"),
-		SlackChannel:      os.Getenv("SLACK_CHANNEL"),
 		AWSAccessKey:      os.Getenv("AWS_ACCESS_KEY"),
 		AWSSecretKey:      os.Getenv("AWS_SECRET_KEY"),
 		KeybaseToken:      os.Getenv("KEYBASE_TOKEN"),
@@ -144,10 +136,20 @@ func (e Env) PathFromHome(path string) string {
 
 // LogPathForLaunchdLabel returns path to log for label
 func (e Env) LogPathForLaunchdLabel(label string) (string, error) {
-	if strings.Contains(label, "..") || strings.Contains(label, "/") || strings.Contains(label, `\`) {
-		return "", fmt.Errorf("Invalid label")
+	if err := ValidateLabel(label); err != nil {
+		return "", err
 	}
 	return filepath.Join(e.Home, "Library/Logs", label+".log"), nil
+}
+
+// ValidateLabel rejects values that could be interpreted as paths or command
+// options when passed to launchctl.
+func ValidateLabel(label string) error {
+	if label == "" || strings.HasPrefix(label, "-") || strings.Contains(label, "..") ||
+		strings.Contains(label, "/") || strings.Contains(label, `\`) {
+		return fmt.Errorf("invalid launchd label %q", label)
+	}
+	return nil
 }
 
 // Plist is plist for env and args
@@ -183,8 +185,10 @@ func (e Env) WritePlist(script Script) (string, error) {
 	}
 	path := filepath.Clean(filepath.Join(plistDir, script.Label+".plist"))
 	log.Printf("Writing %s", path)
-	//nolint:gosec // Plist files must be readable by launchd
-	if err := os.WriteFile(path, data, 0o755); err != nil {
+	if err := os.Chmod(path, 0o600); err != nil && !os.IsNotExist(err) {
+		return "", err
+	}
+	if err := os.WriteFile(path, data, 0o600); err != nil {
 		return "", err
 	}
 	return path, nil

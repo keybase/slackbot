@@ -1,5 +1,5 @@
 [Unit]
-Description=The Keybase Slack robot responsible for the Linux build
+Description=The Keybase Chat bot responsible for the Linux build
 
 [Service]
 EnvironmentFile=/home/keybasebuild/keybot.env

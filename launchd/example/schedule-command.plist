@@ -8,10 +8,6 @@
     <dict>
         <key>GOPATH</key>
         <string>/Users/test/go</string>
-        <key>SLACK_TOKEN</key>
-        <string></string>
-        <key>SLACK_CHANNEL</key>
-        <string></string>
         <key>PATH</key>
         <string>/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/opt/homebrew/bin</string>
     </dict>

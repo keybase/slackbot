@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"os"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -22,6 +22,10 @@ type BotCommandRunner interface {
 type BotBackend interface {
 	SendMessage(text string, channel string)
 	Listen(BotCommandRunner)
+}
+
+type attachmentSender interface {
+	SendAttachment(filename, title, channel string) error
 }
 
 // Bot describes a generic bot
@@ -128,6 +132,13 @@ func (b *Bot) RunCommand(args []string, channel string) error {
 }
 
 func (b *Bot) run(args []string, command Command, channel string) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			log.Printf("Panic running command %q: %v\n%s", strings.Join(args, " "), recovered, debug.Stack())
+			b.backend.SendMessage(fmt.Sprintf("Oops, there was an internal error running %q.", strings.Join(args, " ")), channel)
+		}
+	}()
+
 	out, err := command.Run(channel, args)
 	if err != nil {
 		log.Printf("Error %s running: %#v; %s\n", err, command, out)
@@ -156,6 +167,15 @@ func (b *Bot) SendMessage(text string, channel string) {
 	b.backend.SendMessage(text, channel)
 }
 
+// SendAttachment sends a file through a backend that supports attachments.
+func (b *Bot) SendAttachment(filename, title, channel string) error {
+	sender, ok := b.backend.(attachmentSender)
+	if !ok {
+		return fmt.Errorf("backend does not support attachments")
+	}
+	return sender.SendAttachment(filename, title, channel)
+}
+
 func (b *Bot) Listen() {
 	if err := b.advertiseCommands(); err != nil {
 		log.Printf("Error advertising commands: %s", err)
@@ -165,9 +185,15 @@ func (b *Bot) Listen() {
 
 // NewTestBot returns a bot for testing
 func NewTestBot() (*Bot, error) {
-	backend := &SlackBotBackend{}
+	backend := &noopBackend{}
 	return NewBot(NewConfig(true, false), "testbot", "", backend), nil
 }
+
+type noopBackend struct{}
+
+func (*noopBackend) SendMessage(string, string) {}
+
+func (*noopBackend) Listen(BotCommandRunner) {}
 
 // HasIgnorePauseFlag reports whether args contain the --ignore-pause flag,
 // which lets a single command run while the bot stays paused.
@@ -186,15 +212,6 @@ func BlockQuote(s string) string {
 		s += "\n"
 	}
 	return "```\n" + s + "```"
-}
-
-// GetTokenFromEnv returns slack token from the environment
-func GetTokenFromEnv() string {
-	token := os.Getenv("SLACK_TOKEN")
-	if token == "" {
-		log.Fatal("SLACK_TOKEN is not set")
-	}
-	return token
 }
 
 func isSpace(r rune) bool {

@@ -1,5 +1,5 @@
 [Unit]
-Description=send "!tuxbot build linux" to the Slack #bot channel
+Description=send "!tuxbot build linux" to the Keybase bot conversation
 
 [Service]
 EnvironmentFile=/home/keybasebuild/keybot.env

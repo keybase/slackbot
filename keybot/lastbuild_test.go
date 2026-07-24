@@ -11,6 +11,7 @@ import (
 
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/launchd"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLastBuildPath(t *testing.T) {
@@ -83,13 +84,12 @@ func TestAutomatedFlagParses(t *testing.T) {
 }
 
 func TestAutomatedPausedBlocksBuild(t *testing.T) {
-	bot := slackbot.NewBot(slackbot.NewConfig(false, true), "testbot", "", &slackbot.SlackBotBackend{})
+	bot, err := slackbot.NewTestBot()
+	require.NoError(t, err)
+	bot.Config().SetDryRun(false)
+	bot.Config().SetPaused(true)
 	ext := &keybot{}
 	out, err := ext.Run(bot, "", []string{"build", "mobile", "--automated"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if out != "I'm paused so I can't do that, but I would have run a launchd job (keybase.build.mobile)" {
-		t.Errorf("Unexpected output: %s", out)
-	}
+	require.NoError(t, err)
+	require.Equal(t, "I'm paused so I can't do that, but I would have run a launchd job (keybase.build.mobile)", out)
 }

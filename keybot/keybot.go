@@ -8,14 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
-	"strings"
 
+	kingpin "github.com/alecthomas/kingpin/v2"
 	"github.com/keybase/go-keybase-chat-bot/kbchat/types/chat1"
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
 	"github.com/keybase/slackbot/launchd"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 type keybot struct{}
@@ -238,16 +238,17 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		return runScript(bot, channel, env, script, *ignorePause)
 
 	case gitDiffCmd.FullCommand():
-		rawRepoText := *gitDiffRepo
-		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+		repository, err := slackbot.ResolveRepositoryPath(filepath.Join(env.GoPath, "src"), *gitDiffRepo)
+		if err != nil {
+			return "", err
+		}
 
 		script := launchd.Script{
 			Label:      "keybase.gitdiff",
 			Path:       "github.com/keybase/slackbot/scripts/run_and_send_stdout.sh",
 			BucketName: "prerelease.keybase.io",
 			EnvVars: []launchd.EnvVar{
-				{Key: "REPO", Value: repoParsed},
-				{Key: "PREFIX_GOPATH", Value: boolToEnvString(true)},
+				{Key: "REPO", Value: repository},
 				{Key: "SCRIPT_TO_RUN", Value: "./git_diff.sh"},
 			},
 		}

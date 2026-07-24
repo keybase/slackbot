@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
+	kingpin "github.com/alecthomas/kingpin/v2"
 	"github.com/keybase/go-keybase-chat-bot/kbchat/types/chat1"
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 type winbot struct {
@@ -206,6 +206,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				"git.exe",
 				"checkout",
 				*buildWindowsCientCommit,
+				"--",
 			)
 			gitCmd.Dir = os.ExpandEnv("$GOPATH/src/github.com/keybase/client")
 			stdoutStderr, err = gitCmd.CombinedOutput()
@@ -386,15 +387,17 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		bot.SendMessage(string(logContents[index:]), channel)
 
 	case gitDiffCmd.FullCommand():
-		rawRepoText := *gitDiffRepo
-		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+		repository, err := slackbot.ResolveRepositoryPath(filepath.Join(os.Getenv("GOPATH"), "src"), *gitDiffRepo)
+		if err != nil {
+			return "", err
+		}
 
 		//nolint:noctx // User-initiated git command, no request context available
 		gitDiffCmd := exec.Command(
 			"git.exe",
 			"diff",
 		)
-		gitDiffCmd.Dir = os.ExpandEnv(path.Join("$GOPATH/src", repoParsed))
+		gitDiffCmd.Dir = repository
 
 		if exists, err := Exists(path.Join(gitDiffCmd.Dir, ".git")); !exists {
 			return "Not a git repo", err
@@ -407,8 +410,10 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 		bot.SendMessage(string(stdoutStderr), channel)
 
 	case gitCleanCmd.FullCommand():
-		rawRepoText := *gitCleanRepo
-		repoParsed := strings.Split(strings.Trim(rawRepoText, "`<>"), "|")[1]
+		repository, err := slackbot.ResolveRepositoryPath(filepath.Join(os.Getenv("GOPATH"), "src"), *gitCleanRepo)
+		if err != nil {
+			return "", err
+		}
 
 		//nolint:noctx // User-initiated git command, no request context available
 		gitCleanCmd := exec.Command(
@@ -416,7 +421,7 @@ func (d *winbot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			"clean",
 			"-f",
 		)
-		gitCleanCmd.Dir = os.ExpandEnv(path.Join("$GOPATH/src", repoParsed))
+		gitCleanCmd.Dir = repository
 
 		if exists, err := Exists(path.Join(gitCleanCmd.Dir, ".git")); !exists {
 			return "Not a git repo", err
@@ -461,7 +466,7 @@ func Exists(name string) (bool, error) {
 	if os.IsNotExist(err) {
 		return false, nil
 	}
-	return err != nil, err
+	return err == nil, err
 }
 
 func (d *winbot) winAutoBuild(bot *slackbot.Bot, channel string, interval int, delay int, startHour int) {

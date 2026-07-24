@@ -5,17 +5,20 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/keybase/slackbot"
 )
 
 func main() {
 	config := slackbot.NewConfig(false, false)
-	backend, err := slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv())
+	const name = "examplebot"
+	channel := os.Getenv("KEYBASE_CHAT_CONVID")
+	backend, err := slackbot.NewKeybaseChatBotBackend(name, channel, slackbot.KeybaseRunOptionsFromEnv(name))
 	if err != nil {
 		log.Fatal(err)
 	}
-	bot := slackbot.NewBot(config, "examplebot", "", backend)
+	bot := slackbot.NewBot(config, name, "", backend)
 
 	// Command that runs and shows date
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", config))
@@ -34,6 +37,7 @@ func main() {
 	bot.SetDefault(slackbot.NewFuncCommand(runFn, "Extension", bot.Config()))
 	bot.SetHelp(bot.HelpMessage() + "\n\n" + ext.Help(bot))
 
-	// Connect to slack and listen
+	// Connect to Keybase chat and listen.
+	bot.SendMessage("I'm running.", channel)
 	bot.Listen()
 }

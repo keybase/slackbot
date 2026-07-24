@@ -5,16 +5,19 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/keybase/slackbot"
 )
 
 func main() {
-	backend, err := slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv())
+	const name = "tuxbot"
+	channel := os.Getenv("KEYBASE_CHAT_CONVID")
+	backend, err := slackbot.NewKeybaseChatBotBackend(name, channel, slackbot.KeybaseRunOptionsFromEnv(name))
 	if err != nil {
 		log.Fatal(err)
 	}
-	bot := slackbot.NewBot(slackbot.ReadConfigOrDefault(), "tuxbot", "", backend)
+	bot := slackbot.NewBot(slackbot.ReadConfigOrDefault(), name, "", backend)
 
 	bot.AddCommand("date", slackbot.NewExecCommand("/bin/date", nil, true, "Show the current date", bot.Config()))
 	bot.AddCommand("pause", slackbot.NewPauseCommand(bot.Config()))
@@ -31,5 +34,6 @@ func main() {
 	bot.SetHelp(bot.HelpMessage() + "\n\n" + ext.Help(bot))
 
 	log.Println("Started tuxbot")
+	bot.SendMessage("I'm running.", channel)
 	bot.Listen()
 }

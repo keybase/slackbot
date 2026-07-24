@@ -12,11 +12,17 @@ import (
 )
 
 type fakeBackend struct {
-	messages []string
+	messages    []string
+	attachments []string
 }
 
 func (b *fakeBackend) SendMessage(text string, _ string) {
 	b.messages = append(b.messages, text)
+}
+
+func (b *fakeBackend) SendAttachment(filename, _ string, _ string) error {
+	b.attachments = append(b.attachments, filename)
+	return nil
 }
 
 func (b *fakeBackend) Listen(BotCommandRunner) {}
@@ -65,6 +71,25 @@ func TestIgnorePauseRunsCommandWhilePaused(t *testing.T) {
 		t.Fatal("command did not run with --ignore-pause")
 	}
 	require.True(t, bot.Config().Paused(), "bot should remain paused")
+}
+
+func TestCommandPanicIsContained(t *testing.T) {
+	backend := &fakeBackend{}
+	bot := NewBot(NewConfig(false, false), "testbot", "", backend)
+	command := NewFuncCommand(func(_ string, _ []string) (string, error) {
+		panic("boom")
+	}, "Panic", bot.Config())
+
+	bot.run([]string{"panic"}, command, "chan")
+	require.Equal(t, []string{`Oops, there was an internal error running "panic".`}, backend.messages)
+}
+
+func TestSendAttachment(t *testing.T) {
+	backend := &fakeBackend{}
+	bot := NewBot(NewConfig(false, false), "testbot", "", backend)
+
+	require.NoError(t, bot.SendAttachment("/tmp/build.log", "build output", "chan"))
+	require.Equal(t, []string{"/tmp/build.log"}, backend.attachments)
 }
 
 func TestParseInput(t *testing.T) {
