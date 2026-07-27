@@ -1,6 +1,0 @@
-[Unit]
-Description=send "!tuxbot build linux" to the Keybase bot conversation
-
-[Service]
-EnvironmentFile=/home/keybasebuild/keybot.env
-ExecStart=/home/keybasebuild/slackbot/systemd/send.sh '!tuxbot build linux --skip-ci --nightly'

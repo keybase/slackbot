@@ -1,9 +1,0 @@
-[Unit]
-Description=send stathat success on weekends when nightly doesn't run
-
-[Timer]
-OnCalendar=Sat,Sun 12:00
-Persistent=true
-
-[Install]
-WantedBy=timers.target
