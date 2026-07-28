@@ -324,7 +324,7 @@ func (k *keybot) Help(bot *slackbot.Bot) string {
 	return out
 }
 
-func (k *keybot) Advertisements(bot *slackbot.Bot) []chat1.UserBotCommandInput {
+func (k *keybot) Advertisements() []chat1.UserBotCommandInput {
 	return []chat1.UserBotCommandInput{
 		{Name: "build", Description: "Build darwin, mobile, android, or ios artifacts", Usage: "<darwin|mobile|android|ios> [flags]"},
 		{Name: "cancel", Description: "Cancel a launchd job by label", Usage: "<label>"},

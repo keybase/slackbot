@@ -448,7 +448,7 @@ func (d *winbot) Help(bot *slackbot.Bot) string {
 	return out
 }
 
-func (d *winbot) Advertisements(bot *slackbot.Bot) []chat1.UserBotCommandInput {
+func (d *winbot) Advertisements() []chat1.UserBotCommandInput {
 	return []chat1.UserBotCommandInput{
 		{Name: "build", Description: "Start a windows build", Usage: "[--test] [--client-commit <sha>] [--kbfs-commit <sha>] [--updater-commit <sha>] [--skip-ci] [--smoke] [--dev-cert]"},
 		{Name: "cancel", Description: "Cancel the current windows build"},
