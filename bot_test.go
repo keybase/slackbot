@@ -119,30 +119,29 @@ func TestAdvertisedCommands(t *testing.T) {
 	bot.AddAdvertisements(chat1.UserBotCommandInput{
 		Name:        "build",
 		Description: "Build things",
-		Usage:       "!testbot build <target>",
+		Usage:       "<target>",
 	})
 
 	commands := bot.AdvertisedCommands()
 	if len(commands) != 3 {
 		t.Fatalf("expected 3 advertised commands, got %d", len(commands))
 	}
-	if commands[0].Name != "help" {
+	if commands[0].Name != "testbot help" {
 		t.Fatalf("expected help command first, got %q", commands[0].Name)
 	}
 	if commands[0].ExtendedDescription == nil || commands[0].ExtendedDescription.DesktopBody != "help body" {
 		t.Fatalf("unexpected help extended description: %+v", commands[0].ExtendedDescription)
 	}
 	if commands[1] != (chat1.UserBotCommandInput{
-		Name:        "date",
+		Name:        "testbot date",
 		Description: "Show the current date",
-		Usage:       "!testbot date",
 	}) {
 		t.Fatalf("unexpected builtin command: %+v", commands[1])
 	}
 	if commands[2] != (chat1.UserBotCommandInput{
-		Name:        "build",
+		Name:        "testbot build",
 		Description: "Build things",
-		Usage:       "!testbot build <target>",
+		Usage:       "<target>",
 	}) {
 		t.Fatalf("unexpected extra command: %+v", commands[2])
 	}

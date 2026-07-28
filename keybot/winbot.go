@@ -448,16 +448,15 @@ func (d *winbot) Help(bot *slackbot.Bot) string {
 	return out
 }
 
-func (d *winbot) Advertisements(bot *slackbot.Bot) []chat1.UserBotCommandInput {
-	prefix := "!" + bot.Name()
+func (d *winbot) Advertisements() []chat1.UserBotCommandInput {
 	return []chat1.UserBotCommandInput{
-		{Name: "build", Description: "Start a windows build", Usage: prefix + " build [--test] [--client-commit <sha>] [--kbfs-commit <sha>] [--updater-commit <sha>] [--skip-ci] [--smoke] [--dev-cert]"},
-		{Name: "cancel", Description: "Cancel the current windows build", Usage: prefix + " cancel"},
-		{Name: "dumplog", Description: "Show the last windows build log file", Usage: prefix + " dumplog"},
-		{Name: "gclean", Description: "Clean a repo under $GOPATH/src", Usage: prefix + " gclean <repo>"},
-		{Name: "gdiff", Description: "Show the git diff for a repo under $GOPATH/src", Usage: prefix + " gdiff <repo>"},
-		{Name: "restart", Description: "Quit and let the calling script restart the bot", Usage: prefix + " restart"},
-		{Name: "startAutoTimer", Description: "Start or stop the automatic build timer", Usage: prefix + " startAutoTimer [--interval <hours>] [--startHour <hour>] [--delay <hours>]"},
+		{Name: "build", Description: "Start a windows build", Usage: "[--test] [--client-commit <sha>] [--kbfs-commit <sha>] [--updater-commit <sha>] [--skip-ci] [--smoke] [--dev-cert]"},
+		{Name: "cancel", Description: "Cancel the current windows build"},
+		{Name: "dumplog", Description: "Show the last windows build log file"},
+		{Name: "gclean", Description: "Clean a repo under $GOPATH/src", Usage: "<repo>"},
+		{Name: "gdiff", Description: "Show the git diff for a repo under $GOPATH/src", Usage: "<repo>"},
+		{Name: "restart", Description: "Quit and let the calling script restart the bot"},
+		{Name: "startAutoTimer", Description: "Start or stop the automatic build timer", Usage: "[--interval <hours>] [--startHour <hour>] [--delay <hours>]"},
 	}
 }
 
