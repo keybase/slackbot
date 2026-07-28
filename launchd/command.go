@@ -44,7 +44,10 @@ func (c StartCommand) Run(_ string, _ []string) (string, error) {
 
 // Stop a launchd job
 func Stop(label string) (string, error) {
-	//nolint:noctx // launchctl is a trusted system binary, no context available
+	if err := ValidateLabel(label); err != nil {
+		return "", err
+	}
+	//nolint:gosec,noctx // launchctl is a trusted system binary and label is validated, no context available
 	if _, err := exec.Command("/bin/launchctl", "stop", label).CombinedOutput(); err != nil {
 		return "", fmt.Errorf("Error in launchctl stop: %s", err)
 	}

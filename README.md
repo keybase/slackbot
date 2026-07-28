@@ -1,12 +1,16 @@
-## Slackbot
+## Keybase Chat build bot
 
 [![Build Status](https://github.com/keybase/slackbot/actions/workflows/ci.yml/badge.svg)](https://github.com/keybase/slackbot/actions)
 [![GoDoc](https://godoc.org/github.com/keybase/slackbot?status.svg)](https://godoc.org/github.com/keybase/slackbot)
 
-```
-export SLACK_TOKEN=...
-go install github.com/keybase/slackbot/examplebot
-$GOPATH/bin/examplebot
-```
+The project provides build bots controlled from a configured Keybase Chat
+conversation. Set `KEYBASE_CHAT_CONVID` and either run an existing Keybase
+client (`KEYBASE_LOCATION`/`KEYBASE_HOME`) or configure
+`KEYBASE_ONESHOT_USERNAME` and `KEYBASE_ONESHOT_PAPERKEY`.
 
-Then invite the bot to a channel and then post '!examplebot help'.
+Then install and run a bot, and post `!examplebot help` in the configured
+conversation.
+
+The build notification scripts require `jq` to construct Keybase Chat API
+requests. Make sure `jq` is installed and available on `PATH` for the bot and
+its launchd jobs.

@@ -8,10 +8,6 @@
     <dict>
         <key>GOPATH</key>
         <string>/Users/test/go</string>
-        <key>SLACK_TOKEN</key>
-        <string></string>
-        <key>SLACK_CHANNEL</key>
-        <string></string>
         <key>GITHUB_TOKEN</key>
         <string></string>
         <key>AWS_ACCESS_KEY</key>

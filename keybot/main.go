@@ -9,7 +9,6 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/keybase/go-keybase-chat-bot/kbchat"
 	"github.com/keybase/go-keybase-chat-bot/kbchat/types/chat1"
 
 	"github.com/keybase/slackbot"
@@ -39,13 +38,11 @@ func runScript(bot *slackbot.Bot, channel string, env launchd.Env, script launch
 		return fmt.Sprintf("I'm paused so I can't do that, but I would have run a launchd job (%s)", script.Label), nil
 	}
 
-	// Write job plist
 	path, err := env.WritePlist(script)
 	if err != nil {
 		return "", err
 	}
 
-	// Remove previous log
 	if err := launchd.CleanupLog(env, script.Label); err != nil {
 		return "", err
 	}
@@ -74,64 +71,22 @@ type extension interface {
 
 func main() {
 	name := os.Getenv("BOT_NAME")
-	var err error
 	var label string
 	var ext extension
-	var backend slackbot.BotBackend
-	var hybrids []slackbot.HybridBackendMember
-	var channel string
 
-	// Set up Slack
-	slackChannel := os.Getenv("SLACK_CHANNEL")
-	slackBackend, err := slackbot.NewSlackBotBackend(slackbot.GetTokenFromEnv())
+	channel := os.Getenv("KEYBASE_CHAT_CONVID")
+	backend, err := slackbot.NewKeybaseChatBotBackend(name, channel, slackbot.KeybaseRunOptionsFromEnv(name))
 	if err != nil {
-		log.Printf("failed to initialize Slack backend: %s", err)
-	} else {
-		hybrids = append(hybrids, slackbot.HybridBackendMember{
-			Backend: slackBackend,
-			Channel: slackChannel,
-		})
+		log.Fatalf("failed to initialize Keybase backend: %s", err)
 	}
-
-	// Set up Keybase
-	var opts kbchat.RunOptions
-	keybaseChannel := os.Getenv("KEYBASE_CHAT_CONVID")
-	opts.KeybaseLocation = os.Getenv("KEYBASE_LOCATION")
-	opts.HomeDir = os.Getenv("KEYBASE_HOME")
-	opts.DebugTag = name
-	oneshotUsername := os.Getenv("KEYBASE_ONESHOT_USERNAME")
-	oneshotPaperkey := os.Getenv("KEYBASE_ONESHOT_PAPERKEY")
-	if len(oneshotPaperkey) > 0 && len(oneshotUsername) > 0 {
-		opts.Oneshot = &kbchat.OneshotOptions{
-			Username: oneshotUsername,
-			PaperKey: oneshotPaperkey,
-		}
-	}
-	keybaseBackend, err := slackbot.NewKeybaseChatBotBackend(name, keybaseChannel, opts)
-	if err != nil {
-		log.Printf("failed to initialize Keybase backend: %s", err)
-	} else {
-		hybrids = append(hybrids, slackbot.HybridBackendMember{
-			Backend: keybaseBackend,
-			Channel: keybaseChannel,
-		})
-	}
-
-	// Set up hybrid backend
-	hybridChannel := ""
-	hybridBackend := slackbot.NewHybridBackend(hybrids...)
 
 	switch name {
 	case "keybot":
 		ext = &keybot{}
 		label = "keybase.keybot"
-		backend = hybridBackend
-		channel = hybridChannel
 	case "winbot":
 		ext = &winbot{}
 		label = "keybase.winbot"
-		channel = hybridChannel
-		backend = hybridBackend
 	default:
 		log.Fatal("Invalid BOT_NAME")
 	}
@@ -139,7 +94,6 @@ func main() {
 	bot := slackbot.NewBot(slackbot.ReadConfigOrDefault(), name, label, backend)
 	addBasicCommands(bot)
 
-	// Extension
 	runFn := func(channel string, args []string) (string, error) {
 		return ext.Run(bot, channel, args)
 	}
@@ -148,6 +102,7 @@ func main() {
 	bot.AddAdvertisements(ext.Advertisements(bot)...)
 
 	bot.SendMessage("I'm running.", channel)
-
-	bot.Listen()
+	if err := bot.Listen(); err != nil {
+		log.Fatalf("bot listener failed: %s", err)
+	}
 }

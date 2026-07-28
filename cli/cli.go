@@ -12,7 +12,7 @@ import (
 
 	"github.com/keybase/slackbot"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/alecthomas/kingpin/v2"
 )
 
 // IsParseContextValid checks if the kingpin context is valid

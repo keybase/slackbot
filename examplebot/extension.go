@@ -7,9 +7,9 @@ import (
 	"bytes"
 	"fmt"
 
+	kingpin "github.com/alecthomas/kingpin/v2"
 	"github.com/keybase/slackbot"
 	"github.com/keybase/slackbot/cli"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 type extension struct{}

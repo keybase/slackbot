@@ -11,5 +11,8 @@ if [ -n "$convid" ]; then
   echo "Sending to Keybase convID: $convid"
   location=${KEYBASE_LOCATION:-"keybase"}
   home=${KEYBASE_HOME:-$HOME}
-  $location --home $home chat api -m "{\"method\":\"send\", \"params\": {\"options\": { \"conversation_id\": \"$convid\" , \"message\": { \"body\": \"$@\" }}}}"
+  body="$*"
+  payload=$(jq -cn --arg convID "$convid" --arg body "$body" \
+    '{method:"send",params:{options:{conversation_id:$convID,message:{body:$body}}}}')
+  "$location" --home "$home" chat api -m "$payload"
 fi
