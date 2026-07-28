@@ -39,5 +39,7 @@ func main() {
 
 	// Connect to Keybase chat and listen.
 	bot.SendMessage("I'm running.", channel)
-	bot.Listen()
+	if err := bot.Listen(); err != nil {
+		log.Fatalf("bot listener failed: %s", err)
+	}
 }

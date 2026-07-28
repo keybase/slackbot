@@ -102,5 +102,7 @@ func main() {
 	bot.AddAdvertisements(ext.Advertisements(bot)...)
 
 	bot.SendMessage("I'm running.", channel)
-	bot.Listen()
+	if err := bot.Listen(); err != nil {
+		log.Fatalf("bot listener failed: %s", err)
+	}
 }

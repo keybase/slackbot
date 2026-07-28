@@ -10,3 +10,7 @@ client (`KEYBASE_LOCATION`/`KEYBASE_HOME`) or configure
 
 Then install and run a bot, and post `!examplebot help` in the configured
 conversation.
+
+The build notification scripts require `jq` to construct Keybase Chat API
+requests. Make sure `jq` is installed and available on `PATH` for the bot and
+its launchd jobs.

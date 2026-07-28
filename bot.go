@@ -21,7 +21,7 @@ type BotCommandRunner interface {
 
 type BotBackend interface {
 	SendMessage(text string, channel string)
-	Listen(BotCommandRunner)
+	Listen(BotCommandRunner) error
 }
 
 type attachmentSender interface {
@@ -176,11 +176,11 @@ func (b *Bot) SendAttachment(filename, title, channel string) error {
 	return sender.SendAttachment(filename, title, channel)
 }
 
-func (b *Bot) Listen() {
+func (b *Bot) Listen() error {
 	if err := b.advertiseCommands(); err != nil {
 		log.Printf("Error advertising commands: %s", err)
 	}
-	b.backend.Listen(b)
+	return b.backend.Listen(b)
 }
 
 // NewTestBot returns a bot for testing
@@ -193,7 +193,7 @@ type noopBackend struct{}
 
 func (*noopBackend) SendMessage(string, string) {}
 
-func (*noopBackend) Listen(BotCommandRunner) {}
+func (*noopBackend) Listen(BotCommandRunner) error { return nil }
 
 // HasIgnorePauseFlag reports whether args contain the --ignore-pause flag,
 // which lets a single command run while the bot stays paused.

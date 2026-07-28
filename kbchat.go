@@ -88,11 +88,10 @@ func (b *KeybaseChatBotBackend) AdvertiseCommands(commands []chat1.UserBotComman
 	return err
 }
 
-func (b *KeybaseChatBotBackend) Listen(runner BotCommandRunner) {
+func (b *KeybaseChatBotBackend) Listen(runner BotCommandRunner) error {
 	sub, err := b.kbc.ListenForNewTextMessages()
 	if err != nil {
-		log.Printf("failed to set up listen: %s", err)
-		return
+		return fmt.Errorf("set up Keybase chat listener: %w", err)
 	}
 	commandPrefix := "!" + b.name
 	for {

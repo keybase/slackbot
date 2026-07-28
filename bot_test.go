@@ -4,6 +4,7 @@
 package slackbot
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 type fakeBackend struct {
 	messages    []string
 	attachments []string
+	listenErr   error
 }
 
 func (b *fakeBackend) SendMessage(text string, _ string) {
@@ -25,7 +27,9 @@ func (b *fakeBackend) SendAttachment(filename, _ string, _ string) error {
 	return nil
 }
 
-func (b *fakeBackend) Listen(BotCommandRunner) {}
+func (b *fakeBackend) Listen(BotCommandRunner) error {
+	return b.listenErr
+}
 
 func TestHelp(t *testing.T) {
 	bot, err := NewTestBot()
@@ -90,6 +94,14 @@ func TestSendAttachment(t *testing.T) {
 
 	require.NoError(t, bot.SendAttachment("/tmp/build.log", "build output", "chan"))
 	require.Equal(t, []string{"/tmp/build.log"}, backend.attachments)
+}
+
+func TestListenReturnsBackendError(t *testing.T) {
+	expectedErr := errors.New("listen failed")
+	backend := &fakeBackend{listenErr: expectedErr}
+	bot := NewBot(NewConfig(false, false), "testbot", "", backend)
+
+	require.ErrorIs(t, bot.Listen(), expectedErr)
 }
 
 func TestParseInput(t *testing.T) {
