@@ -325,16 +325,15 @@ func (k *keybot) Help(bot *slackbot.Bot) string {
 }
 
 func (k *keybot) Advertisements(bot *slackbot.Bot) []chat1.UserBotCommandInput {
-	prefix := "!" + bot.Name()
 	return []chat1.UserBotCommandInput{
-		{Name: "build", Description: "Build darwin, mobile, android, or ios artifacts", Usage: prefix + " build <darwin|mobile|android|ios> [flags]"},
-		{Name: "cancel", Description: "Cancel a launchd job by label", Usage: prefix + " cancel <label>"},
-		{Name: "dumplog", Description: "Show the log file for a launchd job", Usage: prefix + " dumplog <label>"},
-		{Name: "gclean", Description: "Clean the go/go-ios/go-android repos", Usage: prefix + " gclean"},
-		{Name: "gdiff", Description: "Show the git diff for a repo under $GOPATH/src", Usage: prefix + " gdiff <repo>"},
-		{Name: "nodeModuleClean", Description: "Clean the ios/android node_modules", Usage: prefix + " nodeModuleClean"},
-		{Name: "release", Description: "Promote or mark releases as broken", Usage: prefix + " release <promote|broken> ..."},
-		{Name: "smoketest", Description: "Set smoketesting status for a build", Usage: prefix + " smoketest --build-a <id> --platform <name> --enable <bool> --max-testers <n>"},
-		{Name: "upgrade", Description: "Upgrade a package", Usage: prefix + " upgrade <name>"},
+		{Name: "build", Description: "Build darwin, mobile, android, or ios artifacts", Usage: "<darwin|mobile|android|ios> [flags]"},
+		{Name: "cancel", Description: "Cancel a launchd job by label", Usage: "<label>"},
+		{Name: "dumplog", Description: "Show the log file for a launchd job", Usage: "<label>"},
+		{Name: "gclean", Description: "Clean the go/go-ios/go-android repos"},
+		{Name: "gdiff", Description: "Show the git diff for a repo under $GOPATH/src", Usage: "<repo>"},
+		{Name: "nodeModuleClean", Description: "Clean the ios/android node_modules"},
+		{Name: "release", Description: "Promote or mark releases as broken", Usage: "<promote|broken> ..."},
+		{Name: "smoketest", Description: "Set smoketesting status for a build", Usage: "--build-a <id> --platform <name> --enable <bool> --max-testers <n>"},
+		{Name: "upgrade", Description: "Upgrade a package", Usage: "<name>"},
 	}
 }

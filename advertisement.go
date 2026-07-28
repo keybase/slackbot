@@ -18,18 +18,16 @@ func (b *Bot) AddAdvertisements(commands ...chat1.UserBotCommandInput) {
 
 func (b *Bot) AdvertisedCommands() []chat1.UserBotCommandInput {
 	commands := []chat1.UserBotCommandInput{{
-		Name:                "help",
+		Name:                b.advertisedCommandName("help"),
 		Description:         "Show available commands",
-		Usage:               fmt.Sprintf("!%s help", b.name),
 		ExtendedDescription: b.helpExtendedDescription(),
 	}}
 
 	for _, trigger := range b.triggers() {
 		command := b.commands[trigger]
 		commands = append(commands, chat1.UserBotCommandInput{
-			Name:        trigger,
+			Name:        b.advertisedCommandName(trigger),
 			Description: command.Description(),
-			Usage:       fmt.Sprintf("!%s %s", b.name, trigger),
 		})
 	}
 
@@ -37,9 +35,16 @@ func (b *Bot) AdvertisedCommands() []chat1.UserBotCommandInput {
 	slices.SortFunc(extras, func(a, b chat1.UserBotCommandInput) int {
 		return strings.Compare(a.Name, b.Name)
 	})
+	for i := range extras {
+		extras[i].Name = b.advertisedCommandName(extras[i].Name)
+	}
 	commands = append(commands, extras...)
 
 	return commands
+}
+
+func (b *Bot) advertisedCommandName(command string) string {
+	return fmt.Sprintf("%s %s", b.name, command)
 }
 
 func (b *Bot) advertiseCommands() error {
