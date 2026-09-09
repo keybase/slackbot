@@ -6,7 +6,7 @@ toolchain go1.27.1
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
-	github.com/keybase/go-keybase-chat-bot v0.0.0-20260714190752-406d338a3ba3
+	github.com/keybase/go-keybase-chat-bot v0.0.0-20260909165657-742f1152f4ca
 	github.com/stretchr/testify v1.11.1
 )
 
