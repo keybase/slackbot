@@ -94,10 +94,8 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	home := os.Getenv("HOME")
 	javaHome := "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
 	javaBin := javaHome + "/bin"
-	// need custom go to fix issue
-	goRoot := "/Users/build/code/go"
-	goBin := goRoot + "/bin"
-	path := goBin + ":" + javaBin + ":/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin:/opt/homebrew/bin"
+	// Homebrew comes first so we get its go; /usr/local has a stale go install.
+	path := "/opt/homebrew/bin:" + javaBin + ":/sbin:/usr/sbin:/bin:/usr/local/bin:/usr/bin"
 	env := launchd.NewEnv(home, path)
 	androidHome := "/usr/local/opt/android-sdk"
 	// ndkVer65x := "23.1.7779620"
