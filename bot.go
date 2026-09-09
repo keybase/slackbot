@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"runtime/debug"
+	"slices"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -198,12 +199,7 @@ func (*noopBackend) Listen(BotCommandRunner) error { return nil }
 // HasIgnorePauseFlag reports whether args contain the --ignore-pause flag,
 // which lets a single command run while the bot stays paused.
 func HasIgnorePauseFlag(args []string) bool {
-	for _, arg := range args {
-		if arg == "--ignore-pause" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(args, "--ignore-pause")
 }
 
 // BlockQuote returns the string block-quoted
