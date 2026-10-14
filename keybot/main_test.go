@@ -110,3 +110,18 @@ func TestInvalidUsage(t *testing.T) {
 		t.Errorf("Unexpected output: %s", out)
 	}
 }
+
+func TestBuildCleanSetsCleanCaches(t *testing.T) {
+	bot, err := slackbot.NewTestBot()
+	require.NoError(t, err)
+	ext := &keybot{}
+	for _, platform := range []string{"darwin", "mobile", "android", "ios"} {
+		out, err := ext.Run(bot, "", []string{"build", platform})
+		require.NoError(t, err)
+		require.Contains(t, out, `launchd.EnvVar{Key:"CLEAN_CACHES", Value:"0"}`, platform)
+
+		out, err = ext.Run(bot, "", []string{"build", platform, "--clean"})
+		require.NoError(t, err)
+		require.Contains(t, out, `launchd.EnvVar{Key:"CLEAN_CACHES", Value:"1"}`, platform)
+	}
+}
