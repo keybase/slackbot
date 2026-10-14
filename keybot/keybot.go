@@ -37,13 +37,15 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	buildMobileSkipCI := buildMobile.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildMobileAutomated := buildMobile.Flag("automated", "Whether this is a timed build").Bool()
 	buildMobileCientCommit := buildMobile.Flag("client-commit", "Build a specific client commit hash").String()
+	buildMobileClean := buildMobile.Flag("clean", "Clear the yarn cache, node_modules and the Go build cache first").Bool()
 
 	buildAndroid := build.Command("android", "Start an android build")
 	buildAndroidSkipCI := buildAndroid.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildAndroidAutomated := buildAndroid.Flag("automated", "Whether this is a timed build").Bool()
 	buildAndroidCientCommit := buildAndroid.Flag("client-commit", "Build a specific client commit hash").String()
+	buildAndroidClean := buildAndroid.Flag("clean", "Clear the yarn cache, node_modules and the Go build cache first").Bool()
 	buildIOS := build.Command("ios", "Start an ios build")
-	buildIOSClean := buildIOS.Flag("clean", "Whether to clean first").Bool()
+	buildIOSClean := buildIOS.Flag("clean", "Run xcodebuild clean and clear the yarn cache, node_modules and the Go build cache first").Bool()
 	buildIOSSkipCI := buildIOS.Flag("skip-ci", "Whether to skip CI").Bool()
 	buildIOSAutomated := buildIOS.Flag("automated", "Whether this is a timed build").Bool()
 	buildIOSCientCommit := buildIOS.Flag("client-commit", "Build a specific client commit hash").String()
@@ -58,6 +60,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 	buildDarwinNoS3 := buildDarwin.Flag("skip-s3", "Don't push to S3 after building the app").Bool()
 	buildDarwinNoNotarize := buildDarwin.Flag("skip-notarize", "Don't notarize the app").Bool()
 	buildDarwinArch := buildDarwin.Flag("arch", "Build for a specific architecture (arm64, amd64)").String()
+	buildDarwinClean := buildDarwin.Flag("clean", "Clear the yarn cache, node_modules and the Go build cache first").Bool()
 
 	release := app.Command("release", "Release things")
 	releasePromote := release.Command("promote", "Promote a release to public")
@@ -137,6 +140,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "NOS3", Value: boolToEnvString(*buildDarwinNoS3)},
 				{Key: "NONOTARIZE", Value: boolToEnvString(*buildDarwinNoNotarize)},
 				{Key: "ARCH", Value: *buildDarwinArch},
+				{Key: "CLEAN_CACHES", Value: boolToEnvString(*buildDarwinClean)},
 			},
 		}
 		return runScript(bot, channel, env, script, *ignorePause)
@@ -160,6 +164,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "CLIENT_COMMIT", Value: *buildMobileCientCommit},
 				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
+				{Key: "CLEAN_CACHES", Value: boolToEnvString(*buildMobileClean)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-ios")
@@ -181,6 +186,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 				{Key: "CLIENT_COMMIT", Value: *buildAndroidCientCommit},
 				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
+				{Key: "CLEAN_CACHES", Value: boolToEnvString(*buildAndroidClean)},
 			},
 		}
 		env.GoPath = env.PathFromHome("go-android") // Custom go path for Android so we don't conflict
@@ -199,6 +205,7 @@ func (k *keybot) Run(bot *slackbot.Bot, channel string, args []string) (string, 
 			EnvVars: []launchd.EnvVar{
 				{Key: "CLIENT_COMMIT", Value: *buildIOSCientCommit},
 				{Key: "CLEAN", Value: boolToEnvString(iosClean)},
+				{Key: "CLEAN_CACHES", Value: boolToEnvString(iosClean)},
 				{Key: "CHECK_CI", Value: boolToEnvString(!skipCI)},
 				{Key: "AUTOMATED_BUILD", Value: boolToEnvString(automated)},
 			},
